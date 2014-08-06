@@ -86,7 +86,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     
     public function activate(){ //overrides abstract in parent LifeCycle
         If(WP_DEBUG) error_log("called activate\n");
-        add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
+        // add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
         //$this->initOptions();
         // if( is_admin() ){
             // add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
@@ -100,9 +100,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     
     //include the admin page in woocommerce settings
     public function includeAdminPage($settings){
-        $pluginDir = dirname(plugin_basename(__FILE__));
-        If(WP_DEBUG) error_log("plugindir: $plugindir\n");
-        $settings[] = include($pluginDir . 'lasercommerce_admin.php');
+        $pluginDir = plugin_dir_path( __FILE__ );
+        If(WP_DEBUG) error_log("plugindir: $pluginDir\n");
+        $settings[] = include($pluginDir . 'Lasercommerce_Admin.php');
         return $settings;
     }
     
@@ -114,6 +114,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         // Add options administration page
         // http://plugin.michael-simpson.com/?page_id=47
+        If(WP_DEBUG) error_log("called addActionsAndFilters\n");
+        add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
+        
         add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
 
         // Example adding a script & style just for the options administration page

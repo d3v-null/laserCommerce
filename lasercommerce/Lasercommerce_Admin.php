@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class LaserCommerce_Admin extends WC_Settings_Page{
     public function __construct() {
         $this->id            = 'lasercommerce';
-        $this->label         = __('Laserphile Advanced Ecommerce', 'lasercommerce');
+        $this->label         = __('LaserCommerce', 'lasercommerce');
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output' ) );
@@ -22,19 +22,20 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 'type'  => 'title',
                 'title' => __( 'LaserCommerce Options', 'lasercommerce' ),
                 'id'    => $this->id . '_options',
-                'desc'  => 'description'
+                'desc'  => 'Configure Laserphile advanced eCommerce settings'
             ),
             array(
+                'type'  => 'number',
                 'title' => __( 'A Number', 'lasercommerce' ),
                 'id'    => $this->id . '_options_number',
                 'default'=>0,
                 'desc_tip'=>'desc_tip',
-            )
+            ),
             array(
                 'type' => 'sectionend',
                 'id' => $this->id . '_options'
             )
-        )
+        );
         
         return apply_filters( 'lasercommerce_woocommerce_admin_settings', $settings);
     }
