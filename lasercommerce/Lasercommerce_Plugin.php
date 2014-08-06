@@ -58,6 +58,10 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //        $wpdb->query("CREATE TABLE IF NOT EXISTS `$tableName` (
         //            `id` INTEGER NOT NULL");
     }
+    
+    protected function otherInstall(){ //overrides abstract in parent LifeCycle
+        //TODO:
+    }
 
     /**
      * See: http://plugin.michael-simpson.com/?page_id=101
@@ -77,6 +81,30 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      * @return void
      */
     public function upgrade() {
+    }
+    
+    public function activate(){ //overrides abstract in parent LifeCycle
+        $this->initOptions();
+        if( is_admin() ){
+            $this->registerAdminPage();
+        }
+        //TODO:
+        //register product price hooks
+        //register cart hooks
+        
+    }
+    
+    //registers admin page in woocommerce settings
+    private function registerAdminPage(){
+        include('lasercommerce_admin.php');
+    }
+    
+    public function deactivate(){ //overrides abstract in parent LifeCycle
+        //TODO:
+    }
+    
+    protected function initOptions(){ //overrides abstract in parent LifeCycle
+        //TODO:
     }
 
     public function addActionsAndFilters() {

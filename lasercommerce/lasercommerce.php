@@ -130,7 +130,7 @@ Lasercommerce_i18n_init();
 
 // Next, run the version check.
 // If it is successful, continue with initialization for this plugin
-if (Lasercommerce_PhpVersionCheck()) {
+if (Lasercommerce_PhpVersionCheck() and Lasercommerce_WoocommerceCheck()) {
     // Only load and run the init function if we know PHP version can parse it
     include_once('lasercommerce_init.php');
     Lasercommerce_init(__FILE__);
