@@ -1,0 +1,16 @@
+[06-Aug-2014 09:40:16 UTC] called activate
+[06-Aug-2014 09:43:26 UTC] called activate
+[06-Aug-2014 09:43:51 UTC] called activate
+[06-Aug-2014 09:45:06 UTC] called activate
+[06-Aug-2014 09:45:38 UTC] PHP Parse error:  syntax error, unexpected '$Lasercommerce_minimalRequired' (T_VARIABLE) in /home/admin/web/technotan.com.au/public_html/wp-content/plugins/lasercommerce/lasercommerce.php on line 70
+[06-Aug-2014 09:45:40 UTC] PHP Parse error:  syntax error, unexpected '$Lasercommerce_minimalRequired' (T_VARIABLE) in /home/admin/web/technotan.com.au/public_html/wp-content/plugins/lasercommerce/lasercommerce.php on line 70
+[06-Aug-2014 09:45:40 UTC] PHP Parse error:  syntax error, unexpected '$Lasercommerce_minimalRequired' (T_VARIABLE) in /home/admin/web/technotan.com.au/public_html/wp-content/plugins/lasercommerce/lasercommerce.php on line 70
+[06-Aug-2014 09:48:47 UTC] called activate
+[06-Aug-2014 09:50:30 UTC] called activate
+
+[06-Aug-2014 09:53:18 UTC] called activate
+
+[06-Aug-2014 09:54:38 UTC] called activate
+
+[06-Aug-2014 09:57:36 UTC] called activate
+

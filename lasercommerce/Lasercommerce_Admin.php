@@ -19,37 +19,44 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     public function get_settings() {
         $settings = array(
             array( 
-                'type' => 'title',
+                'type'  => 'title',
                 'title' => __( 'LaserCommerce Options', 'lasercommerce' ),
-                'id' => $this->id,
-                'desc' => 'description'
+                'id'    => $this->id . '_options',
+                'desc'  => 'description'
             ),
             array(
-                'type' => 'sectioned',
-                'id' =>
+                'title' => __( 'A Number', 'lasercommerce' ),
+                'id'    => $this->id . '_options_number',
+                'default'=>0,
+                'desc_tip'=>'desc_tip',
+            )
+            array(
+                'type' => 'sectionend',
+                'id' => $this->id . '_options'
+            )
         )
         
         return apply_filters( 'lasercommerce_woocommerce_admin_settings', $settings);
     }
     
-    function init() {
-        $this->init_form_fields();
-        $this->init_settings();
-        $this->obfuscate    = $this->get_option( 'obfuscate'    );
+    // function init() {
+        // $this->init_form_fields();
+        // $this->init_settings();
+        // $this->obfuscate    = $this->get_option( 'obfuscate'    );
         
-    }
+    // }
     
-    function init_form_fields(){
-        $this->form_fields = array(
-            'obfuscate' => array(
-                'title'         => __('Restrict Visibility', 'lasercommerce'),
-                'type'          => 'checkbox',
-                'label'         => __('Restrict product visibility', 'lasercommerce'),
-                'description'   => __('Restrict the visibility of products to users who have appropriate roles', 'lasercommerce'),
-                'default'       => 'no'
-            ), 
-        );
-    }
+    // function init_form_fields(){
+        // $this->form_fields = array(
+            // 'obfuscate' => array(
+                // 'title'         => __('Restrict Visibility', 'lasercommerce'),
+                // 'type'          => 'checkbox',
+                // 'label'         => __('Restrict product visibility', 'lasercommerce'),
+                // 'description'   => __('Restrict the visibility of products to users who have appropriate roles', 'lasercommerce'),
+                // 'default'       => 'no'
+            // ), 
+        // );
+    // }
     
 }
 

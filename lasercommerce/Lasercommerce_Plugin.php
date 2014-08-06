@@ -60,6 +60,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     protected function otherInstall(){ //overrides abstract in parent LifeCycle
+        If(WP_DEBUG) error_log("called otherinstall\n");
         //TODO:
     }
 
@@ -84,10 +85,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function activate(){ //overrides abstract in parent LifeCycle
+        If(WP_DEBUG) error_log("called activate\n");
+        add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
         //$this->initOptions();
-        if( is_admin() ){
-            add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
-        }
+        // if( is_admin() ){
+            // add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
+        // }
+        
         //TODO:
         //register product price hooks
         //register cart hooks
@@ -95,9 +99,10 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     //include the admin page in woocommerce settings
-    private function registerAdminPage(){
+    public function includeAdminPage($settings){
         $pluginDir = dirname(plugin_basename(__FILE__));
-        $settings[] = include($pluginDir . '/lasercommerce_admin.php');
+        If(WP_DEBUG) error_log("plugindir: $plugindir\n");
+        $settings[] = include($pluginDir . 'lasercommerce_admin.php');
         return $settings;
     }
     
