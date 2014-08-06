@@ -92,6 +92,20 @@ function Lasercommerce_PhpVersionCheck() {
     return true;
 }
 
+function Lasercommerce_noticeWoocommerceNotInstalled() {
+    echo 
+        '<div class="updated fade">' .
+        __('Error: plugin "LaserCommerce" requires WooCommerce to be installed',  'LaserCommerce') .
+        '</div>';
+}
+
+function Lasercommerce_WoocommerceCheck() {
+    if( !in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
+        add_action('admin_notices', 'Lasercommerce_noticeWoocommerceNotInstalled');
+        return false;
+    }
+    return true;
+}
 
 /**
  * Initialize internationalization (i18n) for this plugin.
