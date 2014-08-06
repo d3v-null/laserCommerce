@@ -5,9 +5,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 //LaserCommerce Admin Page
 class LaserCommerce_Admin extends WC_Settings_Page{
-    public function __construct() {
+    public function __construct($optionNamePrefix = 'Lasercommerce_option_') {
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
+        $this->optionNamePrefix = $optionNamePrefix;
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output' ) );
@@ -19,47 +20,25 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     public function get_settings() {
         $settings = array(
             array( 
-                'type'  => 'title',
                 'title' => __( 'LaserCommerce Options', 'lasercommerce' ),
-                'id'    => $this->id . '_options',
+                'id'    => $this->optionNamePrefix . 'options',
+                'type'  => 'title',
                 'desc'  => 'Configure Laserphile advanced eCommerce settings'
             ),
             array(
-                'type'  => 'number',
-                'title' => __( 'A Number', 'lasercommerce' ),
-                'id'    => $this->id . '_options_number',
-                'default'=>0,
-                'desc_tip'=>'desc_tip',
+                'title' => __( 'Price Tiers', 'lasercommerce' ),
+                'id'    => $this->optionNamePrefix . 'price_tiers',
+                'type'  => 'text',
+                'default'=>'',
+                'desc_tip'=>'',
             ),
             array(
                 'type' => 'sectionend',
-                'id' => $this->id . '_options'
+                'id' => $this->optionNamePrefix . 'options'
             )
         );
         
         return apply_filters( 'lasercommerce_woocommerce_admin_settings', $settings);
-    }
-    
-    // function init() {
-        // $this->init_form_fields();
-        // $this->init_settings();
-        // $this->obfuscate    = $this->get_option( 'obfuscate'    );
-        
-    // }
-    
-    // function init_form_fields(){
-        // $this->form_fields = array(
-            // 'obfuscate' => array(
-                // 'title'         => __('Restrict Visibility', 'lasercommerce'),
-                // 'type'          => 'checkbox',
-                // 'label'         => __('Restrict product visibility', 'lasercommerce'),
-                // 'description'   => __('Restrict the visibility of products to users who have appropriate roles', 'lasercommerce'),
-                // 'default'       => 'no'
-            // ), 
-        // );
-    // }
-    
+    }    
 }
-
-new LaserCommerce_Admin();
 ?>

@@ -13,10 +13,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //  http://plugin.michael-simpson.com/?page_id=31
         return array(
             //'_version' => array('Installed Version'), // Leave this one commented-out. Uncomment to test upgrades.
-            'ATextInput' => array(__('Enter in some text', 'my-awesome-plugin')),
-            'Donated' => array(__('I have donated to this plugin', 'my-awesome-plugin'), 'false', 'true'),
-            'CanSeeSubmitData' => array(__('Can See Submission data', 'my-awesome-plugin'),
-                                        'Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber', 'Anyone')
+            // TODO
+            /////////////////////////////////////////////
+            //'ATextInput' => array(__('Enter in some text', 'my-awesome-plugin')),
+            //'Donated' => array(__('I have donated to this plugin', 'my-awesome-plugin'), 'false', 'true'),
+            //'CanSeeSubmitData' => array(__('Can See Submission data', 'my-awesome-plugin'),
+            //                            'Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber', 'Anyone')
         );
     }
 
@@ -101,8 +103,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     //include the admin page in woocommerce settings
     public function includeAdminPage($settings){
         $pluginDir = plugin_dir_path( __FILE__ );
-        If(WP_DEBUG) error_log("plugindir: $pluginDir\n");
-        $settings[] = include($pluginDir . 'Lasercommerce_Admin.php');
+        include('Lasercommerce_Admin.php');
+        $settings[] = new Lasercommerce_Admin($this->getOptionNamePrefix());
+        //$settings[] = include($pluginDir . 'Lasercommerce_Admin.php');
         return $settings;
     }
     
@@ -117,7 +120,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         If(WP_DEBUG) error_log("called addActionsAndFilters\n");
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         
-        add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
+        // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
 
         // Example adding a script & style just for the options administration page
         // http://plugin.michael-simpson.com/?page_id=47
