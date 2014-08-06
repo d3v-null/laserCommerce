@@ -1,7 +1,7 @@
 <?php
 /*
    Plugin Name: LaserCommerce
-   Plugin URI: http://wordpress.org/extend/plugins/lasercommerce/
+   Plugin URI: http://dev.laserphile.com/plugins/lasercommerce
    Version: 0.1
    Author: Derwent
    Description: An all-in-one solution for WooCommerce stores that need fine-grained control over their products pricing and visibility for an arbitrary number of pri
@@ -81,7 +81,6 @@ function Lasercommerce_noticePhpVersionWrong() {
             '<br/>' . __('Your server\'s PHP version: ', 'lasercommerce') . '<strong>' . phpversion() . '</strong>' .
          '</div>';
 }
-
 
 function Lasercommerce_PhpVersionCheck() {
     global $Lasercommerce_minimalRequiredPhpVersion;

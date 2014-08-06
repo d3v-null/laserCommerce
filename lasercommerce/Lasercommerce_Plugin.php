@@ -84,9 +84,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function activate(){ //overrides abstract in parent LifeCycle
-        $this->initOptions();
+        //$this->initOptions();
         if( is_admin() ){
-            $this->registerAdminPage();
+            add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
         }
         //TODO:
         //register product price hooks
@@ -94,16 +94,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
     }
     
-    //registers admin page in woocommerce settings
+    //include the admin page in woocommerce settings
     private function registerAdminPage(){
-        include('lasercommerce_admin.php');
+        $pluginDir = dirname(plugin_basename(__FILE__));
+        $settings[] = include($pluginDir . '/lasercommerce_admin.php');
+        return $settings;
     }
     
     public function deactivate(){ //overrides abstract in parent LifeCycle
-        //TODO:
-    }
-    
-    protected function initOptions(){ //overrides abstract in parent LifeCycle
         //TODO:
     }
 
