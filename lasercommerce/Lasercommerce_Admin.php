@@ -37,7 +37,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 'id' => $this->optionNamePrefix . 'options'
             )
         );
-        
+        //TODO: sanitize price tiers
+        //TODO: enter price tiers in table
         return apply_filters( 'lasercommerce_woocommerce_admin_settings', $settings);
     }    
 }
