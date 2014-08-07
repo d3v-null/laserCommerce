@@ -167,14 +167,15 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         If(WP_DEBUG) error_log("called addActionsAndFilters\n");
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         
-        //TODO: Make modifications to product admin
         $this->maybeAddSavePriceFields( array(  
             "special_customer" => "Sale Price",
             "wholesale_buyer" => "Wholesale", 
             "distributor" => "Distributor", 
             "expo_customer" => "Expo",
         ) );
-        //$this->maybeAddPriceFields( explode(', ', $this->getOption('price_tiers')) );
+        //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
+        
+
         
         //TODO: make modifications to product visibility based on obfuscation condition
         
