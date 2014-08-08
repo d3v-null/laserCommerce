@@ -13,13 +13,14 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output_sections' ) );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output' ) );
-        add_action( 'woocommerce_admin_field_price_tier', array( $this, 'price_tier_setting' ) );
+        add_action( 'woocommerce_admin_field_price_tiers', array( $this, 'price_tiers_setting' ) );
         add_action( 'woocommerce_settings_save_' . $this->id, array( $this, 'save' ) );
+        add_action( 'woocommerce_update_option_price_tiers', array( $this, 'price_tiers_save' ) );
     }    
     
     public function get_sections() {
         $sections = array(
-            '' => _('Advanced Pricing and Visibility', 'lasercommerce'),
+            '' => __('Advanced Pricing and Visibility', 'lasercommerce'),
         );
         
         return apply_filters( 'woocommerce_get_sections_' . $this->id, $sections );
@@ -27,24 +28,24 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     
     public function get_settings( $current_section = "" ) {
         if( !$current_section ) { //Advanced Pricing and Visibility
-            return apply_filters( 'woocommerce_lasercommerce_pricing_visibility_settings', array(
-                array( 
-                    'title' => __( 'LaserCommerce Advanced Pricing and Visibility Options', 'lasercommerce' ),
-                    'id'    => $this->optionNamePrefix . 'options',
-                    'type'  => 'title',
-                ),
+            return apply_filters( 
+                'woocommerce_lasercommerce_pricing_visibility_settings', 
                 array(
-                    'type'  => 'price_tiers',
-                ),
-                    // 'title' => __( 'Price Tiers', 'lasercommerce' ),
-                    // 'id'    => $this->optionNamePrefix . 'price_tiers',
-                    // 'type'  => 'text',
-                    // 'default'=>'',
-                    // 'desc_tip'=>'',
-                // ),
-                array(
-                    'type' => 'sectionend',
-                    'id' => $this->optionNamePrefix . 'options'
+                    array( 
+                        'title' => __( 'LaserCommerce Advanced Pricing and Visibility Options', 'lasercommerce' ),
+                        'id'    => $this->optionNamePrefix . 'options',
+                        'type'  => 'title',
+                    ),
+                    array(
+                        'name'  => 'Price Tiers',
+                        'type'  => 'price_tiers',
+                        'id'    => $this->optionNamePrefix . 'price_tiers',
+                        'default' => 'hello2'
+                    ),
+                    array(
+                        'type' => 'sectionend',
+                        'id' => $this->optionNamePrefix . 'options'
+                    )
                 )
             );
         }
@@ -55,26 +56,34 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     public function output() {
         global $current_section;
         
-        if( $current_section == '' ){
+        if( !$current_section){ //Advanced Pricing and Visibility
             $settings = $this->get_settings();
         
-            WC_Admin_settings::output_fields($settings );
+            WC_Admin_Settings::output_fields($settings );
         }
     }
-    
-    public function price_tier_setting {
+       
+    public function price_tiers_setting() {
         global $wp_roles;
-        $availableRoles = $wp_roles->get_names()
-        $defaultRole = 'customer';
-        assert( in_array( $default, $availableRoles ) );
-        $price_tiers = get_option($this->optionNamePrefix.'price_tiers');
-        IF(WP_DEBUG) error_log("price tiers: ".serialize($price_tiers);
+        if ( ! isset( $wp_roles ) )
+            $wp_roles = new WP_Roles(); 
         
-        $unusedRoles = array_diff($availableRoles, array_keys($price_tiers), array($defaultRoles));
+        $availableRoles = $wp_roles->get_names();
+        $defaultRole = array('customer' => 'Customer');
+        $priceTiers = array('wholesale_buyer' => __('Wholesale', 'lasercommerce'));
+        //get_option($this->optionNamePrefix.'price_tiers', '');
+
+        if(!$priceTiers){
+            $unusedRoles = $availableRoles;
+        } else {
+            $unusedRoles = array_diff($availableRoles, $priceTiers, $defaultRole);
+        }
     
         ?>
         <tr valign="top">
-            <th colspan scope="row" class="titledesc"><?php _e('Price Tiers', 'lasercommerce'); ?></th>
+            <th colspan scope="row" class="titledesc">
+                <?php _e('Price Tiers', 'lasercommerce'); ?>
+            </th>
             <td>
                 <table class="dl_price_tier widefat" cellspacing="0">
                     <thead>
@@ -91,12 +100,12 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                     </thead>
                     <tfoot>
                         <tr>
-                            <th colspan=3>
+                            <th colspan=4>
                                 <select id="select_role">
                                     <option value="">Select a user role</option>
                                     <?php
-                                        foreach($unusedRoles as $role) {
-                                            echo "<option value='$role'>$role</option>" ;
+                                        foreach($unusedRoles as $roleName => $displayName) {
+                                            echo "<option value='$roleName'>$displayName</option>" ;
                                         }
                                     ?>
                                 </select>
@@ -118,30 +127,37 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                             <td class="parent"></th>
                         </tr>
                         <?php
-                        foreach($price_tiers as $role => $tier){
+                            foreach($priceTiers as $role => $name){
                         ?>
                             <tr>
-                                <td width="1%" class="cb"></td>
+                                <td width="1%" class="cb">
+                                    <?php echo "<input type='checkbox' id='cb_$role'>" ; ?>
+                                </td>
                                 <td class="role">
                                     <?php echo $role; ?>
                                 </td>
                                 <td class="name">
-                                    <?php echo $tier->name; ?>
+                                    <?php echo "<input type='text' id='name_$role' value='$name'> Price"; ?>
                                 </td>
                                 <td class="parent"></th>
                             </tr>
                         <?php
-                        }
+                            }
                         ?>   
                     </tbody>
+                    <?php echo "<input type='hidden' name='".$this->optionNamePrefix."price_tiers' value='hello'>"; ?>
+                    <script type="text/javascript">
+                        <?php //todo: this ?>
+                    </script>
                 <table>
-                <script type="text/javascript">
-                    <?php //todo: this ?>
-                </script>
             <td>
         </tr>
                         
         <?php
+    }
+    
+    public function price_tiers_save(){
+        //todo: this
     }
     
     public function donationBoxSection(){
@@ -155,7 +171,6 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             $settings = $this->get_settings();
             
             WC_Admin_Settings::save_fields( $settings );
-            
         }
     }
 }

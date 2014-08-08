@@ -14,6 +14,10 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return array(
             //'_version' => array('Installed Version'), // Leave this one commented-out. Uncomment to test upgrades.
             // TODO
+            // 'price_tiers' => array(
+                // __('Enter Price Tiers','lasercommerce'), 
+                // serialize(array('customer'=>'Customer'))
+            // )
             /////////////////////////////////////////////
             //'ATextInput' => array(__('Enter in some text', 'my-awesome-plugin')),
             //'Donated' => array(__('I have donated to this plugin', 'my-awesome-plugin'), 'false', 'true'),
@@ -45,6 +49,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     protected function getMainPluginFileName() {
         return 'lasercommerce.php';
     }
+    
 
     /**
      * See: http://plugin.michael-simpson.com/?page_id=101
@@ -141,6 +146,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             }
         );
         //TODO: other product types
+        //add_action( 'woocommerce_process_product_meta_variable', 
     }
     
     /**adds text fields and form metadata handlers to product data page 
@@ -160,11 +166,104 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
     }
     
+    public function encodePriceTierTree( $price_tiers ){
+        //todo: this
+        return json_encode( $price_tiers );
+    }
+    
+    public function decodePriceTierTree( $price_tier_tree ){
+        //todo: this
+        return json_decode( $price_tier_tree );
+    }
+    
+    public function getPriceTierTree(){
+        //todo: this
+        
+        return array( 
+            array(
+                'role' => 'special_customer',
+                'name' => 'Special',
+                'children' => array(
+                    'role' => 'wholesale_buyer',
+                    'name' => 'Wholesale'
+                    'children' => array(
+                        array(
+                            'role'  => 'mobile_operator',
+                            'name'  => 'Mobile Operator'
+                        ),
+                        array(
+                            'role'  => 'gym_owner',
+                            'name'  => 'Gym'
+                        ),
+                        array(
+                            'role'  => 'salon',
+                            'name'  => 'Salon'
+                        ),
+                        array(
+                            'role'  => 'home_studio',
+                            'name'  => 'Home Studio'
+                        ),
+                        array(
+                            'role'  => 'distributor',
+                            'name'  => 'Distributor'
+                            'children' => array(
+                                'role' => 'international_distributor',
+                                'name' => 'International Distributor',
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+    
+    public function flattenPriceTierTreeRecursive($node = array()){
+        if( !in_array('role', $node) ) return array();
+        $names = array(
+            $node->role => $node->name
+        );
+        if( in_array('children', $node) ){
+            foreach( $node->children as $child ){
+                array_merge($names, flattenPriceTierTreeRecursive($child) );
+            }
+        }
+        return $names;
+    }
+    
+    public function getPriceTierNames(){
+        $tree = $this->getPriceTierTree();
+        $names = array();
+        foreach( $tree as $node ){
+            array_merge($names, flattenPriceTierTreeRecursive($tree);
+        }
+    }        
+    
+    public function getAvailableTiers(){
+        //todo: this
+        $priceTierTree = $this->getPriceTierTree();
+        if ( is_user_logged_in() ) {
+            $currentUser = wp_get_current_user();
+            $tiers = [];
+            
+            
+        } else {
+            return array();
+        }   
+    }
+        
+    
+    public function getVisiblePrices( $post_id ){
+    }    
+    
     public function addActionsAndFilters() {
 
         // Add options administration page
         // http://plugin.michael-simpson.com/?page_id=47
-        If(WP_DEBUG) error_log("called addActionsAndFilters\n");
+        //If(WP_DEBUG) error_log("called addActionsAndFilters\n");
+        
+        //add_filter( 'lasercommerce_encode_price_tier_tree', array(&$this, 'encodePriceTierTree') );
+        //add_filter( 'lasercommerce_decode_price_tier_tree', array(&$this, 'decodePriceTierTree') );
+        
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         
         $this->maybeAddSavePriceFields( array(  
@@ -175,17 +274,28 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         ) );
         //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
         
-
+        //TODO: Make modifications to bulk edit
+        // add_action( 'woocommerce_variable_product_bulk_edit_actions',
         
         //TODO: make modifications to product visibility based on obfuscation condition
+        // add_filter('product visibility');
+        // add_filter( 'woocommerce_available_variation',
+        // add_filter( 'woocommerce_is_purchasable', 
         
-        //add_filter('product visibility');
-
         //TODO: make modifications to product price display
+        // add_filter( 'woocommerce_get_price' 
+        // add_filter( 'woocommerce_get_variation_price'
+        // add_filter( 'woocommerce_get_price_html'
+        // add_filter( 'woocommerce_variation_price_html', 
+        // add_filter( 'woocommerce_variation_sale_price_html',
+        // add_filter( 'woocommerce_variable_empty_price_html', 
+
+        //TODO: make modifications to tax
+		// add_filter( 'woocommerce_get_cart_tax',  
+        // add_filter( 'option_woocommerce_calc_taxes', 
         
-        //TODO: register product price hooks
-        //TODO: register cart hooks
-        
+        //TODO: make modifications to cart
+        // add_filter( 'woocommerce_calculate_totals',         
         
         
         // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
