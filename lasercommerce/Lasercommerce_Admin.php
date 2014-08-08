@@ -26,7 +26,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     }
     
     public function get_settings( $current_section = "" ) {
-        if( $current_section == '' ) { //Advanced Pricing and Visibility
+        if( !$current_section ) { //Advanced Pricing and Visibility
             return apply_filters( 'woocommerce_lasercommerce_pricing_visibility_settings', array(
                 array( 
                     'title' => __( 'LaserCommerce Advanced Pricing and Visibility Options', 'lasercommerce' ),
@@ -62,9 +62,15 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
     
-    public function price_tier_setting(){
+    public function price_tier_setting {
+        global $wp_roles;
+        $availableRoles = $wp_roles->get_names()
+        $defaultRole = 'customer';
+        assert( in_array( $default, $availableRoles ) );
         $price_tiers = get_option($this->optionNamePrefix.'price_tiers');
         IF(WP_DEBUG) error_log("price tiers: ".serialize($price_tiers);
+        
+        $unusedRoles = array_diff($availableRoles, array_keys($price_tiers), array($defaultRoles));
     
         ?>
         <tr valign="top">
@@ -73,7 +79,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 <table class="dl_price_tier widefat" cellspacing="0">
                     <thead>
                         <tr>
-                            <th class="tb"></th>
+                            <th class="cb"></th>
                             <th class="role">
                                 <?php _e('User Role', 'lasercommerce'); ?>
                             </th>
@@ -83,10 +89,26 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                             <th class="parent"</th>
                         </tr>
                     </thead>
+                    <tfoot>
+                        <tr>
+                            <th colspan=3>
+                                <select id="select_role">
+                                    <option value="">Select a user role</option>
+                                    <?php
+                                        foreach($unusedRoles as $role) {
+                                            echo "<option value='$role'>$role</option>" ;
+                                        }
+                                    ?>
+                                </select>
+                                <a class="add button"> <?php _e('Add service', 'wootrack'); ?></a>
+                                <a class="remove button"><?php _e('Remove selected services', 'wootrack'); ?></a>
+                            </th>
+                        </tr>
+                    </tfoot>                                
                     <tbody>
                         <!-- first row -->
                         <tr class="lasercommerce firstrow">
-                            <td class="tb"></th>
+                            <td class="cb"></th>
                             <td class="role">
                                 <?php _e('Any', 'lasercommerce'); ?>
                             </td>
@@ -99,11 +121,42 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                         foreach($price_tiers as $role => $tier){
                         ?>
                             <tr>
-                                <td 
-                            
-                        <?
+                                <td width="1%" class="cb"></td>
+                                <td class="role">
+                                    <?php echo $role; ?>
+                                </td>
+                                <td class="name">
+                                    <?php echo $tier->name; ?>
+                                </td>
+                                <td class="parent"></th>
+                            </tr>
+                        <?php
                         }
-                        ?>    
+                        ?>   
+                    </tbody>
+                <table>
+                <script type="text/javascript">
+                    <?php //todo: this ?>
+                </script>
+            <td>
+        </tr>
+                        
         <?php
+    }
+    
+    public function donationBoxSection(){
+        //todo: this
+    }
+
+    public function save() {
+        global $current_section;
+        
+        if( !$current_section ) {
+            $settings = $this->get_settings();
+            
+            WC_Admin_Settings::save_fields( $settings );
+            
+        }
+    }
 }
 ?>
