@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 include_once('Lasercommerce_LifeCycle.php');
 
@@ -111,14 +113,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     
-    public function addPriceField($tierID, $tierName){
-        $tierID = sanitize_key($tierID);
+    public function addPriceField($role, $tierName){
+        $role = sanitize_key($role);
         add_action( 
             'woocommerce_product_options_pricing',  
-            function() use ($tierID, $tierName){
+            function() use ($role, $tierName){
                 woocommerce_wp_text_input( 
                     array( 
-                        'id' => $this->prefix($tierID."_price"), 
+                        'id' => $this->prefix($role."_price"), 
                         'label' => __( "$tierName Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'data_type' => 'price' 
                     ) 
@@ -128,19 +130,19 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: other product types
     }
     
-    public function savePriceField($tierID, $tierName = ""){
-        if( $tierName == "" ) $tierName = $tierID;
-        $tierID = sanitize_key($tierID);
+    public function savePriceField($role, $tierName = ""){
+        if( $tierName == "" ) $tierName = $role;
+        $role = sanitize_key($role);
         add_action( 
             'woocommerce_process_product_meta_simple',
-            function($post_id) use ($tierID, $tierName){
+            function($post_id) use ($role, $tierName){
                 $price =  "";
-                if(isset($_POST[$this->prefix($tierID."_price")])){                
-                    $price =  wc_format_decimal($_POST[$this->prefix($tierID."_price")]);                        
+                if(isset($_POST[$this->prefix($role."_price")])){                
+                    $price =  wc_format_decimal($_POST[$this->prefix($role."_price")]);                        
                 }
                 update_post_meta( 
                     $post_id, 
-                    $this->prefix($tierID."_price"),
+                    $this->prefix($role."_price"),
                     $price
                 );
             }
@@ -159,101 +161,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(!is_array($tiers)) {
             $tiers = array($tiers);
         }
-        foreach($tiers as $tierID => $tierName){
-            $this->addPriceField($tierID, $tierName);
-            $this->savePriceField($tierID, $tierName);
+        foreach($tiers as $role => $tierName){
+            $this->addPriceField($role, $tierName);
+            $this->savePriceField($role, $tierName);
         } 
         
     }
     
-    public function encodePriceTierTree( $price_tiers ){
-        //todo: this
-        return json_encode( $price_tiers );
-    }
-    
-    public function decodePriceTierTree( $price_tier_tree ){
-        //todo: this
-        return json_decode( $price_tier_tree );
-    }
-    
-    public function getPriceTierTree(){
-        //todo: this
-        
-        return array( 
-            array(
-                'role' => 'special_customer',
-                'name' => 'Special',
-                'children' => array(
-                    'role' => 'wholesale_buyer',
-                    'name' => 'Wholesale'
-                    'children' => array(
-                        array(
-                            'role'  => 'mobile_operator',
-                            'name'  => 'Mobile Operator'
-                        ),
-                        array(
-                            'role'  => 'gym_owner',
-                            'name'  => 'Gym'
-                        ),
-                        array(
-                            'role'  => 'salon',
-                            'name'  => 'Salon'
-                        ),
-                        array(
-                            'role'  => 'home_studio',
-                            'name'  => 'Home Studio'
-                        ),
-                        array(
-                            'role'  => 'distributor',
-                            'name'  => 'Distributor'
-                            'children' => array(
-                                'role' => 'international_distributor',
-                                'name' => 'International Distributor',
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    }
-    
-    public function flattenPriceTierTreeRecursive($node = array()){
-        if( !in_array('role', $node) ) return array();
-        $names = array(
-            $node->role => $node->name
-        );
-        if( in_array('children', $node) ){
-            foreach( $node->children as $child ){
-                array_merge($names, flattenPriceTierTreeRecursive($child) );
-            }
-        }
-        return $names;
-    }
-    
-    public function getPriceTierNames(){
-        $tree = $this->getPriceTierTree();
-        $names = array();
-        foreach( $tree as $node ){
-            array_merge($names, flattenPriceTierTreeRecursive($tree);
-        }
-    }        
-    
-    public function getAvailableTiers(){
-        //todo: this
-        $priceTierTree = $this->getPriceTierTree();
-        if ( is_user_logged_in() ) {
-            $currentUser = wp_get_current_user();
-            $tiers = [];
-            
-            
-        } else {
-            return array();
-        }   
-    }
-        
-    
-    public function getVisiblePrices( $post_id ){
-    }    
     
     public function addActionsAndFilters() {
 
@@ -266,6 +180,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         
+        //todo: make this read off tier_tree
         $this->maybeAddSavePriceFields( array(  
             "special_customer" => "Sale Price",
             "wholesale_buyer" => "Wholesale", 
