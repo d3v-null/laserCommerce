@@ -182,7 +182,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         //todo: make this read off tier_tree
         $this->maybeAddSavePriceFields( array(  
-            "special_customer" => "Sale Price",
+            "special_customer" => "Special",
             "wholesale_buyer" => "Wholesale", 
             "distributor" => "Distributor", 
             "expo_customer" => "Expo",
@@ -195,14 +195,19 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: make modifications to product visibility based on obfuscation condition
         // add_filter('product visibility');
         // add_filter( 'woocommerce_available_variation',
+        // add_filter( 'woocommerce_product_is_visible', 
         // add_filter( 'woocommerce_is_purchasable', 
         
         //TODO: make modifications to product price display
         // add_filter( 'woocommerce_get_price' 
         // add_filter( 'woocommerce_get_variation_price'
         // add_filter( 'woocommerce_get_price_html'
+        // add_filter( 'woocommerce_variable_price_html',
         // add_filter( 'woocommerce_variation_price_html', 
         // add_filter( 'woocommerce_variation_sale_price_html',
+        // add_filter( 'woocommerce_grouped_price_html', 
+		// add_filter( 'woocommerce_sale_price_html', 
+		// add_filter( 'woocommerce_price_html',         
         // add_filter( 'woocommerce_variable_empty_price_html', 
 
         //TODO: make modifications to tax
@@ -212,6 +217,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: make modifications to cart
         // add_filter( 'woocommerce_calculate_totals',         
         
+        //add_action( 'admin_head',
         
         // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
 

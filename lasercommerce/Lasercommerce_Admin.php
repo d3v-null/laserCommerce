@@ -3,12 +3,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+include_once('Lasercommerce_Tier_Tree.php');
+
 //LaserCommerce Admin Page
 class LaserCommerce_Admin extends WC_Settings_Page{
     public function __construct($optionNamePrefix = 'lasercommerce_') {
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
         $this->optionNamePrefix = $optionNamePrefix;
+        $this->tierTree      = new Lasercommerce_Tier_Tree( $optionNamePrefix );
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output_sections' ) );
@@ -70,8 +73,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         
         $availableRoles = $wp_roles->get_names();
         $defaultRole = array('customer' => 'Customer');
-        $priceTiers = array('wholesale_buyer' => __('Wholesale', 'lasercommerce'));
-        //get_option($this->optionNamePrefix.'price_tiers', '');
+        $priceTiers = $this->tierTree->getPriceTierNames();
+        IF(WP_DEBUG) error_log("priceTiers: ".serialize($priceTiers));
 
         if(!$priceTiers){
             $unusedRoles = $availableRoles;
