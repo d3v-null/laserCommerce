@@ -4,6 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 include_once('Lasercommerce_LifeCycle.php');
+include_once('Lasercommerce_Tier_Tree.php');
 
 class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
@@ -92,12 +93,15 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function activate(){ //overrides abstract in parent LifeCycle
-        If(WP_DEBUG) error_log("called activate\n");
-        // add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
-        //$this->initOptions();
-        // if( is_admin() ){
-            // add_filter( 'woocommerce_get_settings_pages', array($this, 'includeAdminPage') );
-        // }
+        global $Lasercommerce_Plugin;
+        if( !isset($Lasercommerce_Plugin) ) {
+            $Lasercommerce_Plugin = &$this;
+        }
+
+        global $Lasercommerce_Tier_Tree;
+        if( !isset($Lasercommerce_Tier_Tree) ) {
+            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( );
+        }   
     }
     
     
@@ -138,7 +142,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             function($post_id) use ($role, $tierName){
                 $price =  "";
                 if(isset($_POST[$this->prefix($role."_price")])){                
-                    $price =  wc_format_decimal($_POST[$this->prefix($role."_price")]);                        
+                    $price =  wc_format_decimal($_POST[$this->prefix($role."_price")]);
                 }
                 update_post_meta( 
                     $post_id, 
@@ -154,52 +158,66 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     /**adds text fields and form metadata handlers to product data page 
     /* @param $tiers string|array(string|array(string,string))
      */
-    public function maybeAddSavePriceFields($tiers){
-        if(empty($tiers)){
+    public function maybeAddSavePriceFields($tierNames){
+        if(empty($tierNames)){
             return;
         }
-        if(!is_array($tiers)) {
-            $tiers = array($tiers);
-        }
-        foreach($tiers as $role => $tierName){
+        foreach($tierNames as $role => $tierName){
             $this->addPriceField($role, $tierName);
             $this->savePriceField($role, $tierName);
         } 
-        
     }
     
+    public function maybeGetSpecialPrice($specialPrice){ // "" if non-regular user
+        //todo: check if this is necessary
+        If(WP_DEBUG) error_log("called maybeGetSpecialPrice");
+        global $Lasercommerce_Tier_Tree;
+        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiers();
+        if(!empty($visibleTiers)) {
+            return ""; 
+        } else {
+            return $specialPrice;
+        }
+    }
+    
+    public function maybeGetRegularPrice($price){ 
+        If(WP_DEBUG) error_log("called maybeGetPrice");
+        //todo: this
+        // minimum of available prices
+        global $Lasercommerce_Tier_Tree;
+        
+        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiers();
+        $callBack = function($a, $b){
+            //todo: check this
+            if( $a[0] == $b[0] ){
+                return 0;
+            }
+            return( $a[0] < $b[0] );
+        };
+        
+        If(WP_DEBUG) error_log( "visibleTiers asorted: ".serialize( uasort( $visibleTiers, $callBack) ) );
+        If(WP_DEBUG) error_log( "visibleTiers sorted: ".serialize( usort( $visibleTiers,  $callBack ) ) );
+        return $price;
+    }
     
     public function addActionsAndFilters() {
-
-        // Add options administration page
-        // http://plugin.michael-simpson.com/?page_id=47
-        //If(WP_DEBUG) error_log("called addActionsAndFilters\n");
-        
-        //add_filter( 'lasercommerce_encode_price_tier_tree', array(&$this, 'encodePriceTierTree') );
-        //add_filter( 'lasercommerce_decode_price_tier_tree', array(&$this, 'decodePriceTierTree') );
+        If(WP_DEBUG) error_log("called addActionsAndFilters");
         
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         
-        //todo: make this read off tier_tree
-        $this->maybeAddSavePriceFields( array(  
-            "special_customer" => "Special",
-            "wholesale_buyer" => "Wholesale", 
-            "distributor" => "Distributor", 
-            "expo_customer" => "Expo",
-        ) );
-        //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
+        //helper class for tier tree functions    
+        global $Lasercommerce_Tier_Tree;
         
-        //TODO: Make modifications to bulk edit
-        // add_action( 'woocommerce_variable_product_bulk_edit_actions',
+        if( !isset($Lasercommerce_Tier_Tree) ) {
+            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( );
+        }   
         
-        //TODO: make modifications to product visibility based on obfuscation condition
-        // add_filter('product visibility');
-        // add_filter( 'woocommerce_available_variation',
-        // add_filter( 'woocommerce_product_is_visible', 
-        // add_filter( 'woocommerce_is_purchasable', 
+        $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getTierNames() );
         
         //TODO: make modifications to product price display
-        // add_filter( 'woocommerce_get_price' 
+        add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) );
+        add_filter( 'woocommerce_get_special_price', array(&$this, 'maybeGetSpecialPrice' ) );
+        // add_filter( 'woocommerce_get_price', array($this, 'maybeGetPrice') );
         // add_filter( 'woocommerce_get_variation_price'
         // add_filter( 'woocommerce_get_price_html'
         // add_filter( 'woocommerce_variable_price_html',
@@ -209,10 +227,26 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 		// add_filter( 'woocommerce_sale_price_html', 
 		// add_filter( 'woocommerce_price_html',         
         // add_filter( 'woocommerce_variable_empty_price_html', 
-
+        // add_filter( 'woocommerce_order_amount_item_subtotal'
+        
         //TODO: make modifications to tax
 		// add_filter( 'woocommerce_get_cart_tax',  
         // add_filter( 'option_woocommerce_calc_taxes', 
+        // add_filter( 'woocommerce_product_is_taxable'
+        
+        //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
+        
+        //TODO: Make modifications to bulk edit
+        // add_action( 'woocommerce_variable_product_bulk_edit_actions',
+        
+        
+        //TODO: make modifications to product visibility based on obfuscation condition
+        // add_filter('product visibility');
+        // add_filter( 'woocommerce_available_variation',
+        // add_filter( 'woocommerce_product_is_visible', 
+        // add_filter( 'woocommerce_is_purchasable', 
+        
+
         
         //TODO: make modifications to cart
         // add_filter( 'woocommerce_calculate_totals',         

@@ -11,7 +11,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
         $this->optionNamePrefix = $optionNamePrefix;
-        $this->tierTree      = new Lasercommerce_Tier_Tree( $optionNamePrefix );
+        global $Lasercommerce_Tier_Tree;
+        if( !isset($Lasercommerce_Tier_Tree) ) {
+            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $optionNamePrefix );
+        }
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output_sections' ) );
@@ -68,12 +71,13 @@ class LaserCommerce_Admin extends WC_Settings_Page{
        
     public function price_tiers_setting() {
         global $wp_roles;
+        global $Lasercommerce_Tier_Tree;
         if ( ! isset( $wp_roles ) )
             $wp_roles = new WP_Roles(); 
         
         $availableRoles = $wp_roles->get_names();
         $defaultRole = array('customer' => 'Customer');
-        $priceTiers = $this->tierTree->getPriceTierNames();
+        $priceTiers = $Lasercommerce_Tier_Tree->getTierNames();
         IF(WP_DEBUG) error_log("priceTiers: ".serialize($priceTiers));
 
         if(!$priceTiers){
@@ -112,8 +116,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                                         }
                                     ?>
                                 </select>
-                                <a class="add button"> <?php _e('Add service', 'wootrack'); ?></a>
-                                <a class="remove button"><?php _e('Remove selected services', 'wootrack'); ?></a>
+                                <a class="add button"> <?php _e('Add price tier', 'wootrack'); ?></a>
+                                <a class="remove button"><?php _e('Remove price tier services', 'wootrack'); ?></a>
                             </th>
                         </tr>
                     </tfoot>                                
