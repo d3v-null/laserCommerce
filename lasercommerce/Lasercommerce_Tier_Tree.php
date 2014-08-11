@@ -9,7 +9,7 @@ class Lasercommerce_Tier_Tree {
     }
     
     public function getPrice( $postID, $role ){
-        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_price');
+        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_price', true);
     }
     
     public function getTierTree(){
@@ -118,25 +118,22 @@ class Lasercommerce_Tier_Tree {
                 $tiers[] = $role;
             }
         }
-        IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
+        //IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
         return $tiers;
     }
         
-    public function getVisibleTiers( ){
-        $postID = get_the_ID();
-        $currentUser = wp_get_current_user();
-        if ( !$currentUser->exists() ) return array();
+    public function getVisibleTiersSimple($postID, $roles){
+
+        $availableTiers = $this->getAvailableTiers($roles);        
         
-        $roles = $this->getAvailableTiers($currentUser->roles);        
-        
-        $tierNames = $this->getTierNames();
-        $tiers = array();
-        foreach($roles as $role){
-            $price = $this->getPrice( $postID, $role );
-            if( $price ) $tiers[$role] = $price;
+        $visibleTiers = array();
+        foreach( $availableTiers as $role ){
+            $price = $this->getPrice($postID, $role);
+            if( $price ) $visibleTiers[$role] = $price;
+            If(WP_DEBUG) error_log("--> $role price: $price");
         }
-        IF(WP_DEBUG) error_log("visibleTiers: ".serialize($tiers));
-        return $tiers;
+        
+        return $visibleTiers;
     }
 }
  

@@ -116,7 +116,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $settings;
     }
     
-    
     public function addPriceField($role, $tierName){
         $role = sanitize_key($role);
         add_action( 
@@ -168,40 +167,119 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         } 
     }
     
-    public function maybeGetSpecialPrice($specialPrice){ // "" if non-regular user
+    private function getCurrentUserRoles(){
+        $current_user = wp_get_current_user();
+        If(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
+        $roles = $current_user->roles;
+        If(WP_DEBUG) error_log("--> roles: ".serialize($roles));
+        return $roles;
+    }
+    
+    public function maybeGetSalePrice($price = '', $_product = ''){ // "" if non-regular user
+        If(WP_DEBUG) error_log('!!!!!!!!!!!!!!!!!!!!!!!!!');
+        If(WP_DEBUG) error_log("called maybeGetSalePrice");
+        If(WP_DEBUG) error_log("-> price: $price");
         //todo: check if this is necessary
-        If(WP_DEBUG) error_log("called maybeGetSpecialPrice");
+        if( !isset($_product->id) ){ 
+            global $product;
+            if ( !isset($product) ){ 
+                If(WP_DEBUG) error_log("->! product global not set");                
+                return $price;
+            }
+            $_product = $product;
+        }    
+        If(WP_DEBUG) error_log("-> productID: $_product->id");
+        
         global $Lasercommerce_Tier_Tree;
-        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiers();
-        if(!empty($visibleTiers)) {
-            return ""; 
+        
+        $visibleTiers = array();
+        if( $_product->is_type( 'simple' ) ){
+            $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiersSimple(
+                $_product->id, 
+                $this->getCurrentUserRoles()
+            );
         } else {
-            return $specialPrice;
+            If(WP_DEBUG) error_log("-> !!!!!!!!!!!!!!!! type is variable!");
+        }
+        if( empty($visibleTiers) ) {
+            return $price;
+        } else {
+            return '';
         }
     }
     
-    public function maybeGetRegularPrice($price){ 
+    public function maybeGetPrice($price = '', $_product = ''){ 
+        If(WP_DEBUG) error_log('');
         If(WP_DEBUG) error_log("called maybeGetPrice");
-        //todo: this
-        // minimum of available prices
-        global $Lasercommerce_Tier_Tree;
+        If(WP_DEBUG) error_log("-> price: $price");
+        //todo: make this read off settings, minimum price OR lowest available price
+        //todo: extend to variable
         
-        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiers();
-        $callBack = function($a, $b){
-            //todo: check this
-            if( $a[0] == $b[0] ){
-                return 0;
+        if( !isset($_product->id) ){ 
+            global $product;
+            if ( !isset($product) ){ 
+                If(WP_DEBUG) error_log("->! product global not set");
+                return $price;
             }
-            return( $a[0] < $b[0] );
-        };
+            $_product = $product;
+        }    
         
-        If(WP_DEBUG) error_log( "visibleTiers asorted: ".serialize( uasort( $visibleTiers, $callBack) ) );
-        If(WP_DEBUG) error_log( "visibleTiers sorted: ".serialize( usort( $visibleTiers,  $callBack ) ) );
-        return $price;
+        global $Lasercommerce_Tier_Tree;
+
+        if( $_product->is_type( 'simple' ) ){
+            $postID = $_product->id; 
+        } else if( $_product->is_type( 'variation' ) ){
+            If(WP_DEBUG) error_log("--> variable product");
+            if ( isset( $_product->variation_id ) ) {
+                $postID = $_product->variation_id;
+            } else {
+                If(WP_DEBUG) error_log("--> !!!!!! variation not set");
+                return $price;
+            }
+        } else {
+            If(WP_DEBUG) error_log("-> !!!!!!!!!!!!!!!! type not simple or variable!");
+            If(WP_DEBUG) error_log($_product->product_type);
+            return $price;
+        }
+        If(WP_DEBUG) error_log("-> postID: $postID");
+
+        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiersSimple(
+            $postID,
+            $this->getCurrentUserRoles()
+        );
+        if( empty($visibleTiers) ) return $price;
+
+        asort( $visibleTiers );
+        $lowest = array_values($visibleTiers)[0];
+        if(WP_DEBUG) error_log("-> returned price: $lowest");
+        return $lowest;
     }
+    
+    public function maybeGetPriceHtml($price_html, $_product){
+        If(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log("called maybeGetPriceHtml");
+        if(WP_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        
+        return $price_html;
+    }
+    
+    public function maybeGetCartPrice($price, $_product){
+        If(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log("called maybeGetCartPrice");
+        if(WP_DEBUG) error_log("-> price: ".serialize($price));
+        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        
+        return $price;    
+    }
+    
+    public function addVariableProductBulkEditActions(){}
     
     public function addActionsAndFilters() {
         If(WP_DEBUG) error_log("called addActionsAndFilters");
+        If(WP_DEBUG) error_log('');
+        If(WP_DEBUG) error_log('');
+        
         
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         
@@ -215,11 +293,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getTierNames() );
         
         //TODO: make modifications to product price display
-        add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) );
-        add_filter( 'woocommerce_get_special_price', array(&$this, 'maybeGetSpecialPrice' ) );
-        // add_filter( 'woocommerce_get_price', array($this, 'maybeGetPrice') );
+        // add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) ); - doesn't do anything
+        add_filter( 'woocommerce_get_sale_price', array(&$this, 'maybeGetSalePrice'), 999, 2 );
+        add_filter( 'woocommerce_get_price', array(&$this, 'maybeGetPrice'), 999, 2 );
+        add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 999, 2 );
         // add_filter( 'woocommerce_get_variation_price'
-        // add_filter( 'woocommerce_get_price_html'
         // add_filter( 'woocommerce_variable_price_html',
         // add_filter( 'woocommerce_variation_price_html', 
         // add_filter( 'woocommerce_variation_sale_price_html',
@@ -229,6 +307,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         // add_filter( 'woocommerce_variable_empty_price_html', 
         // add_filter( 'woocommerce_order_amount_item_subtotal'
         
+        
         //TODO: make modifications to tax
 		// add_filter( 'woocommerce_get_cart_tax',  
         // add_filter( 'option_woocommerce_calc_taxes', 
@@ -236,8 +315,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
         
-        //TODO: Make modifications to bulk edit
-        // add_action( 'woocommerce_variable_product_bulk_edit_actions',
+        //TODO: Make modifications to variable product bulk edit
+        add_action( 
+            'woocommerce_variable_product_bulk_edit_actions', 
+            array(&$this, 'addVariableProductBulkEditActions')
+        );
+            
         
         
         //TODO: make modifications to product visibility based on obfuscation condition
@@ -249,7 +332,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         
         //TODO: make modifications to cart
-        // add_filter( 'woocommerce_calculate_totals',         
+        add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 999, 2 );
+        // add_filter( 'woocommerce_calculate_totals', 
+        // add_filter( 'woocommerce_calculate_totals', 
+        // add_filter( 'woocommerce_calculate_totals', 
+        // add_filter( 'woocommerce_calculate_totals', 
+        // 
         
         //add_action( 'admin_head',
         
