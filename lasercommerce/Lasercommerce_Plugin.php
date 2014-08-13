@@ -116,8 +116,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $settings;
     }
     
-    public function addPriceField($role, $tierName){
+    public function addPriceField($role, $tierName = ""){
         $role = sanitize_key($role);
+        if( $tierName == "" ) $tierName = $role;
         add_action( 
             'woocommerce_product_options_pricing',  
             function() use ($role, $tierName){
@@ -134,8 +135,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function savePriceField($role, $tierName = ""){
-        if( $tierName == "" ) $tierName = $role;
         $role = sanitize_key($role);
+        if( $tierName == "" ) $tierName = $role;
         add_action( 
             'woocommerce_process_product_meta_simple',
             function($post_id) use ($role, $tierName){
@@ -154,6 +155,22 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //add_action( 'woocommerce_process_product_meta_variable', 
     }
     
+    public function addVariablePriceFields($tiers=""){
+        //TODO: this
+        //TODO: tiers validation
+        if ($tiers) add_action(
+            'woocommerce_product_after_variable_attributes',
+            function( $loop, $variation_data, $variation) use ($tiers){
+                foreach( $tiers as $role => $tierName ){
+                    $var_price = $variation_data[$this->prefix($role."_price")];
+                    if($var_price) if(WP_DEBUG) error_log("$role: ".$var_price[0]);
+                }
+            },
+            999,
+            3
+        );
+    }
+    
     /**adds text fields and form metadata handlers to product data page 
     /* @param $tiers string|array(string|array(string,string))
      */
@@ -165,6 +182,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             $this->addPriceField($role, $tierName);
             $this->savePriceField($role, $tierName);
         } 
+        $this->addVariablePriceFields($tierNames);
     }
     
     private function getCurrentUserRoles(){
@@ -273,7 +291,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $price;    
     }
     
-    public function addVariableProductBulkEditActions(){}
+    public function addVariableProductBulkEditActions(){
+        //todo: this
+    }
+    
+    public function variationIsVisible(){
+        //todo: this
+    }
     
     public function addActionsAndFilters() {
         If(WP_DEBUG) error_log("called addActionsAndFilters");
