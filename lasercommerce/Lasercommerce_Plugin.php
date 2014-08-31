@@ -268,9 +268,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if( empty($visibleTiers) ) return $price;
 
         asort( $visibleTiers );
-        $lowest = array_values($visibleTiers)[0];
+        $lowest = array_values($visibleTiers);//$lowest = array_values($visibleTiers)[0];
         if(WP_DEBUG) error_log("-> returned price: $lowest");
-        return $lowest;
+        return $lowest[0];
     }
     
     public function maybeGetPriceHtml($price_html, $_product){
