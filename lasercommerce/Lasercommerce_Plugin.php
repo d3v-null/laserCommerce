@@ -87,6 +87,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     /**
      * Perform actions when upgrading from version X to version Y
      * See: http://plugin.michael-simpson.com/?page_id=35
+     * asd
      * @return void
      */
     public function upgrade() {
@@ -119,12 +120,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     public function addPriceField($role, $tierName = ""){
         $role = sanitize_key($role);
         if( $tierName == "" ) $tierName = $role;
+        $prefix = $this->getOptionNamePrefix(); 
         add_action( 
             'woocommerce_product_options_pricing',  
-            function() use ($role, $tierName){
+            function() use ($role, $tierName, $prefix){
                 woocommerce_wp_text_input( 
                     array( 
-                        'id' => $this->prefix($role."_price"), 
+                        'id' => $prefix.$role."_price", 
                         'label' => __( "$tierName Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'data_type' => 'price' 
                     ) 
@@ -137,12 +139,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     public function savePriceField($role, $tierName = ""){
         $role = sanitize_key($role);
         if( $tierName == "" ) $tierName = $role;
+        $prefix = $this->getOptionNamePrefix(); 
         add_action( 
             'woocommerce_process_product_meta_simple',
-            function($post_id) use ($role, $tierName){
+            function($post_id) use ($role, $tierName, $prefix){
                 $price =  "";
-                if(isset($_POST[$this->prefix($role."_price")])){                
-                    $price =  wc_format_decimal($_POST[$this->prefix($role."_price")]);
+                if(isset($_POST[$prefix.$role."_price"])){                
+                    $price =  wc_format_decimal($_POST[$prefixer($role."_price")]);
                 }
                 update_post_meta( 
                     $post_id, 
@@ -158,11 +161,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     public function addVariablePriceFields($tiers=""){
         //TODO: this
         //TODO: tiers validation
+        $prefix = $this->getOptionNamePrefix(); 
         if ($tiers) add_action(
             'woocommerce_product_after_variable_attributes',
-            function( $loop, $variation_data, $variation) use ($tiers){
+            function( $loop, $variation_data, $variation) use ($tiers, $prefix){
                 foreach( $tiers as $role => $tierName ){
-                    $var_price = $variation_data[$this->prefix($role."_price")];
+                    $var_price = $variation_data[$prefix.$role."_price"];
                     if($var_price) if(WP_DEBUG) error_log("$role: ".$var_price[0]);
                 }
             },
@@ -194,7 +198,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function maybeGetSalePrice($price = '', $_product = ''){ // "" if non-regular user
-        If(WP_DEBUG) error_log('!!!!!!!!!!!!!!!!!!!!!!!!!');
         If(WP_DEBUG) error_log("called maybeGetSalePrice");
         If(WP_DEBUG) error_log("-> price: $price");
         //todo: check if this is necessary
