@@ -11,7 +11,7 @@
 			"file": "lasercommerce/Lasercommerce_Plugin.php",
 			"settings":
 			{
-				"buffer_size": 14698,
+				"buffer_size": 14741,
 				"line_ending": "Unix"
 			}
 		},
@@ -99,7 +99,7 @@
 	},
 	"console":
 	{
-		"height": 0.0
+		"height": 340.0
 	},
 	"distraction_free":
 	{
@@ -148,7 +148,7 @@
 	"groups":
 	[
 		{
-			"selected": 9,
+			"selected": 0,
 			"sheets":
 			[
 				{
@@ -156,15 +156,15 @@
 					"file": "lasercommerce/Lasercommerce_Plugin.php",
 					"settings":
 					{
-						"buffer_size": 14698,
+						"buffer_size": 14741,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								7999,
+								7999
 							]
 						],
 						"settings":
@@ -173,8 +173,8 @@
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.x": 4.0,
+						"translation.y": 2473.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -426,7 +426,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 832.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
