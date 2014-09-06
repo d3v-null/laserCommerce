@@ -13,39 +13,48 @@ class Lasercommerce_Tier_Tree {
     }
     
     public function getTierTree(){
+        If(WP_DEBUG) error_log("Getting Tier Tree");
         //todo: this
-        
-        return array( 
+
+        $json_string = '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]';
+        If(WP_DEBUG) error_log("-> JSON string: $json_string");
+
+        $tierTree = json_decode($json_string, true);
+        If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree[0]));
+
+        return $tierTree;
+
+/*        return array( 
             array(
-                'role' => 'special_customer',
+                'id' => 'special_customer',
                 'name' => 'Special',
                 'children' => array(
                     array(
-                        'role' => 'wholesale_buyer',
+                        'id' => 'wholesale_buyer',
                         'name' => 'Wholesale',
                         'children' => array(
                             array(
-                                'role'  => 'mobile_operator',
+                                'id'  => 'mobile_operator',
                                 'name'  => 'Mobile Operator'
                             ),
                             array(
-                                'role'  => 'gym_owner',
+                                'id'  => 'gym_owner',
                                 'name'  => 'Gym'
                             ),
                             array(
-                                'role'  => 'salon',
+                                'id'  => 'salon',
                                 'name'  => 'Salon'
                             ),
                             array(
-                                'role'  => 'home_studio',
+                                'id'  => 'home_studio',
                                 'name'  => 'Home Studio'
                             ),
                             array(
-                                'role'  => 'distributor',
+                                'id'  => 'distributor',
                                 'name'  => 'Distributor',
                                 'children' => array(
                                     array(
-                                        'role' => 'international_distributor',
+                                        'id' => 'international_distributor',
                                         'name' => 'International Distributor',
                                     )
                                 )
@@ -54,38 +63,37 @@ class Lasercommerce_Tier_Tree {
                     )
                 )
             )
-        );
+        );*/
     }
     
     private function flattenTierTreeRecursive($node = array()){
         //IF(WP_DEBUG) foreach($node as $k => $v) error_log("node: ($k, ".serialize($node).")");
-        if( !isset($node['role']) ) return array();
-        $names = array();
-        $names[$node['role']] = $node['name'];
+        if( !isset($node['id']) ) return array();
+        $ids = array($node['id']);
         if( isset($node['children'] ) ){
             foreach( $node['children'] as $child ){
                 //IF(WP_DEBUG) error_log("key, child: $key, ".serialize($child));
                 $result = $this->flattenTierTreeRecursive($child);
                 //IF(WP_DEBUG) error_log("result: ".serialize($result));
-                $names = array_merge($names, $result);
+                $ids = array_merge($ids, $result);
             }
         }
         // IF(WP_DEBUG) error_log("names: ".serialize($names));
-        return $names;
+        return $ids;
     }
     
-    public function getTierNames(){
+    public function getRoles(){
         $tree = $this->getTierTree();
-        $names = array();
+        $ids = array();
         foreach( $tree as $node ){
-            $names = array_merge($names, $this->flattenTierTreeRecursive($node));
+            $ids = array_merge($ids, $this->flattenTierTreeRecursive($node));
             // IF(WP_DEBUG) error_log("merge: ".serialize($names));
         }
-        return $names;
-    }        
+        return $ids;
+    }   
     
     private function filterRolesRecursive($node, $roles){
-        if( !isset($node['role']) ) { //is valid array
+        if( !isset($node['id']) ) { //is valid array
             return array();
         }
         $tiers = array();
@@ -97,13 +105,13 @@ class Lasercommerce_Tier_Tree {
             }
         }
         
-        // IF(WP_DEBUG) error_log("recusrive for node: ".$node['role']);
-        // IF(WP_DEBUG) error_log("-> good node: ".in_array( $node['role'], $roles ));
+        // IF(WP_DEBUG) error_log("recusrive for node: ".$node['id']);
+        // IF(WP_DEBUG) error_log("-> good node: ".in_array( $node['id'], $roles ));
         // IF(WP_DEBUG) error_log("-> good children: ".!empty($tiers));
         
-        if(!empty($tiers) or in_array( $node['role'], $roles )){
-            // IF(WP_DEBUG) error_log("--> adding role: ".$node['role'] );
-            $tiers[] = $node['role'];
+        if(!empty($tiers) or in_array( $node['id'], $roles )){
+            // IF(WP_DEBUG) error_log("--> adding role: ".$node['id'] );
+            $tiers[] = $node['id'];
         }
         // IF(WP_DEBUG) error_log("-> tiers:  ".serialize($tiers));
         return $tiers;

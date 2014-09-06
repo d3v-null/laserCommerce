@@ -17,12 +17,21 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
+        add_action( 'woocommerce_settings_' . $this->id, array( $this, 'nestable_init' ) ); //TODO: check priority is right
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output_sections' ) );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output' ) );
         add_action( 'woocommerce_admin_field_price_tiers', array( $this, 'price_tiers_setting' ) );
         add_action( 'woocommerce_settings_save_' . $this->id, array( $this, 'save' ) );
         add_action( 'woocommerce_update_option_price_tiers', array( $this, 'price_tiers_save' ) );
-    }    
+    }   
+
+    public function nestable_init(){
+        wp_register_script( 'jquery-nestable-js', plugins_url('/js/jquery.nestable.js', __FILE__), array('jquery'));
+        wp_register_style( 'nestable-css', plugins_url('/css/nestable.css', __FILE__));
+
+        wp_enqueue_script( 'jquery-nestable-js' );
+        wp_enqueue_style( 'nestable-css' );
+    } 
     
     public function get_sections() {
         $sections = array(
@@ -68,6 +77,26 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             WC_Admin_Settings::output_fields($settings );
         }
     }
+
+    public function output_nestable($node, $names) { 
+        if(isset($node['id'])) {
+            ?>
+                <li class="dd-item" data-id="<?php echo $node['id']; ?>">
+                    <div class="dd-handle">
+                        <?php echo isset($names[$node['id']])?$names[$node['id']]:$node['id']; ?>
+                    </div>
+                    <?php if(isset($node['children'])) { 
+                    ?>
+                        <ol class="dd-list">
+                            <?php foreach( $node['children'] as $child ) {
+                                $this->output_nestable($child, $names); 
+                            } ?>
+                        </ol>
+                    <?php } ?>
+                </li>
+            <?php 
+        }
+    }
        
     public function price_tiers_setting() {
         global $wp_roles;
@@ -75,91 +104,83 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         if ( ! isset( $wp_roles ) )
             $wp_roles = new WP_Roles(); 
         
-        $availableRoles = $wp_roles->get_names();
-        $defaultRole = array('customer' => 'Customer');
-        $priceTiers = $Lasercommerce_Tier_Tree->getTierNames();
-        IF(WP_DEBUG) error_log("priceTiers: ".serialize($priceTiers));
-
-        if(!$priceTiers){
+        $names = $wp_roles->get_names();
+        $availableRoles = array_keys($names);
+        $usedRoles = $Lasercommerce_Tier_Tree->getRoles();
+        $tree = $Lasercommerce_Tier_Tree->getTierTree();
+        if(!$usedRoles){
             $unusedRoles = $availableRoles;
         } else {
-            $unusedRoles = array_diff($availableRoles, $priceTiers, $defaultRole);
+            $unusedRoles = array_diff($availableRoles, $usedRoles);
         }
-    
+        IF(WP_DEBUG) error_log("-> availableRoles: ".serialize($availableRoles));
+        IF(WP_DEBUG) error_log("-> tree: ".serialize($tree));
+        IF(WP_DEBUG) error_log("-> usedRoles: ".     serialize($usedRoles));
+        IF(WP_DEBUG) error_log("-> unusedRoles: ".   serialize($unusedRoles));
+        IF(WP_DEBUG) error_log("-> names: ".         serialize($names));
+
         ?>
-        <tr valign="top">
-            <th colspan scope="row" class="titledesc">
-                <?php _e('Price Tiers', 'lasercommerce'); ?>
-            </th>
-            <td>
-                <table class="dl_price_tier widefat" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th class="cb"></th>
-                            <th class="role">
-                                <?php _e('User Role', 'lasercommerce'); ?>
-                            </th>
-                            <th class="name">
-                                <?php _e('Tier Name', 'lasercommerce'); ?>
-                            </th>
-                            <th class="parent"</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr>
-                            <th colspan=4>
-                                <select id="select_role">
-                                    <option value="">Select a user role</option>
-                                    <?php
-                                        foreach($unusedRoles as $roleName => $displayName) {
-                                            echo "<option value='$roleName'>$displayName</option>" ;
-                                        }
-                                    ?>
-                                </select>
-                                <a class="add button"> <?php _e('Add price tier', 'wootrack'); ?></a>
-                                <a class="remove button"><?php _e('Remove price tier services', 'wootrack'); ?></a>
-                            </th>
-                        </tr>
-                    </tfoot>                                
-                    <tbody>
-                        <!-- first row -->
-                        <tr class="lasercommerce firstrow">
-                            <td class="cb"></th>
-                            <td class="role">
-                                <?php _e('Any', 'lasercommerce'); ?>
-                            </td>
-                            <td class="name">
-                                <?php _e('Regular Price', 'woocommerce'); ?>
-                            </td>
-                            <td class="parent"></th>
-                        </tr>
-                        <?php
-                            foreach($priceTiers as $role => $name){
+            <div class="dd" id="nestable-used">
+                <ol class="dd-list">
+                    <?php if( !empty($tree) ){ 
                         ?>
-                            <tr>
-                                <td width="1%" class="cb">
-                                    <?php echo "<input type='checkbox' id='cb_$role'>" ; ?>
-                                </td>
-                                <td class="role">
-                                    <?php echo $role; ?>
-                                </td>
-                                <td class="name">
-                                    <?php echo "<input type='text' id='name_$role' value='$name'> Price"; ?>
-                                </td>
-                                <td class="parent"></th>
-                            </tr>
+                            <ol class="dd-list">
+                        <?php foreach ($tree as $node) {
+                            $this->output_nestable($node, $names);
+                        } ?>
+                            </ol>
                         <?php
+                    } ?>
+                </ol>
+            </div>
+            <input id='nestable-used-output' style="width:100%">    
+ 
+            <div class="dd" id="nestable-unused">
+                <ol class="dd-list">
+                    <?php foreach( $unusedRoles as $role ) {
+                        ?>
+                            <li class="dd-item" data-id="<?php echo $role; ?>">
+                                <div class="dd-handle">
+                                    <?php echo isset($names[$role])?$names[$role]:$role; ?>
+                                </div>
+                            </li>
+                        <?php
+                    } ?>
+                </ol>
+            </div>
+            <input id='nestable-unused-output' style="width:100%">    
+
+            <script >
+                (function ($) {
+                    $(document).ready(function()
+                    {
+                        var updateOutput = function (e)
+                        {
+                            var list    = e.length ? e : $(e.target),
+                                output  = list.data('output');
+                            if (window.JSON) {
+                                output.val(window.JSON.stringify(list.nestable('serialize')));
+                            } else {
+                                output.val('JSON browser support required');
                             }
-                        ?>   
-                    </tbody>
-                    <?php echo "<input type='hidden' name='".$this->optionNamePrefix."price_tiers' value='hello'>"; ?>
-                    <script type="text/javascript">
-                        <?php //todo: this ?>
-                    </script>
-                <table>
-            <td>
-        </tr>
-                        
+                        };
+
+                        $('#nestable-used').nestable({
+                            group: 1
+                        })
+                        .on('change', updateOutput);
+                        $('#nestable-unused').nestable({
+                            group: 1
+                        })
+                        .on('change', updateOutput);
+
+                        updateOutput($('#nestable-used').data('output', $('#nestable-used-output')));
+                        updateOutput($('#nestable-unused').data('output', $('#nestable-unused-output')));
+
+                        //$('.dd').nestable();
+                    });
+                }(jQuery));            
+            </script>
         <?php
     }
     

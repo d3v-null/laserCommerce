@@ -317,7 +317,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( );
         }   
         
-        $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getTierNames() );
+        $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getRoles() );
         
         //TODO: make modifications to product price display
         // add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) ); - doesn't do anything
