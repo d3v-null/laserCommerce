@@ -16,13 +16,19 @@ class Lasercommerce_Tier_Tree {
         If(WP_DEBUG) error_log("Getting Tier Tree");
         //todo: this
 
-        $json_string = '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]';
+        //$json_string = '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]';
+        $json_string = get_option('lasercommerce_price_tiers');
         If(WP_DEBUG) error_log("-> JSON string: $json_string");
 
         $tierTree = json_decode($json_string, true);
         If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree[0]));
+        if ( !$tierTree ) {
+            return array();
+        } 
+        else {
+            return $tierTree;
+        } 
 
-        return $tierTree;
 
 /*        return array( 
             array(

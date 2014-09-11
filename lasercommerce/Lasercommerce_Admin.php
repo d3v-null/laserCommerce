@@ -55,7 +55,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                         'name'  => 'Price Tiers',
                         'type'  => 'price_tiers',
                         'id'    => $this->optionNamePrefix . 'price_tiers',
-                        'default' => 'hello2'
+                        'default' => '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]'
                     ),
                     array(
                         'type' => 'sectionend',
@@ -98,7 +98,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
        
-    public function price_tiers_setting() {
+    public function price_tiers_setting( $field ) {
         global $wp_roles;
         global $Lasercommerce_Tier_Tree;
         if ( ! isset( $wp_roles ) )
@@ -119,22 +119,20 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         IF(WP_DEBUG) error_log("-> unusedRoles: ".   serialize($unusedRoles));
         IF(WP_DEBUG) error_log("-> names: ".         serialize($names));
 
+        if(isset($field['id'])){
         ?>
             <div class="dd" id="nestable-used">
-                <ol class="dd-list">
-                    <?php if( !empty($tree) ){ 
-                        ?>
-                            <ol class="dd-list">
-                        <?php foreach ($tree as $node) {
-                            $this->output_nestable($node, $names);
-                        } ?>
-                            </ol>
-                        <?php
+                <?php if( !empty($tree) ){ 
+                    ?>
+                        <ol class="dd-list">
+                    <?php foreach ($tree as $node) {
+                        $this->output_nestable($node, $names);
                     } ?>
-                </ol>
+                        </ol>
+                    <?php
+                } ?>
             </div>
-            <input id='nestable-used-output' style="width:100%">    
- 
+            <hr>
             <div class="dd" id="nestable-unused">
                 <ol class="dd-list">
                     <?php foreach( $unusedRoles as $role ) {
@@ -148,7 +146,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                     } ?>
                 </ol>
             </div>
-            <input id='nestable-unused-output' style="width:100%">    
+            <input type="text" name="<?php echo esc_attr( $field['id'] ); ?>" id="<?php echo esc_attr( $field['id'] ); ?>"  style="width:100%; max-width:600px" value="">    
+            <!-- input id='nestable-unused-output' style="width:100%"-->    
 
             <script >
                 (function ($) {
@@ -172,20 +171,22 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                         $('#nestable-unused').nestable({
                             group: 1
                         })
-                        .on('change', updateOutput);
 
-                        updateOutput($('#nestable-used').data('output', $('#nestable-used-output')));
-                        updateOutput($('#nestable-unused').data('output', $('#nestable-unused-output')));
+                        updateOutput($('#nestable-used').data('output', $('#<?php echo esc_attr( $field['id'] ); ?>')));
 
                         //$('.dd').nestable();
                     });
                 }(jQuery));            
             </script>
-        <?php
+        <?php }
     }
     
-    public function price_tiers_save(){
-        //todo: this
+    public function price_tiers_save( $field ){
+        if(WP_DEBUG) error_log('updating price tier! field: '.serialize($field).' POST '.serialize($_POST));
+        if( isset( $_POST[ $field['id']]) ){
+            if(WP_DEBUG) error_log('updating option '.$field['id'].' as '.$_POST[$field['id']]);
+            update_option( $field['id'], $_POST[$field['id']]);
+        }
     }
     
     public function donationBoxSection(){
