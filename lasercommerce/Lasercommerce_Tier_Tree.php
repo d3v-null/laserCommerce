@@ -21,11 +21,13 @@ class Lasercommerce_Tier_Tree {
         If(WP_DEBUG) error_log("-> JSON string: $json_string");
 
         $tierTree = json_decode($json_string, true);
-        If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree[0]));
         if ( !$tierTree ) {
-            return array();
+            
+            If(WP_DEBUG) error_log("-> could not decode ");
+            return array(array('id'=>'administrator'));
         } 
         else {
+            If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree[0]));
             return $tierTree;
         } 
 
