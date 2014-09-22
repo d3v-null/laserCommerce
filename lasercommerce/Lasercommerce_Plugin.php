@@ -191,15 +191,15 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     
     private function getCurrentUserRoles(){
         $current_user = wp_get_current_user();
-        If(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
+        if(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
         $roles = $current_user->roles;
-        If(WP_DEBUG) error_log("--> roles: ".serialize($roles));
+        if(WP_DEBUG) error_log("--> roles: ".serialize($roles));
         return $roles;
     }
     
     public function maybeGetSalePrice($price = '', $_product = ''){ // "" if non-regular user
-        If(WP_DEBUG) error_log("called maybeGetSalePrice");
-        If(WP_DEBUG) error_log("-> price: $price");
+        if(WP_DEBUG) error_log("called maybeGetSalePrice");
+        if(WP_DEBUG) error_log("-> price: $price");
         //todo: check if this is necessary
         if( !isset($_product->id) ){ 
             global $product;
@@ -209,7 +209,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             }
             $_product = $product;
         }    
-        If(WP_DEBUG) error_log("-> productID: $_product->id");
+        if(WP_DEBUG) error_log("-> productID: $_product->id");
         
         global $Lasercommerce_Tier_Tree;
         
@@ -230,9 +230,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
-        If(WP_DEBUG) error_log('');
-        If(WP_DEBUG) error_log("called maybeGetPrice");
-        If(WP_DEBUG) error_log("-> price: $price");
+        if(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log("called maybeGetPrice");
+        if(WP_DEBUG) error_log("-> price: $price");
         //todo: make this read off settings, minimum price OR lowest available price
         //todo: extend to variable
         
@@ -247,22 +247,10 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         global $Lasercommerce_Tier_Tree;
 
-        if( $_product->is_type( 'simple' ) ){
-            $postID = $_product->id; 
-        } else if( $_product->is_type( 'variation' ) ){
-            If(WP_DEBUG) error_log("--> variable product");
-            if ( isset( $_product->variation_id ) ) {
-                $postID = $_product->variation_id;
-            } else {
-                If(WP_DEBUG) error_log("--> !!!!!! variation not set");
-                return $price;
-            }
-        } else {
-            If(WP_DEBUG) error_log("-> !!!!!!!!!!!!!!!! type not simple or variable!");
-            If(WP_DEBUG) error_log($_product->product_type);
+        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );
+        if(!$postID){
             return $price;
         }
-        If(WP_DEBUG) error_log("-> postID: $postID");
 
         $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiersSimple(
             $postID,
@@ -277,7 +265,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function maybeGetPriceHtml($price_html, $_product){
-        If(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log('');
         if(WP_DEBUG) error_log("called maybeGetPriceHtml");
         if(WP_DEBUG) error_log("-> html: $price_html");
         if(WP_DEBUG) error_log("-> product: ".$_product->id);
@@ -286,7 +274,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function maybeGetCartPrice($price, $_product){
-        If(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log('');
         if(WP_DEBUG) error_log("called maybeGetCartPrice");
         if(WP_DEBUG) error_log("-> price: ".serialize($price));
         if(WP_DEBUG) error_log("-> product: ".$_product->id);
@@ -294,6 +282,94 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $price;    
     }
     
+    public function maybeAddPricingTab( $tabs ){
+        if(WP_DEBUG) error_log("\n\n\n\n");
+        if(WP_DEBUG) error_log("called maybeAddPricingTab");
+
+        $current_user = wp_get_current_user();
+        $roles = $current_user->roles;  
+        if(empty($roles)){
+            if(WP_DEBUG) error_log("-> roles are empty");
+            return $tabs;
+        }
+
+        global $Lasercommerce_Tier_Tree;
+        global $product;
+        if(!isset($product)){
+            if(WP_DEBUG) error_log("-> product global not set");
+        }
+
+        $postID = $Lasercommerce_Tier_Tree->getPostID( $product );
+        if(!isset($postID)){
+            if(WP_DEBUG) error_log("-> no postID");
+            return $tabs;
+        }
+
+        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiersSimple(
+            $postID,
+            $roles
+        );
+
+
+        if(!empty($visibleTiers)){
+            wp_register_style( 'pricing_table-css', plugins_url('/css/pricing_table.css', __FILE__));
+            wp_enqueue_style( 'pricing_table-css' );
+
+
+            $regular_price = $product->get_regular_price();
+            if(WP_DEBUG) error_log("-> reg: $regular_price ");
+            if(isset($regular_price)){
+                $visibleTiers['customer'] = $regular_price;
+            }
+
+            global $wp_roles;
+            if( isset($wp_roles) ){
+                $names = $wp_roles->get_names();            
+            } else {
+                $names = array();
+            }
+            $names['customer'] = 'RRP';
+            $names['special_customer'] = 'SSP';
+
+            $tabs['Pricing'] = array(
+                'title' => __('Pricing', 'Lasercommerce'),
+                'priority' => 50,
+                'callback' => function() use ($visibleTiers, $names) { 
+                    ?>
+<table class='shop_table lasercommerce pricing_table'>
+    <thead>
+        <tr>
+            <td>
+                <?php _e('Tier', 'Lasercommerce'); ?>
+            </td>
+            <td>
+                <?php _e('Price', 'Lasercommerce'); ?>
+            </td>
+        </tr>
+    </thead>
+    <?php foreach($visibleTiers as $tier => $price) { ?>
+    <tr>
+        <td>
+            <?php echo isset($names[$tier])?$names[$tier]:$tier; ?>
+        </td>
+        <td>
+            <?php echo $price; ?>
+        </td>
+    </tr>
+    <?php } ?>
+</table>
+                    <?php
+                }
+            );
+        } else {
+            if(WP_DEBUG) error_log("-> visibleTiers is empty");
+            return $tabs;
+        }
+
+        if(WP_DEBUG) error_log("-> returning tabs");
+        return $tabs;
+    }
+
     public function addVariableProductBulkEditActions(){
         //todo: this
     }
@@ -303,9 +379,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function addActionsAndFilters() {
-        If(WP_DEBUG) error_log("called addActionsAndFilters");
-        If(WP_DEBUG) error_log('');
-        If(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log("called addActionsAndFilters");
+        if(WP_DEBUG) error_log('');
+        if(WP_DEBUG) error_log('');
         
         
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
@@ -370,6 +446,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
 
+        add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         // Example adding a script & style just for the options administration page
         // http://plugin.michael-simpson.com/?page_id=47
         //        if (strpos($_SERVER['REQUEST_URI'], $this->getSettingsSlug()) !== false) {

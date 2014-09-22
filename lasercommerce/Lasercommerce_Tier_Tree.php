@@ -13,21 +13,21 @@ class Lasercommerce_Tier_Tree {
     }
     
     public function getTierTree(){
-        If(WP_DEBUG) error_log("Getting Tier Tree");
+        //If(WP_DEBUG) error_log("Getting Tier Tree");
         //todo: this
 
         //$json_string = '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]';
         $json_string = get_option('lasercommerce_price_tiers');
-        If(WP_DEBUG) error_log("-> JSON string: $json_string");
+        //If(WP_DEBUG) error_log("-> JSON string: $json_string");
 
         $tierTree = json_decode($json_string, true);
         if ( !$tierTree ) {
             
-            If(WP_DEBUG) error_log("-> could not decode ");
+            //If(WP_DEBUG) error_log("-> could not decode ");
             return array(array('id'=>'administrator'));
         } 
         else {
-            If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree[0]));
+            //If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree[0]));
             return $tierTree;
         } 
 
@@ -137,6 +137,7 @@ class Lasercommerce_Tier_Tree {
         //IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
         return $tiers;
     }
+
         
     public function getVisibleTiersSimple($postID, $roles){
 
@@ -146,10 +147,34 @@ class Lasercommerce_Tier_Tree {
         foreach( $availableTiers as $role ){
             $price = $this->getPrice($postID, $role);
             if( $price ) $visibleTiers[$role] = $price;
-            If(WP_DEBUG) error_log("--> $role price: $price");
+            //If(WP_DEBUG) error_log("--> $role price: $price");
         }
         
         return $visibleTiers;
+    }
+
+    public function getPostID( $product ){
+        if(!isset($product)) {
+            //if(WP_DEBUG) error_log( '-> product not set');
+            return None;
+        }
+        if( $product->is_type( 'simple' ) ){
+            $postID = $product->id; 
+        } else if( $product->is_type( 'variation' ) ){
+            //If(WP_DEBUG) error_log("--> variable product");
+            if ( isset( $product->variation_id ) ) {
+                $postID = $product->variation_id;
+            } else {
+                //If(WP_DEBUG) error_log("--> !!!!!! variation not set");
+                return None;
+            }
+        } else {
+            //If(WP_DEBUG) error_log("-> !!!!!!!!!!!!!!!! type not simple or variable!");
+            //If(WP_DEBUG) error_log($product->product_type);
+            return None;
+        }
+        //If(WP_DEBUG) error_log("-> postID: $postID");
+        return $postID;
     }
 }
  

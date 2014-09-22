@@ -101,6 +101,9 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     public function price_tiers_setting( $field ) {
         global $wp_roles;
         global $Lasercommerce_Tier_Tree;
+        // if (!isset($Lasercommerce_Tier_Tree)) {
+        //     $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree();
+        // }
         if ( ! isset( $wp_roles ) )
             $wp_roles = new WP_Roles(); 
         
@@ -118,6 +121,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         IF(WP_DEBUG) error_log("-> usedRoles: ".     serialize($usedRoles));
         IF(WP_DEBUG) error_log("-> unusedRoles: ".   serialize($unusedRoles));
         IF(WP_DEBUG) error_log("-> names: ".         serialize($names));
+        IF(WP_DEBUG) error_log("-> field: ".         serialize($field));
 
         if(isset($field['id'])){
         ?>
