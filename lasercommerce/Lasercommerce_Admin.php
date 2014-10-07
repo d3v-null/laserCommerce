@@ -99,18 +99,14 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     }
        
     public function price_tiers_setting( $field ) {
-        global $wp_roles;
         global $Lasercommerce_Tier_Tree;
         // if (!isset($Lasercommerce_Tier_Tree)) {
         //     $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree();
         // }
-        if ( ! isset( $wp_roles ) )
-            $wp_roles = new WP_Roles(); 
-        
-        $names = $wp_roles->get_names();
         $availableRoles = array_keys($names);
         $usedRoles = $Lasercommerce_Tier_Tree->getRoles();
         $tree = $Lasercommerce_Tier_Tree->getTierTree();
+        $names = $Lasercommerce_Tier_Tree->getNames();
         if(!$usedRoles){
             $unusedRoles = $availableRoles;
         } else {
@@ -125,6 +121,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
 
         if(isset($field['id'])){
         ?>
+            <h2>The Tier Tree</h2>
             <div class="dd" id="nestable-used">
                 <?php if( !empty($tree) ){ 
                     ?>
@@ -137,6 +134,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 } ?>
             </div>
             <hr>
+            <h2>Availible User Roles</h2>
             <div class="dd" id="nestable-unused">
                 <ol class="dd-list">
                     <?php foreach( $unusedRoles as $role ) {
@@ -150,7 +148,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                     } ?>
                 </ol>
             </div>
-            <input type="text" name="<?php echo esc_attr( $field['id'] ); ?>" id="<?php echo esc_attr( $field['id'] ); ?>"  style="width:100%; max-width:600px" value="">    
+            <input type="hidden" name="<?php echo esc_attr( $field['id'] ); ?>" id="<?php echo esc_attr( $field['id'] ); ?>"  style="width:100%; max-width:600px" value="">    
             <!-- input id='nestable-unused-output' style="width:100%"-->    
 
             <script >

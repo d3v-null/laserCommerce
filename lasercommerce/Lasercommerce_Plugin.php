@@ -136,20 +136,21 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: other product types
     }
     
-    public function savePriceField($role, $tierName = ""){
+    public function savePriceField($role, $name = ""){
         $role = sanitize_key($role);
-        if( $tierName == "" ) $tierName = $role;
+        if( $name == "" ) $name = $role;
         $prefix = $this->getOptionNamePrefix(); 
         add_action( 
             'woocommerce_process_product_meta_simple',
-            function($post_id) use ($role, $tierName, $prefix){
+            function($post_id) use ($role, $name, $prefix){
+                if(WP_DEBUG) error_log("filtered woocommerce_process_product_meta_simple. role: $role, tiername: $name, prefix: $prefix");
                 $price =  "";
                 if(isset($_POST[$prefix.$role."_price"])){                
-                    $price =  wc_format_decimal($_POST[$prefixer($role."_price")]);
+                    $price =  wc_format_decimal($_POST[$prefix . $role . "_price"]);
                 }
                 update_post_meta( 
                     $post_id, 
-                    $this->prefix($role."_price"),
+                    $prefix.$role."_price",
                     $price
                 );
             }
@@ -158,14 +159,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //add_action( 'woocommerce_process_product_meta_variable', 
     }
     
-    public function addVariablePriceFields($tiers=""){
+    public function addVariablePriceFields($roles=array()){
         //TODO: this
         //TODO: tiers validation
         $prefix = $this->getOptionNamePrefix(); 
-        if ($tiers) add_action(
+        if ($roles) add_action(
             'woocommerce_product_after_variable_attributes',
-            function( $loop, $variation_data, $variation) use ($tiers, $prefix){
-                foreach( $tiers as $role => $tierName ){
+            function( $loop, $variation_data, $variation) use ($roles, $prefix){
+                foreach( $roles as $role ){
                     $var_price = $variation_data[$prefix.$role."_price"];
                     if($var_price) if(WP_DEBUG) error_log("$role: ".$var_price[0]);
                 }
@@ -178,15 +179,17 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     /**adds text fields and form metadata handlers to product data page 
     /* @param $tiers string|array(string|array(string,string))
      */
-    public function maybeAddSavePriceFields($tierNames){
-        if(empty($tierNames)){
+    public function maybeAddSavePriceFields($roles, $names){
+        if(WP_DEBUG) error_log("called maybeAddSavePriceFields on roles: ".serialize($roles).", names: ".serialize($names));
+        if(empty($roles)){
             return;
         }
-        foreach($tierNames as $role => $tierName){
-            $this->addPriceField($role, $tierName);
-            $this->savePriceField($role, $tierName);
+        foreach($roles as $role){
+            $name = array_key_exists($role, $names)?$names[$role]:$role;
+            $this->addPriceField($role, $name);
+            $this->savePriceField($role, $name);
         } 
-        $this->addVariablePriceFields($tierNames);
+        $this->addVariablePriceFields($roles);
     }
     
     private function getCurrentUserRoles(){
@@ -260,7 +263,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         asort( $visibleTiers );
         $lowest = array_values($visibleTiers);//$lowest = array_values($visibleTiers)[0];
-        if(WP_DEBUG) error_log("-> returned price: $lowest");
+        if(WP_DEBUG) error_log("-> returned price: ".serialize($lowest));
         return $lowest[0];
     }
     
@@ -393,7 +396,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( );
         }   
         
-        $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getRoles() );
+        $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getRoles(), $Lasercommerce_Tier_Tree->getNames() );
         
         //TODO: make modifications to product price display
         // add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) ); - doesn't do anything
