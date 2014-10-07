@@ -247,7 +247,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             }
             $_product = $product;
         }    
+        $regular_price = $_product->regular_price;
+        $sale_price = $_product->sale_price;
         
+        if(WP_DEBUG) error_log("-> regular_price: $regular_price");
+        if(WP_DEBUG) error_log("-> sale_price: $sale_price");
+        if( !in_array($price, array($sale_price, $regular_price))){ //Weird thing I have to do to conform with dynamic pricing
+            return $price;
+        }
         global $Lasercommerce_Tier_Tree;
 
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );
@@ -262,8 +269,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if( empty($visibleTiers) ) return $price;
 
         asort( $visibleTiers );
-        $lowest = array_values($visibleTiers);//$lowest = array_values($visibleTiers)[0];
-        if(WP_DEBUG) error_log("-> returned price: ".serialize($lowest));
+        $lowest = array_values($visibleTiers);
+        if(WP_DEBUG) error_log("-> lowest price: ".$lowest[0]);
         return $lowest[0];
     }
     
@@ -271,6 +278,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(WP_DEBUG) error_log('');
         if(WP_DEBUG) error_log("called maybeGetPriceHtml");
         if(WP_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
         if(WP_DEBUG) error_log("-> product: ".$_product->id);
         
         return $price_html;
@@ -400,9 +409,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         //TODO: make modifications to product price display
         // add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) ); - doesn't do anything
-        add_filter( 'woocommerce_get_sale_price', array(&$this, 'maybeGetSalePrice'), 999, 2 );
-        add_filter( 'woocommerce_get_price', array(&$this, 'maybeGetPrice'), 999, 2 );
-        add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 999, 2 );
+        //add_filter( 'woocommerce_get_sale_price', array(&$this, 'maybeGetSalePrice'), 9, 2 );
+        
+        //THE CRUX:
+
+        add_filter( 'woocommerce_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
+
+        // add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 999, 2 );
         // add_filter( 'woocommerce_get_variation_price'
         // add_filter( 'woocommerce_variable_price_html',
         // add_filter( 'woocommerce_variation_price_html', 
@@ -438,7 +451,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         
         //TODO: make modifications to cart
-        add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 999, 2 );
+        add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 9, 2 );
         // add_filter( 'woocommerce_calculate_totals', 
         // add_filter( 'woocommerce_calculate_totals', 
         // add_filter( 'woocommerce_calculate_totals', 
