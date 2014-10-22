@@ -1,0 +1,693 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml">
+		<head>
+			<!-- template designed by Marco Von Ballmoos -->
+			<title>Docs For Class Lasercommerce_InstallIndicator</title>
+			<link rel="stylesheet" href="../media/stylesheet.css" />
+			<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'/>
+		</head>
+		<body>
+			<div class="page-body">			
+<h2 class="class-name">Class Lasercommerce_InstallIndicator</h2>
+
+<a name="sec-description"></a>
+<div class="info-box">
+	<div class="info-box-title">Description</div>
+	<div class="nav-bar">
+					<span class="disabled">Description</span> |
+							<a href="#sec-descendents">Descendents</a>
+			|													<a href="#sec-method-summary">Methods</a> (<a href="#sec-methods">details</a>)
+						
+											<a href="#sec-const-summary">Constants</a> (<a href="#sec-consts">details</a>)
+						
+			</div>
+	<div class="info-box-body">
+        		<!-- ========== Info from phpDoc block ========= -->
+		<p class="notes">
+			Located in <a class="field" href="_Lasercommerce_InstallIndicator.php.html">/Lasercommerce_InstallIndicator.php</a> (line <span class="field">33</span>)
+		</p>
+		
+				
+		<pre><a href="../default/Lasercommerce_OptionsManager.html">Lasercommerce_OptionsManager</a>
+   |
+   --Lasercommerce_InstallIndicator</pre>
+	
+			</div>
+</div>
+
+	<a name="sec-descendents"></a>
+	<div class="info-box">
+		<div class="info-box-title">Direct descendents</div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+			<span class="disabled">Descendents</span>
+			|															<a href="#sec-method-summary">Methods</a> (<a href="#sec-methods">details</a>)
+							
+															<a href="#sec-const-summary">Constants</a> (<a href="#sec-consts">details</a>)
+							
+					</div>
+		<div class="info-box-body">
+			<table cellpadding="2" cellspacing="0" class="class-table">
+				<tr>
+					<th class="class-table-header">Class</th>
+					<th class="class-table-header">Description</th>
+				</tr>
+								<tr>
+					<td style="padding-right: 2em"><a href="../default/Lasercommerce_LifeCycle.html">Lasercommerce_LifeCycle</a></td>
+					<td>
+											
+										</td>
+				</tr>
+							</table>
+		</div>
+	</div>
+
+	<a name="sec-const-summary"></a>
+	<div class="info-box">
+		<div class="info-box-title">Class Constant Summary</span></div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+							<a href="#sec-descendents">Descendants</a> |
+						<span class="disabled">Constants</span> (<a href="#sec-consts">details</a>)
+										| 
+									<a href="#sec-method-summary">Methods</a> (<a href="#sec-methods">details</a>)
+							
+					</div>
+		<div class="info-box-body">
+			<div class="const-summary">
+								<div class="const-title">
+					<a href="#optionInstalled" title="details" class="const-name">optionInstalled</a> = 					<span class="var-type"> '_installed'</span>
+
+				</div>
+								<div class="const-title">
+					<a href="#optionVersion" title="details" class="const-name">optionVersion</a> = 					<span class="var-type"> '_version'</span>
+
+				</div>
+							</div>
+		</div>
+	</div>
+
+
+	<a name="sec-method-summary"></a>
+	<div class="info-box">
+		<div class="info-box-title">Method Summary</span></div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+							<a href="#sec-descendents">Descendents</a> |
+															<a href="#sec-const-summary">Constants</a> (<a href="#sec-consts">details</a>)
+							
+									<span class="disabled">Methods</span> (<a href="#sec-methods">details</a>)
+		</div>
+		<div class="info-box-body">			
+			<div class="method-summary">
+																																																																																																																												
+												<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getMainPluginFileName" title="details" class="method-name">getMainPluginFileName</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getPluginDir" title="details" class="method-name">getPluginDir</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getPluginHeaderValue" title="details" class="method-name">getPluginHeaderValue</a>
+											(<span class="var-type">$key</span>&nbsp;<span class="var-name">$key</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getVersion" title="details" class="method-name">getVersion</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">null</span>
+										<a href="#getVersionSaved" title="details" class="method-name">getVersionSaved</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isInstalled" title="details" class="method-name">isInstalled</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isInstalledCodeAnUpgrade" title="details" class="method-name">isInstalledCodeAnUpgrade</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isSavedVersionLessThan" title="details" class="method-name">isSavedVersionLessThan</a>
+											(<span class="var-type">$aVersion</span>&nbsp;<span class="var-name">$aVersion</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isSavedVersionLessThanEqual" title="details" class="method-name">isSavedVersionLessThanEqual</a>
+											(<span class="var-type">$aVersion</span>&nbsp;<span class="var-name">$aVersion</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isVersionLessThan" title="details" class="method-name">isVersionLessThan</a>
+											(<span class="var-type">$version1</span>&nbsp;<span class="var-name">$version1</span>, <span class="var-type">$version2</span>&nbsp;<span class="var-name">$version2</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isVersionLessThanEqual" title="details" class="method-name">isVersionLessThanEqual</a>
+											(<span class="var-type">$version1</span>&nbsp;<span class="var-name">$version1</span>, <span class="var-type">$version2</span>&nbsp;<span class="var-name">$version2</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">null</span>
+										<a href="#markAsInstalled" title="details" class="method-name">markAsInstalled</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#markAsUnInstalled" title="details" class="method-name">markAsUnInstalled</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">void</span>
+										<a href="#saveInstalledVersion" title="details" class="method-name">saveInstalledVersion</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">null</span>
+										<a href="#setVersionSaved" title="details" class="method-name">setVersionSaved</a>
+											(<span class="var-type">$version</span>&nbsp;<span class="var-name">$version</span>)
+									</div>
+								</div>
+		</div>
+	</div>		
+
+	
+	<a name="sec-methods"></a>
+	<div class="info-box">
+		<div class="info-box-title">Methods</div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+							<a href="#sec-descendents">Descendents</a> |
+																		<a href="#sec-const-summary">Constants</a> (<a href="#sec-consts">details</a>)
+							
+										<a href="#sec-method-summary">Methods</a> (<span class="disabled">details</span>)
+						
+		</div>
+		<div class="info-box-body">
+			<A NAME='method_detail'></A>
+
+<a name="methodgetMainPluginFileName" id="getMainPluginFileName"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getMainPluginFileName</span> (line <span class="line-number">88</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> name of the main plugin file that has the header section with  &quot;Plugin Name&quot;, &quot;Version&quot;, &quot;Description&quot;, &quot;Text Domain&quot;, etc.</li>
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getMainPluginFileName
+		</span>
+				()
+			</div>
+	
+		
+			
+			<hr class="separator" />
+		<div class="notes">Redefined in descendants as:</div>
+		<ul class="redefinitions">
+					<li>
+				<a href="../default/Lasercommerce_Plugin.html#methodgetMainPluginFileName">Lasercommerce_Plugin::getMainPluginFileName()</a>
+							</li>
+				</ul>
+	</div>
+<a name="methodgetPluginDir" id="getPluginDir"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getPluginDir</span> (line <span class="line-number">115</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">If your subclass of this class lives in a different directory,  override this method with the exact same code. Since __FILE__ will  be different, you will then get the right dir returned.</p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getPluginDir
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetPluginHeaderValue" id="getPluginHeaderValue"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getPluginHeaderValue</span> (line <span class="line-number">98</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Get a value for input key in the header section of main plugin file.</p>
+<p class="description"><p>E.g. &quot;Plugin Name&quot;, &quot;Version&quot;, &quot;Description&quot;, &quot;Text Domain&quot;, etc.</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> if found, otherwise null</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getPluginHeaderValue
+		</span>
+					(<span class="var-type">$key</span>&nbsp;<span class="var-name">$key</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$key</span>
+				<span class="var-name">$key</span><span class="var-description">: string plugin header key</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodgetVersion" id="getVersion"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getVersion</span> (line <span class="line-number">126</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Version of this code.</p>
+<p class="description"><p>Best practice: define version strings to be easily compared using version_compare()  (http://php.net/manual/en/function.version-compare.php)  NOTE: You should manually make this match the SVN tag for your main plugin file 'Version' release and 'Stable tag' in readme.txt</p></p>
+	<ul class="tags">
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getVersion
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetVersionSaved" id="getVersionSaved"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getVersionSaved</span> (line <span class="line-number">69</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Set a version string in the options. This is useful if you install upgrade and  need to check if an older version was installed to see if you need to do certain  upgrade housekeeping (e.g. changes to DB schema).</p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">null</span>
+		<span class="method-name">
+			getVersionSaved
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodisInstalled" id="isInstalled"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">isInstalled</span> (line <span class="line-number">41</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> indicating if the plugin is installed already</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isInstalled
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodisInstalledCodeAnUpgrade" id="isInstalledCodeAnUpgrade"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">isInstalledCodeAnUpgrade</span> (line <span class="line-number">139</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Useful when checking for upgrades, can tell if the currently installed version is earlier than the  newly installed code. This case indicates that an upgrade has been installed and this is the first time it  has been activated, so any upgrade actions should be taken.</p>
+	<ul class="tags">
+				<li><span class="field">return:</span> true if the version saved in the options is earlier than the version declared in getVersion().  true indicates that new code is installed and this is the first time it is activated, so upgrade actions  should be taken. Assumes that version string comparable by version_compare, examples: '1', '1.1', '1.1.1', '2.0', etc.</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isInstalledCodeAnUpgrade
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodisSavedVersionLessThan" id="isSavedVersionLessThan"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">isSavedVersionLessThan</span> (line <span class="line-number">148</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Used to see if the installed code is an earlier version than the input version</p>
+	<ul class="tags">
+				<li><span class="field">return:</span> true if the saved version is earlier (by natural order) than the input version</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isSavedVersionLessThan
+		</span>
+					(<span class="var-type">$aVersion</span>&nbsp;<span class="var-name">$aVersion</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$aVersion</span>
+				<span class="var-name">$aVersion</span><span class="var-description">: string</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodisSavedVersionLessThanEqual" id="isSavedVersionLessThanEqual"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">isSavedVersionLessThanEqual</span> (line <span class="line-number">161</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Used to see if the installed code is the same or earlier than the input version.</p>
+<p class="description"><p>Useful when checking for an upgrade. If you haven't specified the number of the newer version yet,  but the last version (installed) was 2.3 (for example) you could check if  For example, $this-&gt;isSavedVersionLessThanEqual('2.3') == true indicates that the saved version is not upgraded  past 2.3 yet and therefore you would perform some appropriate upgrade action.</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> true if the saved version is earlier (by natural order) than the input version</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isSavedVersionLessThanEqual
+		</span>
+					(<span class="var-type">$aVersion</span>&nbsp;<span class="var-name">$aVersion</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$aVersion</span>
+				<span class="var-name">$aVersion</span><span class="var-description">: string</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodisVersionLessThan" id="isVersionLessThan"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">isVersionLessThan</span> (line <span class="line-number">179</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> true if version_compare of $versions1 and $version2 shows $version1 as earlier</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isVersionLessThan
+		</span>
+					(<span class="var-type">$version1</span>&nbsp;<span class="var-name">$version1</span>, <span class="var-type">$version2</span>&nbsp;<span class="var-name">$version2</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$version1</span>
+				<span class="var-name">$version1</span><span class="var-description">: string a version string such as '1', '1.1', '1.1.1', '2.0', etc.</span>			</li>
+					<li>
+				<span class="var-type">$version2</span>
+				<span class="var-name">$version2</span><span class="var-description">: string a version string such as '1', '1.1', '1.1.1', '2.0', etc.</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodisVersionLessThanEqual" id="isVersionLessThanEqual"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">isVersionLessThanEqual</span> (line <span class="line-number">170</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> true if version_compare of $versions1 and $version2 shows $version1 as the same or earlier</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isVersionLessThanEqual
+		</span>
+					(<span class="var-type">$version1</span>&nbsp;<span class="var-name">$version1</span>, <span class="var-type">$version2</span>&nbsp;<span class="var-name">$version2</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$version1</span>
+				<span class="var-name">$version1</span><span class="var-description">: string a version string such as '1', '1.1', '1.1.1', '2.0', etc.</span>			</li>
+					<li>
+				<span class="var-type">$version2</span>
+				<span class="var-name">$version2</span><span class="var-description">: string a version string such as '1', '1.1', '1.1.1', '2.0', etc.</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodmarkAsInstalled" id="markAsInstalled"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">markAsInstalled</span> (line <span class="line-number">49</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Note in DB that the plugin is installed</p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">null</span>
+		<span class="method-name">
+			markAsInstalled
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodmarkAsUnInstalled" id="markAsUnInstalled"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">markAsUnInstalled</span> (line <span class="line-number">59</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Note in DB that the plugin is uninstalled</p>
+	<ul class="tags">
+				<li><span class="field">return:</span> returned form delete_option.  true implies the plugin was installed at the time of this call,  false implies it was not.</li>
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			markAsUnInstalled
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodsaveInstalledVersion" id="saveInstalledVersion"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">saveInstalledVersion</span> (line <span class="line-number">189</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Record the installed version to options.</p>
+<p class="description"><p>This helps track was version is installed so when an upgrade is installed, it should call this when finished  upgrading to record the new current version</p></p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">void</span>
+		<span class="method-name">
+			saveInstalledVersion
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodsetVersionSaved" id="setVersionSaved"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">setVersionSaved</span> (line <span class="line-number">80</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Set a version string in the options.</p>
+<p class="description"><p>need to check if</p></p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">null</span>
+		<span class="method-name">
+			setVersionSaved
+		</span>
+					(<span class="var-type">$version</span>&nbsp;<span class="var-name">$version</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$version</span>
+				<span class="var-name">$version</span><span class="var-description">: string best practice: use a dot-delimited string like '1.2.3' so version strings can be easily  compared using version_compare (http://php.net/manual/en/function.version-compare.php)</span>			</li>
+				</ul>
+		
+			
+	</div>
+							<h4>Inherited Methods</h4>
+				<a name='inherited_methods'><!-- --></a>	
+									<!-- =========== Summary =========== -->
+					<p>Inherited From <span class="classname"><a href="../default/Lasercommerce_OptionsManager.html">Lasercommerce_OptionsManager</a></span></p>
+					<blockquote>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodaddOption">Lasercommerce_OptionsManager::addOption()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodcanUserDoRoleOption">Lasercommerce_OptionsManager::canUserDoRoleOption()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methoddeleteOption">Lasercommerce_OptionsManager::deleteOption()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methoddeleteSavedOptions">Lasercommerce_OptionsManager::deleteSavedOptions()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetEmailDomain">Lasercommerce_OptionsManager::getEmailDomain()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetMySqlVersion">Lasercommerce_OptionsManager::getMySqlVersion()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetOption">Lasercommerce_OptionsManager::getOption()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetOptionMetaData">Lasercommerce_OptionsManager::getOptionMetaData()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetOptionNamePrefix">Lasercommerce_OptionsManager::getOptionNamePrefix()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetOptionNames">Lasercommerce_OptionsManager::getOptionNames()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetOptionValueI18nString">Lasercommerce_OptionsManager::getOptionValueI18nString()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetPluginDisplayName">Lasercommerce_OptionsManager::getPluginDisplayName()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodgetRoleOption">Lasercommerce_OptionsManager::getRoleOption()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodinitOptions">Lasercommerce_OptionsManager::initOptions()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodisUserRoleEqualOrBetterThan">Lasercommerce_OptionsManager::isUserRoleEqualOrBetterThan()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodprefix">Lasercommerce_OptionsManager::prefix()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodroleToCapability">Lasercommerce_OptionsManager::roleToCapability()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodunPrefix">Lasercommerce_OptionsManager::unPrefix()</a></span><br>
+													<span class="method-name"><a href="../default/Lasercommerce_OptionsManager.html#methodupdateOption">Lasercommerce_OptionsManager::updateOption()</a></span><br>
+											</blockquote>
+										
+		</div>
+	</div>
+
+	<a name="sec-consts"></a>
+	<div class="info-box">
+		<div class="info-box-title">Class Constants</div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+							<a href="#sec-descendents">Descendants</a> |
+										<a href="#sec-var-summary">Constants</a> (<span class="disabled">details</span>)
+						
+			
+										| 
+									<a href="#sec-method-summary">Methods</a> (<a href="#sec-methods">details</a>)
+							
+					</div>
+		<div class="info-box-body">
+			<a name="constoptionInstalled" id="optionInstalled"><!-- --></A>
+<div class="oddrow">
+
+	<div class="const-header">
+		<span class="const-title">
+			<span class="const-name">optionInstalled</span>
+			 = <span class="const-default"> '_installed'</span>
+			(line <span class="line-number">35</span>)
+		</span>
+	</div>
+
+	<!-- ========== Info from phpDoc block ========= -->
+	
+	
+</div>
+<a name="constoptionVersion" id="optionVersion"><!-- --></A>
+<div class="evenrow">
+
+	<div class="const-header">
+		<span class="const-title">
+			<span class="const-name">optionVersion</span>
+			 = <span class="const-default"> '_version'</span>
+			(line <span class="line-number">36</span>)
+		</span>
+	</div>
+
+	<!-- ========== Info from phpDoc block ========= -->
+	
+	
+</div>
+						
+		</div>
+	</div>
+
+	<p class="notes" id="credit">
+		Documentation generated on Wed, 22 Oct 2014 09:33:12 +0000 by <a href="http://www.phpdoc.org" target="_blank">phpDocumentor 1.4.4</a>
+	</p>
+	</div></body>
+</html>

@@ -1,0 +1,758 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml">
+		<head>
+			<!-- template designed by Marco Von Ballmoos -->
+			<title>Docs For Class Lasercommerce_OptionsManager</title>
+			<link rel="stylesheet" href="../media/stylesheet.css" />
+			<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'/>
+		</head>
+		<body>
+			<div class="page-body">			
+<h2 class="class-name">Class Lasercommerce_OptionsManager</h2>
+
+<a name="sec-description"></a>
+<div class="info-box">
+	<div class="info-box-title">Description</div>
+	<div class="nav-bar">
+					<span class="disabled">Description</span> |
+							<a href="#sec-descendents">Descendents</a>
+			|													<a href="#sec-method-summary">Methods</a> (<a href="#sec-methods">details</a>)
+						
+					</div>
+	<div class="info-box-body">
+        		<!-- ========== Info from phpDoc block ========= -->
+		<p class="notes">
+			Located in <a class="field" href="_Lasercommerce_OptionsManager.php.html">/Lasercommerce_OptionsManager.php</a> (line <span class="field">31</span>)
+		</p>
+		
+				
+		<pre></pre>
+	
+			</div>
+</div>
+
+	<a name="sec-descendents"></a>
+	<div class="info-box">
+		<div class="info-box-title">Direct descendents</div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+			<span class="disabled">Descendents</span>
+			|															<a href="#sec-method-summary">Methods</a> (<a href="#sec-methods">details</a>)
+							
+								</div>
+		<div class="info-box-body">
+			<table cellpadding="2" cellspacing="0" class="class-table">
+				<tr>
+					<th class="class-table-header">Class</th>
+					<th class="class-table-header">Description</th>
+				</tr>
+								<tr>
+					<td style="padding-right: 2em"><a href="../default/Lasercommerce_InstallIndicator.html">Lasercommerce_InstallIndicator</a></td>
+					<td>
+											
+										</td>
+				</tr>
+							</table>
+		</div>
+	</div>
+
+
+
+	<a name="sec-method-summary"></a>
+	<div class="info-box">
+		<div class="info-box-title">Method Summary</span></div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+							<a href="#sec-descendents">Descendents</a> |
+												<span class="disabled">Methods</span> (<a href="#sec-methods">details</a>)
+		</div>
+		<div class="info-box-body">			
+			<div class="method-summary">
+																																																																																																																																																												
+												<div class="method-definition">
+											<span class="method-result">null</span>
+										<a href="#addOption" title="details" class="method-name">addOption</a>
+											(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>, <span class="var-type">$value</span>&nbsp;<span class="var-name">$value</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#canUserDoRoleOption" title="details" class="method-name">canUserDoRoleOption</a>
+											(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#deleteOption" title="details" class="method-name">deleteOption</a>
+											(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">void</span>
+										<a href="#deleteSavedOptions" title="details" class="method-name">deleteSavedOptions</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getEmailDomain" title="details" class="method-name">getEmailDomain</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string|false</span>
+										<a href="#getMySqlVersion" title="details" class="method-name">getMySqlVersion</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getOption" title="details" class="method-name">getOption</a>
+											(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>, [<span class="var-type">$default</span>&nbsp;<span class="var-name">$default</span> = <span class="var-default">null</span>])
+									</div>
+																<div class="method-definition">
+											<span class="method-result">array</span>
+										<a href="#getOptionMetaData" title="details" class="method-name">getOptionMetaData</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">void</span>
+										<a href="#getOptionNamePrefix" title="details" class="method-name">getOptionNamePrefix</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">array</span>
+										<a href="#getOptionNames" title="details" class="method-name">getOptionNames</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getOptionValueI18nString" title="details" class="method-name">getOptionValueI18nString</a>
+											(<span class="var-type">$optionValue</span>&nbsp;<span class="var-name">$optionValue</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getPluginDisplayName" title="details" class="method-name">getPluginDisplayName</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#getRoleOption" title="details" class="method-name">getRoleOption</a>
+											(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">void</span>
+										<a href="#initOptions" title="details" class="method-name">initOptions</a>
+										()
+									</div>
+																<div class="method-definition">
+											<span class="method-result">bool</span>
+										<a href="#isUserRoleEqualOrBetterThan" title="details" class="method-name">isUserRoleEqualOrBetterThan</a>
+											(<span class="var-type">$roleName</span>&nbsp;<span class="var-name">$roleName</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#prefix" title="details" class="method-name">prefix</a>
+											(<span class="var-type">$name</span>&nbsp;<span class="var-name">$name</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#roleToCapability" title="details" class="method-name">roleToCapability</a>
+											(<span class="var-type">$roleName</span>&nbsp;<span class="var-name">$roleName</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">string</span>
+										<a href="#unPrefix" title="details" class="method-name">&amp;unPrefix</a>
+											(<span class="var-type">$name</span>&nbsp;<span class="var-name">$name</span>)
+									</div>
+																<div class="method-definition">
+											<span class="method-result">null</span>
+										<a href="#updateOption" title="details" class="method-name">updateOption</a>
+											(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>, <span class="var-type">$value</span>&nbsp;<span class="var-name">$value</span>)
+									</div>
+								</div>
+		</div>
+	</div>		
+
+	
+	<a name="sec-methods"></a>
+	<div class="info-box">
+		<div class="info-box-title">Methods</div>
+		<div class="nav-bar">
+			<a href="#sec-description">Description</a> |
+							<a href="#sec-descendents">Descendents</a> |
+																<a href="#sec-method-summary">Methods</a> (<span class="disabled">details</span>)
+						
+		</div>
+		<div class="info-box-body">
+			<A NAME='method_detail'></A>
+
+<a name="methodaddOption" id="addOption"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">addOption</span> (line <span class="line-number">158</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">A wrapper function delegating to WP add_option() but it prefixes the input $optionName</p>
+<p class="description"><p>to enforce &quot;scoping&quot; the options in the WP options table thereby avoiding name conflicts</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> from delegated call to delete_option()</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">null</span>
+		<span class="method-name">
+			addOption
+		</span>
+					(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>, <span class="var-type">$value</span>&nbsp;<span class="var-name">$value</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionName</span>
+				<span class="var-name">$optionName</span><span class="var-description">: string defined in settings.php and set as keys of $this-&gt;optionMetaData</span>			</li>
+					<li>
+				<span class="var-type">$value</span>
+				<span class="var-name">$value</span><span class="var-description">: mixed the new value</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodcanUserDoRoleOption" id="canUserDoRoleOption"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">canUserDoRoleOption</span> (line <span class="line-number">235</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> indicates if the user has adequate permissions</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			canUserDoRoleOption
+		</span>
+					(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionName</span>
+				<span class="var-name">$optionName</span><span class="var-description">: string name of a Role option (see comments in getRoleOption())</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methoddeleteOption" id="deleteOption"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">deleteOption</span> (line <span class="line-number">146</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">A wrapper function delegating to WP delete_option() but it prefixes the input $optionName</p>
+<p class="description"><p>to enforce &quot;scoping&quot; the options in the WP options table thereby avoiding name conflicts</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> from delegated call to delete_option()</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			deleteOption
+		</span>
+					(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionName</span>
+				<span class="var-name">$optionName</span><span class="var-description">: string defined in settings.php and set as keys of $this-&gt;optionMetaData</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methoddeleteSavedOptions" id="deleteSavedOptions"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">deleteSavedOptions</span> (line <span class="line-number">77</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Cleanup: remove all options from the DB</p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">void</span>
+		<span class="method-name">
+			deleteSavedOptions
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetEmailDomain" id="getEmailDomain"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getEmailDomain</span> (line <span class="line-number">301</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">If you want to generate an email address like &quot;no-reply@your-site.com&quot; then  you can use this to get the domain name part.</p>
+<p class="description"><p>E.g.  'no-reply@' . $this-&gt;getEmailDomain();  This code was stolen from the wp_mail function, where it generates a default  from &quot;wordpress@your-site.com&quot;</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> domain name</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getEmailDomain
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetMySqlVersion" id="getMySqlVersion"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getMySqlVersion</span> (line <span class="line-number">284</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Query MySQL DB for its version</p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string|false</span>
+		<span class="method-name">
+			getMySqlVersion
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetOption" id="getOption"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getOption</span> (line <span class="line-number">131</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">A wrapper function delegating to WP get_option() but it prefixes the input $optionName</p>
+<p class="description"><p>to enforce &quot;scoping&quot; the options in the WP options table thereby avoiding name conflicts</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> the value from delegated call to get_option(), or optional default value  if option is not set.</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getOption
+		</span>
+					(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>, [<span class="var-type">$default</span>&nbsp;<span class="var-name">$default</span> = <span class="var-default">null</span>])
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionName</span>
+				<span class="var-name">$optionName</span><span class="var-description">: string defined in settings.php and set as keys of $this-&gt;optionMetaData</span>			</li>
+					<li>
+				<span class="var-type">$default</span>
+				<span class="var-name">$default</span><span class="var-description">: string default value to return if the option is not set</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodgetOptionMetaData" id="getOptionMetaData"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getOptionMetaData</span> (line <span class="line-number">55</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Define your options meta data here as an array, where each element in the array</p>
+	<ul class="tags">
+				<li><span class="field">return:</span> of key=&gt;display-name and/or key=&gt;array(display-name, choice1, choice2, ...)  key: an option name for the key (this name will be given a prefix when stored in  the database to ensure it does not conflict with other plugin options)  value: can be one of two things:    (1) string display name for displaying the name of the option to the user on a web page    (2) array where the first element is a display name (as above) and the rest of        the elements are choices of values that the user can select  e.g.  array(    'item' =&gt; 'Item:',             // key =&gt; display-name    'rating' =&gt; array(             // key =&gt; array ( display-name, choice1, choice2, ...)        'CanDoOperationX' =&gt; array('Can do Operation X', 'Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber'),        'Rating:', 'Excellent', 'Good', 'Fair', 'Poor')</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">array</span>
+		<span class="method-name">
+			getOptionMetaData
+		</span>
+				()
+			</div>
+	
+		
+			
+			<hr class="separator" />
+		<div class="notes">Redefined in descendants as:</div>
+		<ul class="redefinitions">
+					<li>
+				<a href="../default/Lasercommerce_Plugin.html#methodgetOptionMetaData">Lasercommerce_Plugin::getOptionMetaData()</a>
+								: See: http://plugin.michael-simpson.com/?page_id=31
+							</li>
+				</ul>
+	</div>
+<a name="methodgetOptionNamePrefix" id="getOptionNamePrefix"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getOptionNamePrefix</span> (line <span class="line-number">33</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">void</span>
+		<span class="method-name">
+			getOptionNamePrefix
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetOptionNames" id="getOptionNames"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getOptionNames</span> (line <span class="line-number">62</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> of string name of options</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">array</span>
+		<span class="method-name">
+			getOptionNames
+		</span>
+				()
+			</div>
+	
+		
+			
+	</div>
+<a name="methodgetOptionValueI18nString" id="getOptionValueI18nString"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getOptionValueI18nString</span> (line <span class="line-number">257</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Override this method and follow its format.</p>
+<p class="description"><p>The purpose of this method is to provide i18n display strings for the values of options.  For example, you may create a options with values 'true' or 'false'.  In the options page, this will show as a drop down list with these choices.  But when the the language is not English, you would like to display different strings  for 'true' and 'false' while still keeping the value of that option that is actually saved in  the DB as 'true' or 'false'.  To do this, follow the convention of defining option values in getOptionMetaData() as canonical names  (what you want them to literally be, like 'true') and then add each one to the switch statement in this  function, returning the &quot;__()&quot; i18n name of that string.</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> __($optionValue) if it is listed in this method, otherwise just returns $optionValue</li>
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getOptionValueI18nString
+		</span>
+					(<span class="var-type">$optionValue</span>&nbsp;<span class="var-name">$optionValue</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionValue</span>
+				<span class="var-name">$optionValue</span><span class="var-description">: string</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodgetPluginDisplayName" id="getPluginDisplayName"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">getPluginDisplayName</span> (line <span class="line-number">91</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">return:</span> display name of the plugin to show as a name/title in HTML.  Just returns the class name. Override this method to return something more readable</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getPluginDisplayName
+		</span>
+				()
+			</div>
+	
+		
+			
+			<hr class="separator" />
+		<div class="notes">Redefined in descendants as:</div>
+		<ul class="redefinitions">
+					<li>
+				<a href="../default/Lasercommerce_Plugin.html#methodgetPluginDisplayName">Lasercommerce_Plugin::getPluginDisplayName()</a>
+							</li>
+				</ul>
+	</div>
+<a name="methodgetRoleOption" id="getRoleOption"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">getRoleOption</span> (line <span class="line-number">185</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">A Role Option is an option defined in getOptionMetaData() as a choice of WP standard roles, e.g.</p>
+<p class="description"><p>'CanDoOperationX' =&gt; array('Can do Operation X', 'Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber')  The idea is use an option to indicate what role level a user must minimally have in order to do some operation.  So if a Role Option 'CanDoOperationX' is set to 'Editor' then users which role 'Editor' or above should be  able to do Operation X.  Also see: canUserDoRoleOption()</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> role name</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			getRoleOption
+		</span>
+					(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionName</span>
+				<span class="var-name">$optionName</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodinitOptions" id="initOptions"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">initOptions</span> (line <span class="line-number">70</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Override this method to initialize options to default values and save to the database with add_option</p>
+	<ul class="tags">
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">void</span>
+		<span class="method-name">
+			initOptions
+		</span>
+				()
+			</div>
+	
+		
+			
+			<hr class="separator" />
+		<div class="notes">Redefined in descendants as:</div>
+		<ul class="redefinitions">
+					<li>
+				<a href="../default/Lasercommerce_LifeCycle.html#methodinitOptions">Lasercommerce_LifeCycle::initOptions()</a>
+								: See: http://plugin.michael-simpson.com/?page_id=31
+							</li>
+					<li>
+				<a href="../default/Lasercommerce_Plugin.html#methodinitOptions">Lasercommerce_Plugin::initOptions()</a>
+							</li>
+				</ul>
+	</div>
+<a name="methodisUserRoleEqualOrBetterThan" id="isUserRoleEqualOrBetterThan"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">isUserRoleEqualOrBetterThan</span> (line <span class="line-number">223</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+	<ul class="tags">
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">bool</span>
+		<span class="method-name">
+			isUserRoleEqualOrBetterThan
+		</span>
+					(<span class="var-type">$roleName</span>&nbsp;<span class="var-name">$roleName</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$roleName</span>
+				<span class="var-name">$roleName</span><span class="var-description">: string a standard WP role name like 'Administrator'</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodprefix" id="prefix"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">prefix</span> (line <span class="line-number">101</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Get the prefixed version input $name suitable for storing in WP options</p>
+<p class="description"><p>Idempotent: if $optionName is already prefixed, it is not prefixed again, it is returned without change</p></p>
+	<ul class="tags">
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			prefix
+		</span>
+					(<span class="var-type">$name</span>&nbsp;<span class="var-name">$name</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$name</span>
+				<span class="var-name">$name</span><span class="var-description">: string option name to prefix. Defined in settings.php and set as keys of $this-&gt;optionMetaData</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodroleToCapability" id="roleToCapability"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">roleToCapability</span> (line <span class="line-number">199</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Given a WP role name, return a WP capability which only that role and roles above it have</p>
+<p class="description"><p>http://codex.wordpress.org/Roles_and_Capabilities</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> a WP capability or '' if unknown input role</li>
+				<li><span class="field">access:</span> protected</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			roleToCapability
+		</span>
+					(<span class="var-type">$roleName</span>&nbsp;<span class="var-name">$roleName</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$roleName</span>
+				<span class="var-name">$roleName</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodunPrefix" id="unPrefix"><!-- --></a>
+<div class="evenrow">
+	
+	<div class="method-header">
+		<span class="method-title">unPrefix</span> (line <span class="line-number">115</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">Remove the prefix from the input $name.</p>
+<p class="description"><p>Idempotent: If no prefix found, just returns what was input.</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> without the prefix.</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">string</span>
+		<span class="method-name">
+			&amp;unPrefix
+		</span>
+					(<span class="var-type">$name</span>&nbsp;<span class="var-name">$name</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$name</span>
+				<span class="var-name">$name</span><span class="var-description">: string</span>			</li>
+				</ul>
+		
+			
+	</div>
+<a name="methodupdateOption" id="updateOption"><!-- --></a>
+<div class="oddrow">
+	
+	<div class="method-header">
+		<span class="method-title">updateOption</span> (line <span class="line-number">170</span>)
+	</div> 
+	
+	<!-- ========== Info from phpDoc block ========= -->
+<p class="short-description">A wrapper function delegating to WP add_option() but it prefixes the input $optionName</p>
+<p class="description"><p>to enforce &quot;scoping&quot; the options in the WP options table thereby avoiding name conflicts</p></p>
+	<ul class="tags">
+				<li><span class="field">return:</span> from delegated call to delete_option()</li>
+				<li><span class="field">access:</span> public</li>
+			</ul>
+	
+	<div class="method-signature">
+		<span class="method-result">null</span>
+		<span class="method-name">
+			updateOption
+		</span>
+					(<span class="var-type">$optionName</span>&nbsp;<span class="var-name">$optionName</span>, <span class="var-type">$value</span>&nbsp;<span class="var-name">$value</span>)
+			</div>
+	
+			<ul class="parameters">
+					<li>
+				<span class="var-type">$optionName</span>
+				<span class="var-name">$optionName</span><span class="var-description">: string defined in settings.php and set as keys of $this-&gt;optionMetaData</span>			</li>
+					<li>
+				<span class="var-type">$value</span>
+				<span class="var-name">$value</span><span class="var-description">: mixed the new value</span>			</li>
+				</ul>
+		
+			
+	</div>
+						
+		</div>
+	</div>
+
+
+	<p class="notes" id="credit">
+		Documentation generated on Wed, 22 Oct 2014 09:33:12 +0000 by <a href="http://www.phpdoc.org" target="_blank">phpDocumentor 1.4.4</a>
+	</p>
+	</div></body>
+</html>
