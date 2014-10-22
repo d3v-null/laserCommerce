@@ -5,8 +5,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 include_once('Lasercommerce_Tier_Tree.php');
 
-//LaserCommerce Admin Page
+
 class LaserCommerce_Admin extends WC_Settings_Page{
+    /**
+     * Constructs the settings page class, hooking into woocommerce settings api
+     * 
+     * @param $optionNamePrefix 
+     */
     public function __construct($optionNamePrefix = 'lasercommerce_') {
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
@@ -25,6 +30,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         add_action( 'woocommerce_update_option_price_tiers', array( $this, 'price_tiers_save' ) );
     }   
 
+    /**
+     * Initializes the nestable jquery functions responsible for the drag and drop 
+     * functionality in the tier tree interface
+     */
     public function nestable_init(){
         wp_register_script( 'jquery-nestable-js', plugins_url('/js/jquery.nestable.js', __FILE__), array('jquery'));
         wp_register_style( 'nestable-css', plugins_url('/css/nestable.css', __FILE__));
@@ -33,6 +42,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         wp_enqueue_style( 'nestable-css' );
     } 
     
+    /**
+     * Overrides the get_sections() method of the WC_Settings Api
+     * used by the api to generate the sections of the pages
+     */
     public function get_sections() {
         $sections = array(
             '' => __('Advanced Pricing and Visibility', 'lasercommerce'),
@@ -41,6 +54,11 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         return apply_filters( 'woocommerce_get_sections_' . $this->id, $sections );
     }
     
+    /**
+     * Returns the appropriate settings array for the given section
+     *
+     * @param string $current_section 
+     */
     public function get_settings( $current_section = "" ) {
         if( !$current_section ) { //Advanced Pricing and Visibility
             return apply_filters( 
@@ -68,6 +86,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         //TODO: enter price tiers in table
     }    
     
+    /**
+     * 
     public function output() {
         global $current_section;
         

@@ -1,15 +1,53 @@
 <?php
 
-/*
+/**
  * helper class for dealing with price tier tree
  */
 class Lasercommerce_Tier_Tree {
+    /**
+     * Constructs the helper object
+     * @param $optionNamePrefix The prefix used to find price tier options
+     */
     public function __construct($optionNamePrefix = 'lasercommerce_') {
         $this->optionNamePrefix = $optionNamePrefix;
     }
     
+    /**
+     * (Depreciated!) Gets the price of a given post for a given role
+     * 
+     * @param integer $postID The ID of the given product / product variation
+     * @param string $role The role of the price being retrieved
+     * @return string price
+     */
     public function getPrice( $postID, $role ){
         return get_post_meta( $postID, $this->optionNamePrefix.$role.'_price', true);
+    }
+
+    /**
+     * Get the regular price of the given post viewed at a given role
+     * 
+     * @param integer $postID The ID of the given product / product variation
+     * @param string $role The role of the price being retrieved
+     * @return string price the regular price
+     */     
+    public function getRegularPrice( $postID, $role ){
+        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_regular_price', true);
+    }
+
+    /**
+     * Get the special price of the given post viewed at a given role
+     * 
+     * @param integer $postID The ID of the given product / product variation
+     * @param string $role The role of the price being retrieved
+     * @return string price the regular price
+     */     
+    public function getSpecialPrice( $postID, $role ){
+        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_special_price', true);
+    }
+
+
+    public function getScheduleFrom( $postID, $role ){
+        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_schedule_from', true);   
     }
 
     public function getOmniscientRoles(){
