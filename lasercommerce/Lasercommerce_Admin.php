@@ -87,7 +87,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     }    
     
     /**
-     * 
+     * Used bt the WC_Settings_Api to output the fields in the settings array
+     */
     public function output() {
         global $current_section;
         
@@ -98,6 +99,13 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
 
+    /**
+     * Used by price_tiers_setting to recursively output the html for nestable fields 
+     * this is the drag and drop field used in the configuration of the price tier
+     * 
+     * @param array $node The node of the tree to be displayed
+     * @param array $names The array containing the mapping of roles to tier names
+     */
     public function output_nestable($node, $names) { 
         if(isset($node['id'])) {
             ?>
@@ -118,6 +126,12 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
        
+    /**
+     * Used by the WC_Settings to output the price tiers setting html
+     * note: there are lots of debugging items still left
+     *
+     * @param array $field Array specifying the field that is being used
+     */
     public function price_tiers_setting( $field ) {
         global $Lasercommerce_Tier_Tree;
         // if (!isset($Lasercommerce_Tier_Tree)) {
@@ -202,7 +216,12 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             </script>
         <?php }
     }
-    
+    /**
+     * used by WC_Settings API to save the price tiers field from $POST data
+     * to the options in the database
+     *
+     * @param array $field The array specifying the field being saved
+     */
     public function price_tiers_save( $field ){
         if(WP_DEBUG) error_log('updating price tier! field: '.serialize($field).' POST '.serialize($_POST));
         if( isset( $_POST[ $field['id']]) ){
@@ -211,10 +230,15 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
     
+    /** (Unfinished) Outputs a donate box section in the admin interface
+     */
     public function donationBoxSection(){
         //todo: this
     }
 
+    /**
+     * Used by WC_Settings API to save all of the fields in the current section
+      */
     public function save() {
         global $current_section;
         

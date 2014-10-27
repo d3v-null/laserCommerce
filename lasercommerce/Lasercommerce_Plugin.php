@@ -6,6 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
 
+/**
+ * Registers Wordpress and woocommerce hooks to modify prices
+ */
 class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
     /**
@@ -33,7 +36,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 //        $i18nValue = parent::getOptionValueI18nString($optionValue);
 //        return $i18nValue;
 //    }
-
+    /**
+     * Initializes database options
+     */
     protected function initOptions() {
         $options = $this->getOptionMetaData();
         if (!empty($options)) {
@@ -45,10 +50,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         }
     }
 
+    /**
+     * Gets the plugin human readable name
+     */
     public function getPluginDisplayName() {
         return 'LaserCommerce';
     }
 
+    /**
+     * Gets the filename of the main plugin
+     */
     protected function getMainPluginFileName() {
         return 'lasercommerce.php';
     }
@@ -69,6 +80,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //            `id` INTEGER NOT NULL");
     }
     
+    /** 
+     * (Not used) Runs at install
+     */
     protected function otherInstall(){ //overrides abstract in parent LifeCycle
     }
 
@@ -87,13 +101,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     /**
      * Perform actions when upgrading from version X to version Y
      * See: http://plugin.michael-simpson.com/?page_id=35
-     * asd
+     * 
      * @return void
      */
     public function upgrade() {
     }
     
-    public function activate(){ //overrides abstract in parent LifeCycle
+    /**
+     * Overrides abstract method in parent LifeCycle class
+     */
+    public function activate(){ 
         global $Lasercommerce_Plugin;
         if( !isset($Lasercommerce_Plugin) ) {
             $Lasercommerce_Plugin = &$this;
@@ -105,11 +122,18 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         }   
     }
     
-    
+    /**
+     * Overrides abstract method in parent LifeCycle class
+     */    
     public function deactivate(){ //overrides abstract in parent LifeCycle
     }
 
-    //include the lasercommerce admin tab in woocommerce settings
+    /**
+     * include the lasercommerce admin tab in woocommerce settings
+     * 
+     * @param array $settings An array specifying the settings to display in the admin page
+     * @return array $settings 
+     */
     public function includeAdminPage($settings){
         $pluginDir = plugin_dir_path( __FILE__ );
         include('Lasercommerce_Admin.php');
@@ -117,7 +141,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $settings;
     }
     
-    public function addPriceField($role, $tierName = ""){
+    /**
+     * Used by maybeAddSavePriceField to add a price field to the product admin interface
+     * TODO: make this work with special prices
+     * 
+     * @param string $role The role for which the price tier applies
+     * @param string tierName The human readable name for the tier
+     */
+    private function addPriceField($role, $tierName = ""){
         $role = sanitize_key($role);
         if( $tierName == "" ) $tierName = $role;
         $prefix = $this->getOptionNamePrefix(); 
@@ -136,7 +167,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: other product types
     }
     
-    public function savePriceField($role, $name = ""){
+    /**
+     * Used by maybeAddSavePriceField to add a hook to save a price field
+     * TODO: make this work with special prices 
+     * 
+     * @param string $role The role the price tier applied to 
+     * @param string $name The human readable name of the price field
+     */ 
+    private function savePriceField($role, $name = ""){
         $role = sanitize_key($role);
         if( $name == "" ) $name = $role;
         $prefix = $this->getOptionNamePrefix(); 
@@ -159,6 +197,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //add_action( 'woocommerce_process_product_meta_variable', 
     }
     
+    /**
+     * (Not complete) Used by 
+     */
     public function addVariablePriceFields($roles=array()){
         //TODO: this
         //TODO: tiers validation
@@ -176,8 +217,10 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         );
     }
     
-    /**adds text fields and form metadata handlers to product data page 
-    /* @param $tiers string|array(string|array(string,string))
+    /**
+     * Adds text fields and form metadata handlers to product data page 
+     *
+     * @param $tiers string|array(string|array(string,string))
      */
     public function maybeAddSavePriceFields($roles, $names){
         if(WP_DEBUG) error_log("called maybeAddSavePriceFields on roles: ".serialize($roles).", names: ".serialize($names));
