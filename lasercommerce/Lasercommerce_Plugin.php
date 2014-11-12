@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
+include_once('Lasercommerce_Price_Spec.php');
 
 /**
  * Registers Wordpress and woocommerce hooks to modify prices
@@ -120,6 +121,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if( !isset($Lasercommerce_Tier_Tree) ) {
             $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( );
         }   
+
+        global $Lasercommerce_Price_Spec;
+        if( !isset($Lasercommerce_Price_Spec) ){
+            $Lasercommerce_Price_Spec = new Lasercommerce_Price_Spec();
+        }
     }
     
     /**
@@ -141,100 +147,142 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $settings;
     }
     
+    //TODO: this
+
     /**
-     * Used by maybeAddSavePriceField to add a price field to the product admin interface
+     * Used by maybeAddSaveTierField to add price fields to the product admin interface for a given tier
      * TODO: make this work with special prices
      * 
-     * @param string $role The role for which the price tier applies
-     * @param string tierName The human readable name for the tier
+     * @param string $tier_slug The internal name for the price tier (eg. wholesale)
+     * @param string $tier_name The human readable name for the price tier (eg. Wholesale)
      */
-    private function addPriceField($role, $tierName = ""){
-        $role = sanitize_key($role);
-        if( $tierName == "" ) $tierName = $role;
+    private function addTierFields($tier_slug, $tier_name = ""){
+        //sanitize tier_slug and $tier_name
+        $tier_slug = sanitize_key($tier_slug);
+        $tier_name = sanitize_key($tier_name);
+        if( $tier_name == "" ) $tier_name = $tier_slug;
         $prefix = $this->getOptionNamePrefix(); 
+        
+        // The following code was inspred by WooCommerce:
+        // https://github.com/woothemes/woocommerce/blob/master/includes/admin/meta-boxes/class-wc-meta-box-product-data.php
+
         add_action( 
             'woocommerce_product_options_pricing',  
-            function() use ($role, $tierName, $prefix){
+            function() use ($tier_slug, $tier_name, $prefix){
+                global $post, $thepostid;
+                if( !isset($thepostid) ){
+                    $thepostid = $post->ID;
+                }
+
+                echo '<div class="options_group show_if_simple">';
+
+                $price_spec = new Lasercommerce_Price_Spec($thepostid, $tier_slug);
+\
+                // Regular Price
                 woocommerce_wp_text_input( 
                     array( 
-                        'id' => $prefix.$role."_price", 
-                        'label' => __( "$tierName Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
+                        'id' => $prefix.$tier_slug."_regular_price", 
+                        'value' => esc_attr($price_spec->get_regular_price());
+                        'label' => __( "$tier_name Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'data_type' => 'price' 
                     ) 
                 );    
+                // Special Price
+                woocommerce_wp_text_input( 
+                    array( 
+                        'id' => $prefix.$tier_slug."_special_price", 
+                        'value' => esc_attr($price_spec->get_special_price());
+                        'label' => __( "$tier_name Special Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
+                        'description' => '<a href="#" class="sale_schedule">' . __( 'Schedule', 'lasercommerce' ) . '</a>',
+                        'data_type' => 'price' 
+                    ) 
+                );  
+
+                // Special active
+                $special_active_from    = ( $date = $price_spec->get_special_active_from() ) ? date_i18n( 'Y-m-d', $date ) : '';
+                $special_active_to      = ( $date = $price_spec->get_special_active_to() )   ? date_i18n( 'Y-m-d', $date ) : '';
+                $special_active_from_id = $prefix . $tier_slug . '_sale_price_dates_from';
+                $special_active_to_id   = $prefix . $tier_slug . '_sale_price_dates_to'
+
+                echo '  <p class="form-field sale_price_dates_fields">
+                            <label for="'.$special_active_from_id.'">' . __( 'Sale Price Dates', 'woocommerce' ) . '</label>
+                            <input type="text" class="short" name="'.$special_active_from_id.'" id="'.$special_active_from_id.'" value="' . esc_attr( $special_active_from ) . '" placeholder="' . _x( 'From&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
+                            <input type="text" class="short" name="'.$special_active_to_id.'" id="'.$special_active_to_id.'" value="' . esc_attr( $special_active_to ) . '" placeholder="' . _x( 'From&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
+                            <a href="#" class="cancel_sale_schedule">'. __( 'Cancel', 'woocommerce' ) .'</a>
+                        </p>';
+                // TODO: test above javascript is working
+
+                // TODO: output dynamic pricing rules
             }
         );
         //TODO: other product types
     }
     
     /**
-     * Used by maybeAddSavePriceField to add a hook to save a price field
+     * Used by maybeAddSavePriceField to add a hook to save price fields for a given tier
      * TODO: make this work with special prices 
      * 
-     * @param string $role The role the price tier applied to 
-     * @param string $name The human readable name of the price field
+     * @param string $tier_slug The slug of the tier the price fields apply to  
+     * @param string $tier_name The human readable name for the price tier
      */ 
-    private function savePriceField($role, $name = ""){
-        $role = sanitize_key($role);
-        if( $name == "" ) $name = $role;
+    private function saveTierFields($tier_slug, $tier_name = ""){
+        //sanitize tier_slug and $tier_name
+        $tier_slug = sanitize_key($tier_slug);
+        $tier_name = sanitize_key($tier_name);
+        if( $tier_name == "" ) $tier_name = $tier_slug;
         $prefix = $this->getOptionNamePrefix(); 
         add_action( 
             'woocommerce_process_product_meta_simple',
-            function($post_id) use ($role, $name, $prefix){
-                if(WP_DEBUG) error_log("filtered woocommerce_process_product_meta_simple. role: $role, tiername: $name, prefix: $prefix");
-                $price =  "";
-                if(isset($_POST[$prefix.$role."_price"])){                
-                    $price =  wc_format_decimal($_POST[$prefix . $role . "_price"]);
+            function($post_id) use ($tier_slug, $tier_name, $prefix){
+                global $post, $thepostid;
+                if( !isset($thepostid) ){
+                    $thepostid = $post->ID;
                 }
-                update_post_meta( 
-                    $post_id, 
-                    $prefix.$role."_price",
-                    $price
-                );
-            }
+
+                $price_spec = new Lasercommerce_Price_Spec($thepostid, $tier_slug);
+
+                $regular_id     = $prefix.$tier_slug."_regular_price";
+                $regular_price  = isset($_POST[$regular_id]) ? wc_format_decimal( $_POST[$regular_id] ) : '';
+                $price_spec['regular'] = $regular_price;
+                
+                $special_id     = $prefix.$tier_slug."_special_price";
+                $special_price  = isset($_POST[$special_id]) ? wc_format_decimal( $_POST[$special_id] ) : '';
+                $price_spec['special'] = $special_price;
+
+                $date_from_id   = $prefix.'_sale_price_dates_from';
+                $date_from      = isset( $_POST[$date_from_id] ) ? wc_clean( $_POST[$date_from_id] ) : '';
+                $price_spec['special_active_from'] = $date_from;
+
+                $date_to_id     = $prefix.'_sale_price_dates_to';
+                $date_to        = isset( $_POST[$date_to_id] ) ? wc_clean( $_POST[$date_to_id] ) : '';
+                $price_spec['special_active_to'] = $date_to;
+
+                // TODO: save dynamic pricing rules
+
+                $price_spec->save();
+
         );
         //TODO: other product types
         //add_action( 'woocommerce_process_product_meta_variable', 
     }
     
     /**
-     * (Not complete) Used by 
+     * Adds text fields and form metadata handlers to product data page for given tiers
+     * @param array $tiers a list of tier slugs
+     * @param array $names A mapping of tier slugs to their names
      */
-    public function addVariablePriceFields($roles=array()){
-        //TODO: this
-        //TODO: tiers validation
-        $prefix = $this->getOptionNamePrefix(); 
-        if ($roles) add_action(
-            'woocommerce_product_after_variable_attributes',
-            function( $loop, $variation_data, $variation) use ($roles, $prefix){
-                foreach( $roles as $role ){
-                    $var_price = $variation_data[$prefix.$role."_price"];
-                    if($var_price) if(WP_DEBUG) error_log("$role: ".$var_price[0]);
-                }
-            },
-            999,
-            3
-        );
+    public function maybeAddSaveTierFields($tiers, $names = array()){
+        foreach($tiers as $tier_slug){
+            $tier_name = isset($names[$tier_slug]?$names[$tier_slug]:$tier_slug;
+            $this->addTierField($tier_slug, $tier_name);
+            $this->saveTierField($tier_slug, $tier_name);
+        } 
     }
     
     /**
-     * Adds text fields and form metadata handlers to product data page 
-     *
-     * @param $tiers string|array(string|array(string,string))
+     * Gets the role of the current user
+     * @return string $role The role of the current user
      */
-    public function maybeAddSavePriceFields($roles, $names){
-        if(WP_DEBUG) error_log("called maybeAddSavePriceFields on roles: ".serialize($roles).", names: ".serialize($names));
-        if(empty($roles)){
-            return;
-        }
-        foreach($roles as $role){
-            $name = array_key_exists($role, $names)?$names[$role]:$role;
-            $this->addPriceField($role, $name);
-            $this->savePriceField($role, $name);
-        } 
-        $this->addVariablePriceFields($roles);
-    }
-    
     private function getCurrentUserRoles(){
         $current_user = wp_get_current_user();
         if(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
@@ -243,35 +291,58 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $roles;
     }
     
-    public function maybeGetSalePrice($price = '', $_product = ''){ // "" if non-regular user
-        if(WP_DEBUG) error_log("called maybeGetSalePrice");
-        if(WP_DEBUG) error_log("-> price: $price");
-        //todo: check if this is necessary
-        if( !isset($_product->id) ){ 
-            global $product;
-            if ( !isset($product) ){ 
-                If(WP_DEBUG) error_log("->! product global not set");                
-                return $price;
-            }
-            $_product = $product;
-        }    
-        if(WP_DEBUG) error_log("-> productID: $_product->id");
-        
-        global $Lasercommerce_Tier_Tree;
-        
-        $visibleTiers = array();
-        if( $_product->is_type( 'simple' ) ){
-            $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiersSimple(
-                $_product->id, 
-                $this->getCurrentUserRoles()
-            );
-        } else {
-            If(WP_DEBUG) error_log("-> !!!!!!!!!!!!!!!! type is variable!");
+    public function on_get_price( $base_price, $_product ){
+        if( is_product() ){
+            $id = isset($_product->variation_id)?$_product->variation_id:$_product
         }
-        if( empty($visibleTiers) ) {
-            return $price;
+    }
+
+
+    private function maybeGetLowestPriceSpec($_product=''){
+        if(is_product()) {
+            global $Lasercommerce_Tier_Tree, $Lasercommerce_Price_Spec;
+
+            $id = isset( $_product->variation_id ) ? $_product->variation_id : $_product->id;
+
+            $specs = array()
+            foreach( $this->getCurrentUserRoles() as $role ){
+                $price_spec = new Lasercommerce_Price_Spec($_product->id, $role);
+                if(empty($price_spec)) continue;
+                $specs[$role] = $price_spec
+            }
+
+            uasort( $specs, 'Lasercommerce_Price_Spec::sort_spec_by_price' );
+
+            return $specs[0];
+        } else { 
+            return null;
+        }
+
+    }
+
+    /**
+     * Gets the regular price of the given simple product, used inw oocommerce_get_regular_price
+     * @param mixed $price The regular price as seen by woocommerce core
+     * @param mixed $_product The product object
+     * @return mixed $price The regular price overridden by this plugin
+     */
+    public function maybeGetRegularPrice($price = '', $_product=''){
+        //TODO: detect if the price to override is woocommerce price
+        $lowestPirceSpec = $this->maybeGetLowestPriceSpec($product);
+        if(!is_null($lowestPirceSpec)){
+            return $lowestPirceSpec['regular'];
         } else {
-            return '';
+            return $Price
+        }
+    }
+
+    public function maybeGetSalePrice($price = '', $_product = ''){ 
+        //TODO: detect if the price to override is woocommerce price
+        $lowestPirceSpec = $this->maybeGetLowestPriceSpec($product);
+        if(!is_null($lowestPirceSpec)){
+            return $lowestPirceSpec['special'];
+        } else {
+            return $Price
         }
     }
     
@@ -315,6 +386,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         $lowest = array_values($visibleTiers);
         if(WP_DEBUG) error_log("-> lowest price: ".$lowest[0]);
         return $lowest[0];
+        //TODO: detect if the price to override is woocommerce price
+        $lowestPirceSpec = $this->maybeGetLowestPriceSpec($product);
+        if(!is_null($lowestPirceSpec)){
+            return $lowestPirceSpec['special'];
+        } else {
+            return $Price
+        }
     }
     
     public function maybeGetPriceHtml($price_html, $_product){
@@ -458,14 +536,32 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         add_filter( 'woocommerce_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
 
-        // add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 999, 2 );
+        //Filter / Action research:
+        //DYNAMIC PRICING
+        //---------------
+        //on_cart_loaded_from_session
+        //
+        // add_action( 'woocommerce_cart_loaded_from_session', 
+        //Handled by on_calculate_totals
+        // add_action( 'woocommerce_before_calculate_totals', 
+        //Handled by on_price_html
+        // add_filter( 'woocommerce_grouped_price_html', 
+        // add_filter( 'woocommerce_variation_price_html', 
+        // add_filter( 'woocommerce_sale_price_html', 
+        // add_filter( 'woocommerce_price_html',         
+        // add_filter( 'woocommerce_variation_price_html', 
+        // add_filter( 'woocommerce_variation_sale_price_html',
+        //Handled by on_get_price
+        // add_filter( 'woocommerce_get_price', 
+        //Filters used by ...
+        // add_filter( 'woocommerce_get_price_html',
         // add_filter( 'woocommerce_get_variation_price'
         // add_filter( 'woocommerce_variable_price_html',
         // add_filter( 'woocommerce_variation_price_html', 
         // add_filter( 'woocommerce_variation_sale_price_html',
         // add_filter( 'woocommerce_grouped_price_html', 
-		// add_filter( 'woocommerce_sale_price_html', 
-		// add_filter( 'woocommerce_price_html',         
+        // add_filter( 'woocommerce_sale_price_html', 
+        // add_filter( 'woocommerce_price_html',         
         // add_filter( 'woocommerce_variable_empty_price_html', 
         // add_filter( 'woocommerce_order_amount_item_subtotal'
         

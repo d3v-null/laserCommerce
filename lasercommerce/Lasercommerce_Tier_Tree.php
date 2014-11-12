@@ -24,6 +24,7 @@ class Lasercommerce_Tier_Tree {
     }
 
     /**
+     * (Needs to be rewritten to handle price_spec) 
      * Get the regular price of the given post viewed at a given role
      * 
      * @param integer $postID The ID of the given product / product variation
@@ -35,6 +36,7 @@ class Lasercommerce_Tier_Tree {
     }
 
     /**
+     * (Needs to be rewritten to handle price_spec)     
      * Get the special price of the given post viewed at a given role
      * 
      * @param integer $postID The ID of the given product / product variation
@@ -46,6 +48,7 @@ class Lasercommerce_Tier_Tree {
     }
 
     /**
+     * (Needs to be rewritten to handle price_spec)     
      * Get the date when the special price of the given post becomes active viewed at a given role
      * 
      * @param integer $postID The ID of the given product / product variation
@@ -57,6 +60,7 @@ class Lasercommerce_Tier_Tree {
     }
 
     /**
+     * (Needs to be rewritten to handle price_spec)     
      * Get the date when the special price of the given post becomes inactive viewed at a given role
      * 
      * @param integer $postID The ID of the given product / product variation
@@ -197,7 +201,6 @@ class Lasercommerce_Tier_Tree {
      * @param integer $postID The ID of the given product / product variation
      * @param array $roles The list of roles visible to the user
      * @return array $visibleTiers The list of tiers visible to the user ( role => price )
-     */
     public function getVisibleTiersSimple($postID, $roles){
 
         $availableTiers = $this->getAvailableTiers($roles);        
@@ -210,7 +213,8 @@ class Lasercommerce_Tier_Tree {
         }
         
         return $visibleTiers;
-    }
+    } 
+    */
 
     /**
      * Gets the postID of a given simple or variable product
