@@ -4,6 +4,9 @@
  * Helper class for specifying the price of a product including the parameters that
  * determine a product's fixed prices, and the rules that determine it's dynamic pricing.
  */
+
+include_once('Lasercommerce_Pricing.php');
+
 class Lasercommerce_Price_Spec {
 	
 	/**
@@ -14,7 +17,7 @@ class Lasercommerce_Price_Spec {
 	 *		...
 	 *	}
 	 */
-	private $pricings;
+	private $pricing;
 
 	/**
 	 * 	dynamics := {
@@ -48,7 +51,6 @@ class Lasercommerce_Price_Spec {
 	public $optionNamePrefix;
 	public $optionNameSuffix;
 	public $postID;
-	public $tier_slug;
 
 	/**
 	 * fills this class' price spec array with data from a given product's metadata
@@ -67,7 +69,6 @@ class Lasercommerce_Price_Spec {
 		$this->optionNameSuffix = "_price_spec";
 
         $this->postID = sanitize_key($postID);
-        $this->tier_slug = sanitize_key($tier_slug);
 
 		$this->load();
 	}
@@ -90,13 +91,13 @@ class Lasercommerce_Price_Spec {
 		$this->pricing = array();
 		if(isset($price_spec['pricing'])){
 			foreach ($price_spec['pricing'] as $role => $params) {
-				$this->pricing[$role] = new Lasercommercee_Pricing(deserialize($params));
+				$this->pricing[$role] = new Lasercommerce_Pricing(unserialize($params));
 			}
 		}
 		$this->dynamics = array();
 		if(isset($price_spec['dynamics'])){
 			foreach ($price_spec['dynamics'] as $dynamicID => $dynamic) {
-				$this->dynamics[$dynamicID] = new Lasercommerce_Dynamic(deserialize($dynamic));
+				$this->dynamics[$dynamicID] = new Lasercommerce_Dynamic(unserialize($dynamic));
 			}
 		}
 	}
@@ -110,186 +111,242 @@ class Lasercommerce_Price_Spec {
 			'dynamics' => array()
 		);
 
+		if(WP_DEBUG) error_log("saving price spec.");
+		if(WP_DEBUG) error_log(" -> pricing: ".esc_attr(serialize($this->pricing)));
+		if(WP_DEBUG) error_log(" -> dynamics ".esc_attr(serialize($this->dynamics)));
+
+
 		foreach ($this->pricing as $role => $pricing) {
-			$price_spec[$role] = $pricing.__toString();
+			$price_spec['pricing'][$role] = "$pricing";
 		}
 
-		$price_spec = array(
-			'pricing' => $this->pricing;
-			'dynamics' => $this->dynamics;
-		);
+		foreach ($this->dynamics as $dynamicID => $dynamic) {
+			$price_spec['dynamics'][$dynamicID] = $dynamic.__toString();
+		}
+
 		update_post_meta( $this->postID, $this->get_meta_name(), serialize($price_spec) );
 	}
 
-	public static function is_valid_role($role){
+	public static function is_valid_pricing($pricing){
+		if(WP_DEBUG) error_log("type of pricing: ".gettype($pricing));
+		if(WP_DEBUG) error_log("class of pricing: ".get_class($pricing));
+		if(WP_DEBUG) error_log("pricing methods: ".serialize(get_class_methods($pricing)));
+
 		return true;
+		return $pricing instanceof Lasercommerce_Pricing;
 	}
 
-	public static function validate_role($role){
-		if($this->is_valid_role($role)){
+	public static function validate_pricing($pricing){
+		if(Lasercommerce_Price_Spec::is_valid_pricing($pricing)){
 			return true;
 		} else {
-			throw new Exception("Invalid timestamp: $timestamp", 1);
+			throw new Exception("Invalid pricing object: ", 1);
 			return false;
 		}
 	}
 
-	public static function is_valid_role_list($roles){
-		foreach ($roles as $role) {
-			if(!$this->is_valid_role($role)) return false;
-		}
+	public function pricing_isset($role){
+		return isset($this->pricing[$role]);
 	}
 
-	public static function validate_role_list($roles){
-		foreach ($roles as $role) {
-			$this->validate_role($role);
-		}
-	}
-
-	private function maybe_get_dynamic_rules($dynamicID){
-		if(isset($this->dynamics[$dynamicID])){
-			return $this->dynamics[$dynamicID];
+	public function maybe_get_pricing($role){
+		if($this->pricing_isset($role)){
+			return $this->pricing[$role];
 		} else {
-			throw new Exception("Invalid dynamicID: $dynamicID", 1);
-			return null;
+			return new Lasercommerce_Pricing(array());
 		}
 	}
 
-	private function maybe_get_dynamic_conditions($dynamicID){
-		$rules = $this->maybe_get_dynamic_rules($dynamicID);
-
-		if(isset($this->dynamics[$dynamicID])){
-			$rules = $this->dynamics[$dynamicID];
-			return isset($rules['conditions'])?$rules['conditions']:array();
-		} else {
-			return array();
+	public function maybe_set_pricing($role, $pricing){
+		if($this->validate_pricing($pricing)){
+			$this->pricing[$role] = $pricing;
 		}
 	}
 
-	private function maybe_get_dynamic_collector($dynamicID){
-		if(isset($this->dynamics[$dynamicID])){
-			$rules = $this->dynamics[$dynamicID]
-		}
+	public function maybe_get_default_pricing(){
+		$_product = new WC_Product($this->postID);
+		$params = array();
+		$regular = $_product->regular_price;
+		if($regular) $params['regular'] = $regular;
+		$sale = $_product->sale_price;
+		if($sale) $params['sale'] = $sale;
+		$sale_from = $_product->sale_from;
+		if($sale_from) $params['sale_from'] = $sale_from;
+		$sale_to = $_product->sale_to;
+		if($sale_to) $params['sale_to'] = $sale_to;
+		return new Lasercommerce_Pricing($params);
 	}
 
-	private function maybe_get_dynamic_condition($dynamicID, $condition){
-		$conditions = $this->maybe_get_dynamic_conditions($dynamicID);
-		return isset($conditions[$condition])?$conditions[$condition]:null;
-	}
 
-	public function maybe_set_dynamic_condition($dynamicID, $condition, $value){
-		$conditions = $this->maybe_get_dynamic_conditions($dynamicID);
-		if(!$conditions) $conditions = array();
-		$conditions[$condition] = $value;
-	}
+	// public static function is_valid_role($role){
+	// 	return true;
+	// }
 
-	public function maybe_get_dynamic_active_from($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'active_from');
-	}
+	// public static function validate_role($role){
+	// 	if($this->is_valid_role($role)){
+	// 		return true;
+	// 	} else {
+	// 		throw new Exception("Invalid timestamp: $timestamp", 1);
+	// 		return false;
+	// 	}
+	// }
 
-	public function maybe_set_dynamic_active_from($dynamicID, $value){
-		if($this->validate_timestamp($value)){
-			$this->maybe_set_dynamic_condition($dynamicID, $condition, $value);
-		}
-	}
+	// public static function is_valid_role_list($roles){
+	// 	foreach ($roles as $role) {
+	// 		if(!$this->is_valid_role($role)) return false;
+	// 	}
+	// }
 
-	public function maybe_get_dynamic_active_to($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'active_to');
-	}
+	// public static function validate_role_list($roles){
+	// 	foreach ($roles as $role) {
+	// 		$this->validate_role($role);
+	// 	}
+	// }
 
-	public function maybe_set_dynamic_active_to($dynamicID, $value){
-		if ($this->validate_timestamp($value)) {
-			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_active', $value);
-		}
-	}
+	// private function maybe_get_dynamic_rules($dynamicID){
+	// 	if(isset($this->dynamics[$dynamicID])){
+	// 		return $this->dynamics[$dynamicID];
+	// 	} else {
+	// 		throw new Exception("Invalid dynamicID: $dynamicID", 1);
+	// 		return null;
+	// 	}
+	// }
 
-	public function maybe_get_dynamic_include($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'include');
-	}
+	// private function maybe_get_dynamic_conditions($dynamicID){
+	// 	$rules = $this->maybe_get_dynamic_rules($dynamicID);
 
-	public function maybe_set_dynamic_include($dynamicID, $value){
-		if($this->validate_role_list($value)){
-			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include', $value);
-		}
-	}
+	// 	if(isset($this->dynamics[$dynamicID])){
+	// 		$rules = $this->dynamics[$dynamicID];
+	// 		return isset($rules['conditions'])?$rules['conditions']:array();
+	// 	} else {
+	// 		return array();
+	// 	}
+	// }
 
-	public function maybe_get_dynamic_include_ancestors($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'include_ancestors');
-	}
+	// private function maybe_get_dynamic_collector($dynamicID){
+	// 	if(isset($this->dynamics[$dynamicID])){
+	// 		$rules = $this->dynamics[$dynamicID];
+	// 	}
+	// }
 
-	public function maybe_set_dynamic_include_ancestors($dynamicID, $value){
-		if($this->validate_role_list($value)){
-			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include_ancestors', $value);
-		}
-	}
+	// private function maybe_get_dynamic_condition($dynamicID, $condition){
+	// 	$conditions = $this->maybe_get_dynamic_conditions($dynamicID);
+	// 	return isset($conditions[$condition])?$conditions[$condition]:null;
+	// }
 
-	public function maybe_get_dynamic_include_descendents($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'include_descendents');
-	}
+	// public function maybe_set_dynamic_condition($dynamicID, $condition, $value){
+	// 	$conditions = $this->maybe_get_dynamic_conditions($dynamicID);
+	// 	if(!$conditions) $conditions = array();
+	// 	$conditions[$condition] = $value;
+	// }
 
-	public function maybe_set_dynamic_include_descendents($dynamicID, $value){
-		if($this->validate_role_list($value)){
-			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include_descendents', $value);
-		}
-	}
+	// public function maybe_get_dynamic_active_from($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'active_from');
+	// }
 
-	public function maybe_get_dynamic_exclude_ancestors($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'exclude_ancestors');
-	}
+	// public function maybe_set_dynamic_active_from($dynamicID, $value){
+	// 	if($this->validate_timestamp($value)){
+	// 		$this->maybe_set_dynamic_condition($dynamicID, $condition, $value);
+	// 	}
+	// }
 
-	public function maybe_set_dynamic_exclude_ancestors($dynamicID, $value){
-		if($this->validate_role_list($value)){
-			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_exclude_ancestors', $value);
-		}
-	}	
+	// public function maybe_get_dynamic_active_to($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'active_to');
+	// }
 
-	public function maybe_get_dynamic_exclude_descendents($dynamicID){
-		return maybe_get_dynamic_condition($dynamicID, 'exclude_descendents');
-	}
+	// public function maybe_set_dynamic_active_to($dynamicID, $value){
+	// 	if ($this->validate_timestamp($value)) {
+	// 		$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_active', $value);
+	// 	}
+	// }
 
-	public function maybe_set_dynamic_exclude_descendents($dynamicID, $value){
-		if($this->validate_role_list($value)){
-			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_exclude_descendents', $value);
-		}
-	}
+	// public function maybe_get_dynamic_include($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'include');
+	// }
 
-	public function is_dynamic_active_now($dynamicID){
-		$from = $this->maybe_get_dynamic_active_from($dynamicID);
-		$to = $this->maybe_get_dynamic_active_to($dynamicID);
-		return is_something_active_now($from, $to);
-	}
+	// public function maybe_set_dynamic_include($dynamicID, $value){
+	// 	if($this->validate_role_list($value)){
+	// 		$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include', $value);
+	// 	}
+	// }
 
-	public function is_dynamic_visible_to_role($dynamicID, $role){
-		global $Lasercommerce_Tier_Tree;
-        if( !isset($Lasercommerce_Tier_Tree) ) {
-            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $optionNamePrefix );
-        }
+	// public function maybe_get_dynamic_include_ancestors($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'include_ancestors');
+	// }
 
-		$include = $this->maybe_get_dynamic_include($dynamicID);
-		//$include_ancestors = $this->maybe_get_dynamic_include_ancestors($dynamicID);
-		$include_descendents = $this->maybe_get_dynamic_include_descendents($dynamicID);
-		//$exclude_ancestors = $this->maybe_get_dynamic_exclude_ancestors($dynamicID)
-		$exclude_descendents = $this->maybe_get_dynamic_exclude_descendents($dynamicID);
+	// public function maybe_set_dynamic_include_ancestors($dynamicID, $value){
+	// 	if($this->validate_role_list($value)){
+	// 		$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include_ancestors', $value);
+	// 	}
+	// }
 
-		//TODO: This
+	// public function maybe_get_dynamic_include_descendents($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'include_descendents');
+	// }
 
-	}
+	// public function maybe_set_dynamic_include_descendents($dynamicID, $value){
+	// 	if($this->validate_role_list($value)){
+	// 		$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include_descendents', $value);
+	// 	}
+	// }
 
-	public function is_dynamic_visible_to_roles($dynamicID, $roles){
-		foreach ($roles as $role) {
-			if($this->is_dynamic_visible_to_role($dynamicID, $role)) return true;
-		} 
-		return false;
-	}
+	// public function maybe_get_dynamic_exclude_ancestors($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'exclude_ancestors');
+	// }
 
-	public function get_valid_dynamics($roles){
-		$dynamics = array();
-		foreach ($this->dynamics as $dynamicID => $rules) {
-			if ($this->is_dynamic_active_now($dynamicID) and $this->is_dynamic_visible_to_roles($dynamicID, $roles)){
-				array_push($dynamics, $dynamicID)
-			}
-		}
-	}
+	// public function maybe_set_dynamic_exclude_ancestors($dynamicID, $value){
+	// 	if($this->validate_role_list($value)){
+	// 		$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_exclude_ancestors', $value);
+	// 	}
+	// }	
+
+	// public function maybe_get_dynamic_exclude_descendents($dynamicID){
+	// 	return maybe_get_dynamic_condition($dynamicID, 'exclude_descendents');
+	// }
+
+	// public function maybe_set_dynamic_exclude_descendents($dynamicID, $value){
+	// 	if($this->validate_role_list($value)){
+	// 		$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_exclude_descendents', $value);
+	// 	}
+	// }
+
+	// public function is_dynamic_active_now($dynamicID){
+	// 	$from = $this->maybe_get_dynamic_active_from($dynamicID);
+	// 	$to = $this->maybe_get_dynamic_active_to($dynamicID);
+	// 	return is_something_active_now($from, $to);
+	// }
+
+	// public function is_dynamic_visible_to_role($dynamicID, $role){
+	// 	global $Lasercommerce_Tier_Tree;
+ //        if( !isset($Lasercommerce_Tier_Tree) ) {
+ //            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $optionNamePrefix );
+ //        }
+
+	// 	$include = $this->maybe_get_dynamic_include($dynamicID);
+	// 	//$include_ancestors = $this->maybe_get_dynamic_include_ancestors($dynamicID);
+	// 	$include_descendents = $this->maybe_get_dynamic_include_descendents($dynamicID);
+	// 	//$exclude_ancestors = $this->maybe_get_dynamic_exclude_ancestors($dynamicID)
+	// 	$exclude_descendents = $this->maybe_get_dynamic_exclude_descendents($dynamicID);
+
+	// 	//TODO: This
+
+	// }
+
+	// public function is_dynamic_visible_to_roles($dynamicID, $roles){
+	// 	foreach ($roles as $role) {
+	// 		if($this->is_dynamic_visible_to_role($dynamicID, $role)) return true;
+	// 	} 
+	// 	return false;
+	// }
+
+	// public function get_valid_dynamics($roles){
+	// 	$dynamics = array();
+	// 	foreach ($this->dynamics as $dynamicID => $rules) {
+	// 		if ($this->is_dynamic_active_now($dynamicID) and $this->is_dynamic_visible_to_roles($dynamicID, $roles)){
+	// 			array_push($dynamics, $dynamicID);
+	// 		}
+	// 	}
+	// }
 
 	/**
 	 * Calculates the price for a given collector quantity
@@ -367,9 +424,4 @@ class Lasercommerce_Price_Spec {
 	public function generate_pricing_table_html(){
 		
 	}
-
-    public static function sort_spec_by_regular_price($spec_a, $spec_b){
-        //TODO: sort by regular or sort by price??
-        return $spec_a['regular'] > $spec_b['regular'];
-    }
 }

@@ -16,19 +16,34 @@ class Lasercommerce_Pricing {
 	 */
 	private $params;
 
+	public static function sort_by_regular($a, $b){
+		if(isset($a->regular)){
+			if(isset($b->regualr)){ //Both set
+				if($a->regular == $b->regular){
+					return 0;
+				} else{
+					return ($a->regular < $b->regular) ? -1 : 1; 
+				}
+			} else { //only a is set
+				return -1;
+			}
+		} else { 
+			if(isset($b->regular)){ // only b is set
+				return 1;
+			} else { //neither is set
+				return 0;
+			}
+		}
+	}
+
 	public function __construct($params){
 		$this->params = array();
-		if(isset($params['regular']) {
-			$this->regular = $params['regular']);
-		} else {
-			throw new Exception("Cannot create pricing without regualr price", 1);
-			$this->params = null;
+		if($params){
+			if(isset($params['regular'])) $this->regular = $params['regular'];
+			if(isset($params['sale'])) $this->sale = $params['sale'];
+			if(isset($params['sale_from'])) $this->sale_from = $params['sale_from'];
+			if(isset($params['sale_to'])) $this->sale_to = $params['sale_to'];
 		}
-
-		if(isset($params['sale'])) $this->sale = $sale;
-		if(isset($params['sale_from'])) $this->sale_from = $sale_from;
-		if(isset($params['sale_to']))) $this->sale_to = $sale_to;
-
 	}
 
 	public function __get($name){
@@ -59,7 +74,7 @@ class Lasercommerce_Pricing {
 				break;
 			case 'tax_status':
 				if($this->validate_tax_status($value)){
-					$this->params[$name] = $value
+					$this->params[$name] = $value;
 				}
 				break;
 			default:
@@ -86,7 +101,7 @@ class Lasercommerce_Pricing {
 	}
 
 	public static function validate_price($price){
-		if(is_valid_price($price)){
+		if(Lasercommerce_Pricing::is_valid_price($price)){
 			return true;
 		} else {
 			throw new Exception("Invalid Price: $price", 1);
@@ -103,7 +118,7 @@ class Lasercommerce_Pricing {
 	}
 
 	public static function validate_tax_status($status){
-		if(is_valid_tax_status($status){
+		if(Lasercommerce_Pricing::is_valid_tax_status($status)){
 			return true;
 		} else {
 			throw new Exception("Invalid Tax Status: $status", 1);
@@ -116,7 +131,7 @@ class Lasercommerce_Pricing {
 	}
 
 	public static function validate_timestamp($timestamp){
-		if($this->is_valid_timestamp($timestamp)){
+		if(Lasercommerce_Pricing::is_valid_timestamp($timestamp)){
 			return true;
 		} else {
 			throw new Exception("Invalid timestamp: $timestamp", 1);
@@ -125,23 +140,30 @@ class Lasercommerce_Pricing {
 	}
 	
 	public function is_sale_active_now(){
-		$from = isset($this->sale_from)?$this->sale_from:null;
-		$to = isset($this->sale_to)?$this->sale_to:null;
-		$date = new DateTime();
-		$now = $date->getTimeStamp();
-		if($now){
-			if($from){
-				if(strtotime($from) > strtotime($now)){
-					return false;
+		$sale = isset($this->sale)?$this->sale:null;
+		if($sale){
+			$from = isset($this->sale_from)?$this->sale_from:null;
+			$to = isset($this->sale_to)?$this->sale_to:null;
+			$date = new DateTime();
+
+			$now = $date->getTimeStamp();
+			if($now){
+				if($from){
+					if(strtotime($from) > strtotime($now)){
+						return false;
+					}
+				}
+				if($to){
+					if(strtotime($to) < strtotime($now)){
+						return false;
+					}
 				}
 			}
-			if($to){
-				if(strtotime($to) < strtotime($now)){
-					return false;
-				}
-			}
+			return true;
+		} else {
+			return false;
 		}
-		return true;
+		
 	}
 
 	/** 
@@ -159,3 +181,4 @@ class Lasercommerce_Pricing {
 		}
 		//gets the dynamic pricing collector mode and finds the quantity from session data
 	}	
+}
