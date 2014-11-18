@@ -176,13 +176,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
                 echo '<div class="options_group show_if_simple">';
 
-                $price_spec = new Lasercommerce_Price_Spec($thepostid, $tier_slug);
-\
+                $price_spec = new Lasercommerce_Price_Spec($thepostid);
+
+                $regular_price  = ($price = $price_spec->maybe_get_regular_price($tier_slug)) ? esc_attr($price) : '' ;
+                $sale_price     = ($price = $price_spec->sale_price($tier_slug)) ? esc_attr($price) : '' ;
+
                 // Regular Price
                 woocommerce_wp_text_input( 
                     array( 
                         'id' => $prefix.$tier_slug."_regular_price", 
-                        'value' => esc_attr($price_spec->get_regular_price());
+                        'value' => $regular_price,
                         'label' => __( "$tier_name Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'data_type' => 'price' 
                     ) 
@@ -190,19 +193,19 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 // Special Price
                 woocommerce_wp_text_input( 
                     array( 
-                        'id' => $prefix.$tier_slug."_special_price", 
-                        'value' => esc_attr($price_spec->get_special_price());
-                        'label' => __( "$tier_name Special Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
+                        'id' => $prefix.$tier_slug."_sale_price", 
+                        'value' => $sale_price,
+                        'label' => __( "$tier_name Sale Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'description' => '<a href="#" class="sale_schedule">' . __( 'Schedule', 'lasercommerce' ) . '</a>',
                         'data_type' => 'price' 
                     ) 
                 );  
 
                 // Special active
-                $special_active_from    = ( $date = $price_spec->get_special_active_from() ) ? date_i18n( 'Y-m-d', $date ) : '';
-                $special_active_to      = ( $date = $price_spec->get_special_active_to() )   ? date_i18n( 'Y-m-d', $date ) : '';
-                $special_active_from_id = $prefix . $tier_slug . '_sale_price_dates_from';
-                $special_active_to_id   = $prefix . $tier_slug . '_sale_price_dates_to'
+                $sale_from    = ( $date = $price_spec->maybe_get_sale_from() ) ? date_i18n( 'Y-m-d', $date ) : '';
+                $sale_to      = ( $date = $price_spec->maybe_get_sale_to() )   ? date_i18n( 'Y-m-d', $date ) : '';
+                $sale_from_id = $prefix . $tier_slug . '_sale_price_dates_from';
+                $sale_to_id   = $prefix . $tier_slug . '_sale_price_dates_to';
 
                 echo '  <p class="form-field sale_price_dates_fields">
                             <label for="'.$special_active_from_id.'">' . __( 'Sale Price Dates', 'woocommerce' ) . '</label>
@@ -239,28 +242,28 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     $thepostid = $post->ID;
                 }
 
-                $price_spec = new Lasercommerce_Price_Spec($thepostid, $tier_slug);
+                $price_spec = new Lasercommerce_Price_Spec($thepostid);
 
                 $regular_id     = $prefix.$tier_slug."_regular_price";
                 $regular_price  = isset($_POST[$regular_id]) ? wc_format_decimal( $_POST[$regular_id] ) : '';
-                $price_spec['regular'] = $regular_price;
+                $price_spec->maybe_set_regular_price($tier_slug, $regular_price);
                 
-                $special_id     = $prefix.$tier_slug."_special_price";
-                $special_price  = isset($_POST[$special_id]) ? wc_format_decimal( $_POST[$special_id] ) : '';
-                $price_spec['special'] = $special_price;
+                $sale_id     = $prefix.$tier_slug."_special_price";
+                $sale_price  = isset($_POST[$sale_id]) ? wc_format_decimal( $_POST[$sale_id] ) : '';
+                $price_spec->maybe_set_sale_price($tier_slug, $sale_price);
 
-                $date_from_id   = $prefix.'_sale_price_dates_from';
-                $date_from      = isset( $_POST[$date_from_id] ) ? wc_clean( $_POST[$date_from_id] ) : '';
-                $price_spec['special_active_from'] = $date_from;
+                $sale_from_id   = $prefix.'_sale_price_dates_from';
+                $sale_from      = isset( $_POST[$sale_from_id] ) ? wc_clean( $_POST[$sale_from_id] ) : '';
+                $price_spec->maybe_set_sale_from($tier_slug, $sale_from);
 
-                $date_to_id     = $prefix.'_sale_price_dates_to';
-                $date_to        = isset( $_POST[$date_to_id] ) ? wc_clean( $_POST[$date_to_id] ) : '';
-                $price_spec['special_active_to'] = $date_to;
+                $sale_to_id     = $prefix.'_sale_price_dates_to';
+                $sale_to        = isset( $_POST[$sale_to_id] ) ? wc_clean( $_POST[$sale_to_id] ) : '';
+                $price_spec->maybe_set_sale_to($tier_slug, $sale_to);
 
                 // TODO: save dynamic pricing rules
 
                 $price_spec->save();
-
+            }
         );
         //TODO: other product types
         //add_action( 'woocommerce_process_product_meta_variable', 
@@ -272,10 +275,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      * @param array $names A mapping of tier slugs to their names
      */
     public function maybeAddSaveTierFields($tiers, $names = array()){
+        if(WP_DEBUG) error_log("Called maybeAddSaveTierFields: ".serialize($tiers));
         foreach($tiers as $tier_slug){
-            $tier_name = isset($names[$tier_slug]?$names[$tier_slug]:$tier_slug;
-            $this->addTierField($tier_slug, $tier_name);
-            $this->saveTierField($tier_slug, $tier_name);
+            $tier_name = isset($names[$tier_slug])?$names[$tier_slug]:$tier_slug;
+            $this->addTierFields($tier_slug, $tier_name);
+            $this->saveTierFields($tier_slug, $tier_name);
         } 
     }
     
@@ -290,30 +294,20 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(WP_DEBUG) error_log("--> roles: ".serialize($roles));
         return $roles;
     }
-    
-    public function on_get_price( $base_price, $_product ){
-        if( is_product() ){
-            $id = isset($_product->variation_id)?$_product->variation_id:$_product
-        }
-    }
 
-
-    private function maybeGetLowestPriceSpec($_product=''){
+    private function maybeGetLowestPricing($_product=''){
         if(is_product()) {
             global $Lasercommerce_Tier_Tree, $Lasercommerce_Price_Spec;
 
             $id = isset( $_product->variation_id ) ? $_product->variation_id : $_product->id;
-
-            $specs = array()
+            $price_spec = new Lasercommerce_Price_Spec($id);
+            $pricing = array();
             foreach( $this->getCurrentUserRoles() as $role ){
-                $price_spec = new Lasercommerce_Price_Spec($_product->id, $role);
-                if(empty($price_spec)) continue;
-                $specs[$role] = $price_spec
+                $pricing[$role] = $price_spec->maybe_get_pricing_params($role);
             }
+            uasort( $pricing );
 
-            uasort( $specs, 'Lasercommerce_Price_Spec::sort_spec_by_price' );
-
-            return $specs[0];
+            return $pricing[0];
         } else { 
             return null;
         }
@@ -328,70 +322,31 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      */
     public function maybeGetRegularPrice($price = '', $_product=''){
         //TODO: detect if the price to override is woocommerce price
-        $lowestPirceSpec = $this->maybeGetLowestPriceSpec($product);
-        if(!is_null($lowestPirceSpec)){
-            return $lowestPirceSpec['regular'];
+        $lowestPricing = $this->maybeGetLowestTier($_product);
+        if(!is_null($lowestPricing)){
+            return $lowestPricing['regular'];
         } else {
-            return $Price
+            return $price;
         }
     }
 
     public function maybeGetSalePrice($price = '', $_product = ''){ 
         //TODO: detect if the price to override is woocommerce price
-        $lowestPirceSpec = $this->maybeGetLowestPriceSpec($product);
-        if(!is_null($lowestPirceSpec)){
-            return $lowestPirceSpec['special'];
+        $lowestPricing = $this->maybeGetLowestPricing($_product);
+        if(!is_null($lowestPricing)){
+            return $lowestPricing['special'];
         } else {
-            return $Price
+            return $price;
         }
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
-        if(WP_DEBUG) error_log('');
-        if(WP_DEBUG) error_log("called maybeGetPrice");
-        if(WP_DEBUG) error_log("-> price: $price");
-        //todo: make this read off settings, minimum price OR lowest available price
-        //todo: extend to variable
-        
-        if( !isset($_product->id) ){ 
-            global $product;
-            if ( !isset($product) ){ 
-                If(WP_DEBUG) error_log("->! product global not set");
-                return $price;
-            }
-            $_product = $product;
-        }    
-        $regular_price = $_product->regular_price;
-        $sale_price = $_product->sale_price;
-        
-        if(WP_DEBUG) error_log("-> regular_price: $regular_price");
-        if(WP_DEBUG) error_log("-> sale_price: $sale_price");
-        if( !in_array($price, array($sale_price, $regular_price))){ //Weird thing I have to do to conform with dynamic pricing
-            return $price;
-        }
-        global $Lasercommerce_Tier_Tree;
-
-        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );
-        if(!$postID){
-            return $price;
-        }
-
-        $visibleTiers = $Lasercommerce_Tier_Tree->getVisibleTiersSimple(
-            $postID,
-            $this->getCurrentUserRoles()
-        );
-        if( empty($visibleTiers) ) return $price;
-
-        asort( $visibleTiers );
-        $lowest = array_values($visibleTiers);
-        if(WP_DEBUG) error_log("-> lowest price: ".$lowest[0]);
-        return $lowest[0];
-        //TODO: detect if the price to override is woocommerce price
-        $lowestPirceSpec = $this->maybeGetLowestPriceSpec($product);
-        if(!is_null($lowestPirceSpec)){
-            return $lowestPirceSpec['special'];
+        $lowestTier = $this->maybeGetLowestTier($_product);
+        if(!is_null($lowestTier)){
+            $price_spec
+            return $lowestTier->calculate_price();
         } else {
-            return $Price
+            return $price;
         }
     }
     
@@ -404,15 +359,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(WP_DEBUG) error_log("-> product: ".$_product->id);
         
         return $price_html;
-    }
-    
-    public function maybeGetCartPrice($price, $_product){
-        if(WP_DEBUG) error_log('');
-        if(WP_DEBUG) error_log("called maybeGetCartPrice");
-        if(WP_DEBUG) error_log("-> price: ".serialize($price));
-        if(WP_DEBUG) error_log("-> product: ".$_product->id);
-        
-        return $price;    
     }
     
     public function maybeAddPricingTab( $tabs ){
@@ -526,7 +472,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( );
         }   
         
-        $this->maybeAddSavePriceFields( $Lasercommerce_Tier_Tree->getRoles(), $Lasercommerce_Tier_Tree->getNames() );
+        $this->maybeAddSaveTierFields( $Lasercommerce_Tier_Tree->getRoles(), $Lasercommerce_Tier_Tree->getNames() );
         
         //TODO: make modifications to product price display
         // add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) ); - doesn't do anything

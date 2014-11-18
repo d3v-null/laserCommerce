@@ -115,17 +115,17 @@ class Lasercommerce_Tier_Tree {
     private function flattenTierTreeRecursive($node = array()){
         IF(WP_DEBUG) foreach($node as $k => $v) error_log("node: ($k, ".serialize($v).")");
         if( !isset($node['id']) ) return array();
-        $ids = array($node['id']);
+        $roles = array($node['id']);
         if( isset($node['children'] ) ){
             foreach( $node['children'] as $child ){
                 //IF(WP_DEBUG) error_log("key, child: $key, ".serialize($child));
                 $result = $this->flattenTierTreeRecursive($child);
                 //IF(WP_DEBUG) error_log("result: ".serialize($result));
-                $ids = array_merge($ids, $result);
+                $roles = array_merge($roles, $result);
             }
         }
         // IF(WP_DEBUG) error_log("names: ".serialize($names));
-        return $ids;
+        return $roles;
     }
     
     /**
@@ -135,13 +135,29 @@ class Lasercommerce_Tier_Tree {
      */
     public function getRoles(){
         $tree = $this->getTierTree();
-        $ids = array();
+        $roles = array();
         foreach( $tree as $node ){
-            $ids = array_merge($ids, $this->flattenTierTreeRecursive($node));
+            $roles = array_merge($roles, $this->flattenTierTreeRecursive($node));
             // IF(WP_DEBUG) error_log("merge: ".serialize($names));
         }
-        return $ids;
+        return $roles;
     }   
+
+    // public function getDescendents($role){
+    //     $roles = $this->getRoles();
+    //     if(in_array($role, $roles)){
+    //         return $this->flattenTierTreeRecursive
+    //     }
+    // }
+
+    // public function isDescendentOf($a, $b){
+    //     $roles = $this->getRoles();
+    //     if(in_array($a, $roles) and in_array($b, $roles)){
+
+    //     } else {
+
+    //     }
+    // }
     
     /**
      * Used by getAvailableTiers to recursively determine the price tiers available 
@@ -194,6 +210,8 @@ class Lasercommerce_Tier_Tree {
         //IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
         return $tiers;
     }
+
+
 
     /**
      * (Depreciated) Returns a list of prices available for a user that can view a given list of roles

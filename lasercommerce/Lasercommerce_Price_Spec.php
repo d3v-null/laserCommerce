@@ -1,50 +1,61 @@
 <?php
 
 /**
- * Helper class for specifying the price of a product
+ * Helper class for specifying the price of a product including the parameters that
+ * determine a product's fixed prices, and the rules that determine it's dynamic pricing.
  */
 class Lasercommerce_Price_Spec {
+	
 	/**
-	 * The array specifying the price of a product, here is it's format:
+	 * The array specifying the pricing of a product, here is it's format:
 	 *
-	 * 	price_spec: {
-	 * 		‘regular’:<regular price>, 
-	 * 		‘special’:<special price>,
-	 * 		[‘special_active’:<special active>,]
-	 * 		‘dynamic’: {
-	 * 			‘collector’: {
-	 *				‘type’:<collector type>,
-	 *				‘params’:<collector params>
-	 * 			},
- 	 *			‘rules’:<rules> 
- 	 *		}
-	 *		[‘dynamic_active’:<dynamic active>]
-	 *		['tax_status':<'inc'|'exc'>]
+	 * 	pricing := {
+ 	 *		<role>:<pricing>,
+	 *		...
 	 *	}
-	 *
-	 * <special active>, <dynamic active> :=  True | False | { from’:<active from>, to’:<active to> }
-	 * <collector type> := ‘cat’ | ‘prod’ | 'var’ | ‘catweights’
-	 * <rules> := { ‘qty brk’:<qty brk>, ‘discount’:<discount> }
-	 * <collector params> := <list of SKUs>|<list of category slugs>|<list of varIDs>|<list of weighted category slugs>
 	 */
-	private array $price_spec;
+	private $pricings;
+
+	/**
+	 * 	dynamics := {
+	 * 		<rule ID>:<rules>,
+	 * 		...
+ 	 *	};
+	 * 	rules := {
+	 * 		‘collector’: {
+	 *			‘type’:<collector type>,
+	 *			‘params’:<collector params>
+	 * 		},
+	 * 		'conditions': {
+	 * 			['include':<tiers>,]
+	 *			['include_ancestors':<tiers>,]
+	 *			['include_descendents':<tiers>,]
+	 *			['exclude_ancestors':<tiers>,]
+	 *			['exclude_descendents':<tiers>,]
+	 *			['active_from':<timestamp>,]
+	 *			['active_to':<timestamp>]
+	 * 		},
+	 * 		'modifier': {
+	 * 			'type':<modifier type>,
+	 * 			'params':<modifier params>
+	 *		}
+	 * 	}
+	 * 	collector type := ‘cat’ | ‘prod’ | 'var’ | ‘catweights’
+	 * 	modifier type := 
+	 */
+	private $dynamics;
 
 	public $optionNamePrefix;
 	public $optionNameSuffix;
 	public $postID;
-	public $tier_slug
-
-    public static function sort_spec_by_regular_price($spec_a, $spec_b){
-        //TODO: sort by regular or sort by price??
-        return $spec_a['regular'] > $spec_b['regular'];
-    }
+	public $tier_slug;
 
 	/**
 	 * fills this class' price spec array with data from a given product's metadata
 	 * @param mixed $postID The postID of the product
 	 * @param string $tier_slug The tier of the price_spec
 	 */
-	public function __construct($postID, $tier_slug){
+	public function __construct($postID){
 		global $Lasercommerce_Plugin;
 		if(!isset($Lasercommerce_Plugin)){
 			$Lasercommerce_Plugin = new Lasercommerce_Plugin();
@@ -53,7 +64,7 @@ class Lasercommerce_Price_Spec {
 		}
 
 		$this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix(); 
-		$this->optionNameSuffix = "_price_spec"
+		$this->optionNameSuffix = "_price_spec";
 
         $this->postID = sanitize_key($postID);
         $this->tier_slug = sanitize_key($tier_slug);
@@ -66,201 +77,217 @@ class Lasercommerce_Price_Spec {
 	 * @return string $meta_name Name of the meta field
 	 */
 	public function get_meta_name(){
-		return $this->optionNamePrefix . $this->tier_slug . $this->optionNameSuffix
+		return $this->optionNamePrefix . $this->optionNameSuffix;
 	}
 
 	/**
 	 * Loads the price_spec array from the postID and tier_slug given in construction
 	 */
 	public function load(){
-		$string = get_post_meta( $this->postID, , true);
-		//TODO: error checking
-		$price_spec = deserialize($string);
-		//TODO: error checking
-		$this->price_spec = $price_spec;
+		$string = get_post_meta( $this->postID, $this->get_meta_name(), true);
+		$price_spec = unserialize($string);
+
+		$this->pricing = array();
+		if(isset($price_spec['pricing'])){
+			foreach ($price_spec['pricing'] as $role => $params) {
+				$this->pricing[$role] = new Lasercommercee_Pricing(deserialize($params));
+			}
+		}
+		$this->dynamics = array();
+		if(isset($price_spec['dynamics'])){
+			foreach ($price_spec['dynamics'] as $dynamicID => $dynamic) {
+				$this->dynamics[$dynamicID] = new Lasercommerce_Dynamic(deserialize($dynamic));
+			}
+		}
 	}
 
 	/**
 	 * Turns this class' price spec into a serialized string and saves in product meta
 	 */
 	public function save(){
-		update_post_meta( $this->postID, $this->get_meta_name(), serialize($this->price_spec) );
+		$price_spec = array(
+			'pricing' => array(),
+			'dynamics' => array()
+		);
+
+		foreach ($this->pricing as $role => $pricing) {
+			$price_spec[$role] = $pricing.__toString();
+		}
+
+		$price_spec = array(
+			'pricing' => $this->pricing;
+			'dynamics' => $this->dynamics;
+		);
+		update_post_meta( $this->postID, $this->get_meta_name(), serialize($price_spec) );
 	}
 
-	public function __get( $key ){
-		if( in_array($key, array_keys($price_spec)) ){
-			if(isset($price_spec[$key])){
-				return $price_spec[$key];
-			} else {
-				return null;
-			}
-		} elseif( in_array($key, array('special_active_from', 'special_active_to'))) {
-			$special_active = $this['special_active'];
-			if(is_null($special_active)) return null;
-			switch ($key) {
-				case 'special_active_from':
-					return isset($special_active['from'])?$special_active['from']:null;
-				case 'special_active_to':
-					return isset($special_active[ 'to' ])?$special_active[ 'to' ]:null;
-				default:
-					return null;
-			}
-		} elseif( in_array($key, array('collector', 'dynamic_rules'))) {
-			$dynamic = $this['dynamic'];
-			if(is_null($dynamic)) return null;
-			switch ($key) {
-				case 'collector':
-					return isset($dynamic['collector'])?$dynamic['collector']:null;
-				case 'dynamic_rules':
-					return isset($dynamic['rules'])?$dynamic['rules']:null;
-				default:
-					return null;
-			}
-		} elseif( in_array($key, array('collector_type', 'collector_params')) ) {
-			$collector = $this['dynamic_collector'];
-			if(is_null($collector)) return null;
-			switch ($key) {
-				case 'collector_type':
-					return isset($collector['type'])?$collector['type']:null;
-				case 'collector_params':
-					return isset($collector['params'])?$collector['params']:null;
-				default:
-					return null;
-			}
+	public static function is_valid_role($role){
+		return true;
+	}
+
+	public static function validate_role($role){
+		if($this->is_valid_role($role)){
+			return true;
 		} else {
+			throw new Exception("Invalid timestamp: $timestamp", 1);
+			return false;
+		}
+	}
+
+	public static function is_valid_role_list($roles){
+		foreach ($roles as $role) {
+			if(!$this->is_valid_role($role)) return false;
+		}
+	}
+
+	public static function validate_role_list($roles){
+		foreach ($roles as $role) {
+			$this->validate_role($role);
+		}
+	}
+
+	private function maybe_get_dynamic_rules($dynamicID){
+		if(isset($this->dynamics[$dynamicID])){
+			return $this->dynamics[$dynamicID];
+		} else {
+			throw new Exception("Invalid dynamicID: $dynamicID", 1);
 			return null;
 		}
 	}
 
-	public function __set( $key, $value ){
-		if( in_array($key, array('regular', 'special', 'special_active', 'dynamic', 'dynamic_active', 'tax_status')) ){
-			$price_spec[$key] = $value;
-		} elseif (in_array($key, array('special_active_from', 'special_active_to')) ) {
-			if(is_null($this['special_active'])) $this['special_active'] = array();
-			switch ($key) {
-				case 'special_active_from':
-					$this['special_active']['from'] = $value;
-					break;
-				case 'special_active_to':
-					$this['special_active']['to'] = $value;
-					break;
-				default:
-					break;					
-			}
-			$this['special_active'] = $special_active;
-		} elseif (in_array($key, array('collector', 'dynamic_rules'))) {
-			if(is_null($this['dynamic'])) $this['dynamic'] = array();
-			switch ($key) {
-				case 'collector':
-					$this['dynamic']['collector'] = $value;
-					break;
-				case 'dynamic_rules':
-					$this['dynamic']['rules'] = $value;
-					break;
-				default:
-					break;					
-			}
-		} elseif (in_array($key, array('collector_type', 'collector_params'))) {
-			if(is_null($this['dynamic_collector'])) $this->dynamic_collector = array();
-			switch ($key) {
-				case 'collector_type':
-					$this['dynamic_collector']['type'] = $value;
-					break;
-				case 'collector_params':
-					$this['dynamic_collector']['params'] = $value;
-					break;
-				default:
-					break;
-			}
-		} else {
+	private function maybe_get_dynamic_conditions($dynamicID){
+		$rules = $this->maybe_get_dynamic_rules($dynamicID);
 
+		if(isset($this->dynamics[$dynamicID])){
+			$rules = $this->dynamics[$dynamicID];
+			return isset($rules['conditions'])?$rules['conditions']:array();
+		} else {
+			return array();
 		}
 	}
 
-	public function __isset( $key ){
-		if(in_array($key, array_keys($price_spec))){
-			return true;
-		} elseif( in_array($key, array('special_active_from', 'special_active_to')) ){
-			if(isset($this['special_active'])) {
-				switch ($key) {
-					case 'special_active_from':
-						return isset($this['special_active']['from']);
-					case 'special_active_to':
-						return isset($this['special_active']['to']);
-				}
-			}
-		} elseif( in_array($key, array('collector', 'dynamic_rules'))){
-			if(isset($this['dynamic'])) {
-				switch ($key) {
-					case 'collector':
-						return isset($this['dynamic']['collector']);
-					case 'dynamic_rules':
-						return isset($this['dynamic']['rules']);
-				}
-			} 
-		} elseif( in_array($key, array('collector_type', 'collector_params')) ){
-			if(isset($this['collector'])){
-				switch ($key) {
-					case 'collector_type':
-						return isset($this['collector']['type']);
-					case 'collector_params':
-						return isset($this['collector']['params']);
-				}
-			}
+	private function maybe_get_dynamic_collector($dynamicID){
+		if(isset($this->dynamics[$dynamicID])){
+			$rules = $this->dynamics[$dynamicID]
 		}
+	}
+
+	private function maybe_get_dynamic_condition($dynamicID, $condition){
+		$conditions = $this->maybe_get_dynamic_conditions($dynamicID);
+		return isset($conditions[$condition])?$conditions[$condition]:null;
+	}
+
+	public function maybe_set_dynamic_condition($dynamicID, $condition, $value){
+		$conditions = $this->maybe_get_dynamic_conditions($dynamicID);
+		if(!$conditions) $conditions = array();
+		$conditions[$condition] = $value;
+	}
+
+	public function maybe_get_dynamic_active_from($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'active_from');
+	}
+
+	public function maybe_set_dynamic_active_from($dynamicID, $value){
+		if($this->validate_timestamp($value)){
+			$this->maybe_set_dynamic_condition($dynamicID, $condition, $value);
+		}
+	}
+
+	public function maybe_get_dynamic_active_to($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'active_to');
+	}
+
+	public function maybe_set_dynamic_active_to($dynamicID, $value){
+		if ($this->validate_timestamp($value)) {
+			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_active', $value);
+		}
+	}
+
+	public function maybe_get_dynamic_include($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'include');
+	}
+
+	public function maybe_set_dynamic_include($dynamicID, $value){
+		if($this->validate_role_list($value)){
+			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include', $value);
+		}
+	}
+
+	public function maybe_get_dynamic_include_ancestors($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'include_ancestors');
+	}
+
+	public function maybe_set_dynamic_include_ancestors($dynamicID, $value){
+		if($this->validate_role_list($value)){
+			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include_ancestors', $value);
+		}
+	}
+
+	public function maybe_get_dynamic_include_descendents($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'include_descendents');
+	}
+
+	public function maybe_set_dynamic_include_descendents($dynamicID, $value){
+		if($this->validate_role_list($value)){
+			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_include_descendents', $value);
+		}
+	}
+
+	public function maybe_get_dynamic_exclude_ancestors($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'exclude_ancestors');
+	}
+
+	public function maybe_set_dynamic_exclude_ancestors($dynamicID, $value){
+		if($this->validate_role_list($value)){
+			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_exclude_ancestors', $value);
+		}
+	}	
+
+	public function maybe_get_dynamic_exclude_descendents($dynamicID){
+		return maybe_get_dynamic_condition($dynamicID, 'exclude_descendents');
+	}
+
+	public function maybe_set_dynamic_exclude_descendents($dynamicID, $value){
+		if($this->validate_role_list($value)){
+			$this->maybe_set_dynamic_condition($dynamicID, 'dynamic_exclude_descendents', $value);
+		}
+	}
+
+	public function is_dynamic_active_now($dynamicID){
+		$from = $this->maybe_get_dynamic_active_from($dynamicID);
+		$to = $this->maybe_get_dynamic_active_to($dynamicID);
+		return is_something_active_now($from, $to);
+	}
+
+	public function is_dynamic_visible_to_role($dynamicID, $role){
+		global $Lasercommerce_Tier_Tree;
+        if( !isset($Lasercommerce_Tier_Tree) ) {
+            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $optionNamePrefix );
+        }
+
+		$include = $this->maybe_get_dynamic_include($dynamicID);
+		//$include_ancestors = $this->maybe_get_dynamic_include_ancestors($dynamicID);
+		$include_descendents = $this->maybe_get_dynamic_include_descendents($dynamicID);
+		//$exclude_ancestors = $this->maybe_get_dynamic_exclude_ancestors($dynamicID)
+		$exclude_descendents = $this->maybe_get_dynamic_exclude_descendents($dynamicID);
+
+		//TODO: This
+
+	}
+
+	public function is_dynamic_visible_to_roles($dynamicID, $roles){
+		foreach ($roles as $role) {
+			if($this->is_dynamic_visible_to_role($dynamicID, $role)) return true;
+		} 
 		return false;
 	}
 
-	/**
-	 * Helper function for is_something_active_now()
-	 * returns whether something is active at a given timestamp
-	 * given the active times specified by $active
-	 * @param array $active Specifies when something should be active
-	 * @param int $timestamp Specifies time to test if active
-	 * @return bool $active if something is active 
-	 */
-	private function is_something_active($active, $timestamp){
-		if(isset($active['from']){ 
-			if(strtotime($active['from']) - strtotime($timestamp) > 0){ //if it's too early
-				return False;
+	public function get_valid_dynamics($roles){
+		$dynamics = array();
+		foreach ($this->dynamics as $dynamicID => $rules) {
+			if ($this->is_dynamic_active_now($dynamicID) and $this->is_dynamic_visible_to_roles($dynamicID, $roles)){
+				array_push($dynamics, $dynamicID)
 			}
-		} 
-		if(isset($active['to'])){
-			if(strtotime($active['from'])) - strtotime($timestamp) < 0{ //if it's too late
-				return False;
-			}
-		}
-		return True; //otherwise it's active
-		break;
-	}
-
-
-	private function is_something_active_now($active){
-		$date = new DateTime();
-		return is_something_active($active, $date->getTimestamp());
-	}
-
-	/**
-	 * Returns True or False depending on whether the special price is active
-	 * @return boolean $active Whether the special price is active
-	 */
-	public function is_special_active_now(){
-		if(isset($price_spec['special_active'])){
-			return is_something_active_now($price_spec['special_active']);
-		} else {
-			return null;
-		} 
-	}
-
-	/**
-	 * Returns True or False depending on whether the dynamic pricing is active
-	 * @return boolean $active Whether the special price is active
-	 */
-	public function is_dynamic_active_now(){
-		if(isset($price_spec['dynamic_active'])){
-			return is_something_active($price_spec['dynamic_active']);
-		} else {
-			return null;
 		}
 	}
 
@@ -325,18 +352,9 @@ class Lasercommerce_Price_Spec {
 			}
 		}
 		
-		return $quantity
+		return $quantity;
 	}
 
-	/** 
-	 * Looks up cart in session data and finds the discount for this product
-	 * Given the dynamic pricing rules for this spec
-	 * @param float $discount the discount given for this product
-	 */
-	public function calculate_current_price(){
-		//TODO: this
-		//gets the dynamic pricing collector mode and finds the quantity from session data
-	}
 
 	/**
 	 * 
@@ -349,4 +367,9 @@ class Lasercommerce_Price_Spec {
 	public function generate_pricing_table_html(){
 		
 	}
+
+    public static function sort_spec_by_regular_price($spec_a, $spec_b){
+        //TODO: sort by regular or sort by price??
+        return $spec_a['regular'] > $spec_b['regular'];
+    }
 }
