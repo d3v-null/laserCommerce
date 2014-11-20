@@ -423,13 +423,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             return $tabs;
         }
 
+        $visiblePrices = array();
         $visiblePricing = $this->maybeGetVisiblePricing($product);
         if($visiblePricing){
             foreach ($visiblePricing as $role => $pricing) {
                 if($pricing){
                     $regular = $pricing->regular;
                     if($regular){
-                        $visiblePrices = $regular;
+                        $visiblePrices[$role] = $regular;
                     }
                 }
             }  
@@ -520,10 +521,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         add_filter( 'woocommerce_sale_price_html', array(&$this, 'maybeGetSalePriceHtml'), 0, 2);
         add_filter( 'woocommerce_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);     
-        add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 9, 2 );
+        // add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 9, 2 );
 
         add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
+
+        add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
 
         //Filter / Action research:
         //DYNAMIC PRICING
@@ -589,7 +592,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
 
-        // add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         // Example adding a script & style just for the options administration page
         // http://plugin.michael-simpson.com/?page_id=47
         //        if (strpos($_SERVER['REQUEST_URI'], $this->getSettingsSlug()) !== false) {
