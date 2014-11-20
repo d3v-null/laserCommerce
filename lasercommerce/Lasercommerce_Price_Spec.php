@@ -164,17 +164,23 @@ class Lasercommerce_Price_Spec {
 	}
 
 	public function maybe_get_default_pricing(){
-		$_product = new WC_Product($this->postID);
+		$regular 	= get_post_meta( $this->postID, '_regular_price', true);
+		$sale 		= get_post_meta( $this->postID, '_sale_price', true);
+		$sale_from 	= get_post_meta( $this->postID, '_sale_from', true);
+		$sale_to	= get_post_meta( $this->postID, '_sale_to', true);
+
 		$params = array();
-		$regular = $_product->regular_price;
-		if($regular) $params['regular'] = $regular;
-		$sale = $_product->sale_price;
-		if($sale) $params['sale'] = $sale;
-		$sale_from = $_product->sale_from;
-		if($sale_from) $params['sale_from'] = $sale_from;
-		$sale_to = $_product->sale_to;
-		if($sale_to) $params['sale_to'] = $sale_to;
+		if($regular and $regular != '') $params['regular'] = $regular;
+		if($sale and $sale != '') $params['sale'] = $sale;
+		if($sale_from and $sale_from != '') $params['sale_from'] = $sale_from;
+		if($sale_to and $sale_to != '') $params['sale_to'] = $sale_to;
+		if(WP_DEBUG) error_log("maybe_get_default_pricing returned ".serialize($params));
 		return new Lasercommerce_Pricing($params);
+		// $_product = new WC_Product($this->postID);
+		// $regular = $_product->regular_price;
+		// $sale = $_product->sale_price;
+		// $sale_from = $_product->sale_from;
+		// $sale_to = $_product->sale_to;
 	}
 
 

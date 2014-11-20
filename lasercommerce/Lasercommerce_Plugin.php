@@ -294,7 +294,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     private function maybeGetVisiblePricing($_product=''){
-        if(WP_DEBUG) error_log("Calleed maybeGetVisiblePricing");
+        if(WP_DEBUG) error_log("calledalled maybeGetVisiblePricing");
         if($_product) {
             $id = isset( $_product->variation_id ) ? $_product->variation_id : $_product->id;
             $price_spec = new Lasercommerce_Price_Spec($id);
@@ -304,18 +304,24 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             foreach( $this->getCurrentUserRoles() as $role ){
                 $pricing[$role] = $price_spec->maybe_get_pricing($role);
             }
+            if(WP_DEBUG) error_log("-> returned ".serialize(array_keys($pricing)));
+            return $pricing;
         } else { 
             if(WP_DEBUG) error_log("product not valid");
             return null;
-        }        
+        }   
+
     }
 
     private function maybeGetLowestPricing($_product=''){
+        if(WP_DEBUG) error_log("called maybeGetLowestPricing");
         $pricing = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricing)){
             uasort( $pricing, 'Lasercommerce_Pricing::sort_by_regular' );
-            return array_pop($pricing);
+            $pricing = array_shift($pricing);
+            if(WP_DEBUG) error_log("returned ".(string)($pricing));
+            return $pricing;
         } else {
             return null;
         }
@@ -329,40 +335,70 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      */
     public function maybeGetRegularPrice($price = '', $_product=''){
         //TODO: detect if the price to override is woocommerce price
-        $lowestPricing = $this->maybeGetLowestTier($_product);
+        $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
-            return $lowestPricing->regular;
-        } else {
-            return $price;
-        }
+            $price = $lowestPricing->regular;
+        } 
+        if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
+        return $price;
     }
 
     public function maybeGetSalePrice($price = '', $_product = ''){ 
         //TODO: detect if the price to override is woocommerce price
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
-            return $lowestPricing->special;
-        } else {
-            return $price;
-        }
+            $price = $lowestPricing->sale;
+        } 
+        if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
+        return $price;
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
         $lowestTier = $this->maybeGetLowestPricing($_product);
         if($lowestTier){
-            return $lowestTier->maybe_get_current_price();
+            $price = $lowestTier->maybe_get_current_price();
         } else {
-            return '';
+            $price = '';
         }
+        if(WP_DEBUG) error_log("maybeGetPrice returned $price");
+        return $price;        
     }
 
     public function maybeGetCartPrice($price = '', $_product = ''){
-        return $this->maybeGetPrice($price, $_product);
+        $lowestTier = $this->maybeGetLowestPricing($_product);
+        if($lowestTier){
+            $price = $lowestTier->maybe_get_current_price();
+        } else {
+            $price = '';
+        }
+        if(WP_DEBUG) error_log("maybeGetCartPrice returned $price");
+        return $price;    
+    }
+
+    public function maybeGetPriceInclTax($price ='', $qty, $_this){
+        if(WP_DEBUG) error_log("called maybeGetPriceInclTax");
+        if(WP_DEBUG) error_log("price: ".$price);
+        return $price;
+    }
+
+    public function maybeGetPriceExclTax($price ='', $qty, $_this){
+        if(WP_DEBUG) error_log("called maybeGetPriceExclTax");
+        if(WP_DEBUG) error_log("price: ".$price);
+        return $price;
     }
     
     public function maybeGetPriceHtml($price_html, $_product){
-        if(WP_DEBUG) error_log('');
         if(WP_DEBUG) error_log("called maybeGetPriceHtml");
+        if(WP_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        
+        return $price_html;
+    }    
+
+    public function maybeGetSalePriceHtml($price_html, $_product){
+        if(WP_DEBUG) error_log("called maybeGetSalePriceHtml");
         if(WP_DEBUG) error_log("-> html: $price_html");
         if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
         if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
@@ -476,11 +512,18 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         $this->maybeAddSaveTierFields( $Lasercommerce_Tier_Tree->getRoles(), $Lasercommerce_Tier_Tree->getNames() );
 
-        // add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ) ); - doesn't do anything
-        // add_filter( 'woocommerce_get_sale_price', array(&$this, 'maybeGetSalePrice'), 9, 2 );
         
         //THE CRUX:
         add_filter( 'woocommerce_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
+        add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 ); 
+        add_filter( 'woocommerce_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );
+
+        add_filter( 'woocommerce_sale_price_html', array(&$this, 'maybeGetSalePriceHtml'), 0, 2);
+        add_filter( 'woocommerce_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);     
+        add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 9, 2 );
+
+        add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
+        add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
 
         //Filter / Action research:
         //DYNAMIC PRICING
@@ -513,7 +556,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         
         //TODO: make modifications to tax
-		// add_filter( 'woocommerce_get_cart_tax',  
+        // add_filter( 'woocommerce_get_cart_tax',  
         // add_filter( 'option_woocommerce_calc_taxes', 
         // add_filter( 'woocommerce_product_is_taxable'
         
@@ -536,7 +579,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         
         //TODO: make modifications to cart
-        add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 9, 2 );
         // add_filter( 'woocommerce_calculate_totals', 
         // add_filter( 'woocommerce_calculate_totals', 
         // add_filter( 'woocommerce_calculate_totals', 
@@ -547,7 +589,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
 
-        add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
+        // add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         // Example adding a script & style just for the options administration page
         // http://plugin.michael-simpson.com/?page_id=47
         //        if (strpos($_SERVER['REQUEST_URI'], $this->getSettingsSlug()) !== false) {
