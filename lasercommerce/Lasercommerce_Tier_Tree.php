@@ -4,6 +4,9 @@
  * helper class for dealing with price tier tree
  */
 class Lasercommerce_Tier_Tree {
+
+    public static $rootID = 'default'
+
     /**
      * Constructs the helper object
      * @param $optionNamePrefix The prefix used to find price tier options
@@ -30,10 +33,10 @@ class Lasercommerce_Tier_Tree {
      * @param integer $postID The ID of the given product / product variation
      * @param string $role The role of the price being retrieved
      * @return string price the regular price
-     */     
     public function getRegularPrice( $postID, $role ){
         return get_post_meta( $postID, $this->optionNamePrefix.$role.'_regular_price', true);
     }
+     */     
 
     /**
      * (Needs to be rewritten to handle price_spec)     
@@ -42,10 +45,10 @@ class Lasercommerce_Tier_Tree {
      * @param integer $postID The ID of the given product / product variation
      * @param string $role The role of the price being retrieved
      * @return string price the regular price
-     */     
     public function getSpecialPrice( $postID, $role ){
         return get_post_meta( $postID, $this->optionNamePrefix.$role.'_special_price', true);
     }
+     */     
 
     /**
      * (Needs to be rewritten to handle price_spec)     
@@ -54,10 +57,10 @@ class Lasercommerce_Tier_Tree {
      * @param integer $postID The ID of the given product / product variation
      * @param string $role The role of the user
      * @return string date_from The date when the special price is scheduled to become active
-     */     
     public function getScheduleFrom( $postID, $role ){
         return get_post_meta( $postID, $this->optionNamePrefix.$role.'_schedule_from', true);   
     }
+     */     
 
     /**
      * (Needs to be rewritten to handle price_spec)     
@@ -66,10 +69,10 @@ class Lasercommerce_Tier_Tree {
      * @param integer $postID The ID of the given product / product variation
      * @param string $role The role of the user
      * @return string date_to The date when the special price is scheduled to become active
-     */     
     public function getScheduleTo( $postID, $role ){
         return get_post_meta( $postID, $this->optionNamePrefix.$role.'_schedule_to', true);   
     }
+     */     
 
     /**
      * (Undeveloped Functionality) Gets the list of roles that are deemed omniscient - These roles can see all prices
@@ -143,22 +146,15 @@ class Lasercommerce_Tier_Tree {
         return $roles;
     }   
 
-    // public function getDescendents($role){
-    //     $roles = $this->getRoles();
-    //     if(in_array($role, $roles)){
-    //         return $this->flattenTierTreeRecursive
-    //     }
-    // }
+    public function getDescendents($role){
+        $roles = $this->getRoles();
+        if(in_array($role, $roles)){
+            return $this->flattenTierTreeRecursive
+        } else if($role = $this->rootID) {
+            return $this->getRoles()
+        }
+    }
 
-    // public function isDescendentOf($a, $b){
-    //     $roles = $this->getRoles();
-    //     if(in_array($a, $roles) and in_array($b, $roles)){
-
-    //     } else {
-
-    //     }
-    // }
-    
     /**
      * Used by getAvailableTiers to recursively determine the price tiers available 
      * for a user that can view a given list of roles
@@ -211,6 +207,13 @@ class Lasercommerce_Tier_Tree {
         return $tiers;
     }
 
+    public function getAncestors($roles){
+        if(is_array($roles)){
+            return getAvailableTiers($roles);
+        } else if (is_string($roles)){
+            return getAvailableTiers(array($roles));
+        }
+    }
 
 
     /**
