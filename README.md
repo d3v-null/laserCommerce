@@ -17,4 +17,15 @@ Development
 
 We intend to develop LaserCommerce further so that administrators can set the visibility of pages and products to be dependent on a user’s role in the same way the prices already are. For example if a posts visibility is set to “wholesale”, then wholesale and distributor users can see it but not retail.
 
+Installation
+------------
+
+Zip the lasercommerce directory and upload it into wordpress as a plugin.
+
+Prerequisites
+-------------
+
+Wordpress
+Woocommerce
+
 
