@@ -28,4 +28,7 @@ Prerequisites
 Wordpress
 Woocommerce
 
+Issues
+------
 
+Currently pricing is stored in post metadata so that it is easy to import this data from a spreadsheet, however post metadata is slow, so this plugin will not scale well. We will attempt to address this issue in future versions.
