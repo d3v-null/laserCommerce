@@ -1,34 +1,28 @@
 <?php
 
+include_once('Lasercommerce_Plugin.php');
+global $Lasercommerce_Plugin;
+if(!isset($Lasercommerce_Plugin)){
+	$Lasercommerce_Plugin = new Lasercommerce_Plugin();
+}
+
 class Lasercommerce_Pricing {
 
-	/**
-	 * Stores all the parameters that determine the fixed price of a product
-	 * for a given role.
-	 * params has the following layout
-	 * params := {
-	 * 		‘regular’:<price>, 
-	 * 		[‘sale’:<price>,]
-	 * 		[‘sale_from’:<timestamp>,]
-	 *		['sale_to':<timestamp>,]
-	 *		['tax_status':<'inc'|'exc'>]
-	 *	}
-	 */
-	private $params;
+	private static $optionNamePrefix = $Lasercommerce_Plugin>getOptionNamePrefix();;
 
-	public static function sort_by_regular($a, $b){
-		if(isset($a->regular)){
-			if(isset($b->regualr)){ //Both set
-				if($a->regular == $b->regular){
+	public static function sort_by_regular_price($a, $b){
+		if(isset($a->regular_price)){
+			if(isset($b->regualr_price)){ //Both set
+				if($a->regular_price == $b->regular_price){
 					return 0;
 				} else{
-					return ($a->regular < $b->regular) ? -1 : 1; 
+					return ($a->regular_price < $b->regular_price) ? -1 : 1; 
 				}
 			} else { //only a is set
 				return -1;
 			}
 		} else { 
-			if(isset($b->regular)){ // only b is set
+			if(isset($b->regular_price)){ // only b is set
 				return 1;
 			} else { //neither is set
 				return 0;
@@ -36,63 +30,64 @@ class Lasercommerce_Pricing {
 		}
 	}
 
-	public function __construct($params){
-		$this->params = array();
-		if($params){
-			if(isset($params['regular'])) $this->regular = $params['regular'];
-			if(isset($params['sale'])) $this->sale = $params['sale'];
-			if(isset($params['sale_from'])) $this->sale_from = $params['sale_from'];
-			if(isset($params['sale_to'])) $this->sale_to = $params['sale_to'];
-		}
+
+	public function __construct($id, $role=''){
+		$this->id = $id;
+		$this->role = $role;
 	}
 
-	public function __get($name){
-		if ($this->params and isset($this->params[$name])){
-			return $this->params[$name]; 
+	private function get_meta_key($key){
+		//default role
+		if($this->role){
+			return $this->optionNamePrefix() . $this->role . '_' . $key;
 		} else {
-			//throw new Exception("Cannot get param: $param", 1);
-			return null;
-		}		
+			return '_'.$key;
+		}
+
 	}
 
-	public function __set($name, $value){
-		if(!$this->params){
-			$this->params = array();
+	public function __get($key){
+		$defaults = array(
+			'regular_price':'',
+			'sale_price':'',
+			'sale_from':'',
+			'sale_to':'',
+			'tax_status':'taxable'
+		);
+		if( in_array($key, array_keys($defaults) ) ){
+			$value = get_post_meta($this->id, $this->get_meta_key($key), true); 
+			$value = $value ? $value : $defaults[$key]
+		} else {
+			$value = '';//get_post_meta($this->id, $this->get_meta_key($key), true) )
 		}
-		switch ($name) {
-			case 'regular':
-			case 'sale':
-				if($this->validate_price($value)){
-					$this->params[$name] = $value;
-				}
+		return $value
+	}
+
+	public function __isset($key){
+		$value = $this->__get($key);
+		return bool($value);
+	}
+
+	public function __set($key, $value){
+		//validate value
+		switch ($key) {
+			case 'regular_price':
+			case 'sale_price':
+				$this->validate_price($value);
 				break;
 			case 'sale_from':
 			case 'sale_to':
-				if($this->validate_timestamp($value)){
-					$this->params[$name] = $value;
-				}
+				$this->validate_timestamp($value);
 				break;
 			case 'tax_status':
-				if($this->validate_tax_status($value)){
-					$this->params[$name] = $value;
-				}
+				i$thi->validate_tax_status($value);
 				break;
 			default:
-				throw new Exception("Invalid name: $name", 1);
+				throw new Exception("Invalid key: $key", 1);
 				break;
 		}
-	}
+		update_post_meta($this->id, $this->get_meta_key($key), $value);
 
-	public function __isset($name){
-		if(is_array($this->params)){
-			return isset($this->params[$name]);
-		} else {
-			return false;
-		}
-	}
-
-	public function __toString(){
-		return serialize($this->params);
 	}
 
 	public static function is_valid_price($price){
@@ -110,7 +105,7 @@ class Lasercommerce_Pricing {
 	}
 
 	public static function is_valid_tax_status($status){
-		if( in_array($status, array('inc', 'exc'))){
+		if( in_array($status, array('taxable', ''))){
 			return true;
 		} else {
 			return false;
@@ -127,6 +122,7 @@ class Lasercommerce_Pricing {
 	}
 
 	public static function is_valid_timestamp($timestamp){
+		//todo: this
 		return true;
 	}
 
@@ -138,9 +134,13 @@ class Lasercommerce_Pricing {
 			return false;
 		}
 	}
+
+	public function __toString(){
+		return "Segular: " . $this->regular_price . " Sale: " . $this->sale_price;
+	}
 	
 	public function is_sale_active_now(){
-		$sale = isset($this->sale)?$this->sale:null;
+		$sale = isset($this->sale_price)?$this->sale:null;
 		if($sale){
 			$from = isset($this->sale_from)?$this->sale_from:null;
 			$to = isset($this->sale_to)?$this->sale_to:null;
@@ -170,11 +170,11 @@ class Lasercommerce_Pricing {
 	 * Finds the base price of the product currently
 	 */
 	public function maybe_get_current_price(){
-		if(isset($this->regular)){
-			if($this->is_sale_active_now() and isset($this->sale)){
-				return $this->sale;
+		if(isset($this->regular_price)){
+			if($this->is_sale_active_now() and isset($this->sale_price)){
+				return $this->sale_price;
 			} else {
-				return $this->regular;
+				return $this->regular_price;
 			}
 		} else {
 			return null;

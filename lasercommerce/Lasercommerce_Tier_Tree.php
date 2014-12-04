@@ -27,54 +27,6 @@ class Lasercommerce_Tier_Tree {
     }
 
     /**
-     * (Needs to be rewritten to handle price_spec) 
-     * Get the regular price of the given post viewed at a given role
-     * 
-     * @param integer $postID The ID of the given product / product variation
-     * @param string $role The role of the price being retrieved
-     * @return string price the regular price
-    public function getRegularPrice( $postID, $role ){
-        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_regular_price', true);
-    }
-     */     
-
-    /**
-     * (Needs to be rewritten to handle price_spec)     
-     * Get the special price of the given post viewed at a given role
-     * 
-     * @param integer $postID The ID of the given product / product variation
-     * @param string $role The role of the price being retrieved
-     * @return string price the regular price
-    public function getSpecialPrice( $postID, $role ){
-        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_special_price', true);
-    }
-     */     
-
-    /**
-     * (Needs to be rewritten to handle price_spec)     
-     * Get the date when the special price of the given post becomes active viewed at a given role
-     * 
-     * @param integer $postID The ID of the given product / product variation
-     * @param string $role The role of the user
-     * @return string date_from The date when the special price is scheduled to become active
-    public function getScheduleFrom( $postID, $role ){
-        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_schedule_from', true);   
-    }
-     */     
-
-    /**
-     * (Needs to be rewritten to handle price_spec)     
-     * Get the date when the special price of the given post becomes inactive viewed at a given role
-     * 
-     * @param integer $postID The ID of the given product / product variation
-     * @param string $role The role of the user
-     * @return string date_to The date when the special price is scheduled to become active
-    public function getScheduleTo( $postID, $role ){
-        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_schedule_to', true);   
-    }
-     */     
-
-    /**
      * (Undeveloped Functionality) Gets the list of roles that are deemed omniscient - These roles can see all prices
      * 
      * @return array omniscienct_roles an array containing all of the omoniscient roles

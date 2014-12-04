@@ -171,11 +171,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
                 echo '<div class="options_group show_if_simple">';
 
-                $price_spec = new Lasercommerce_Price_Spec($thepostid);
-                $pricing = $price_spec->maybe_get_pricing($tier_slug);
-
-                $regular_price  = (isset($pricing->regular)) ? esc_attr($pricing->regular) : '' ;
-                $sale_price     = (isset($pricing->sale)) ? esc_attr($pricing->sale) : '' ;
+                $pricing = new Lasercommerce_Pricing($thepostid, $tier_slug);
+                $regular_price  = (isset($pricing->regular_price)) ? esc_attr($pricing->regular_price) : '' ;
+                $sale_price     = (isset($pricing->sale_price)) ? esc_attr($pricing->sale_price) : '' ;
 
                 // Regular Price
                 woocommerce_wp_text_input( 
@@ -240,16 +238,15 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     $thepostid = $post->ID;
                 }
 
-                $price_spec = new Lasercommerce_Price_Spec($thepostid);
-                $pricing = $price_spec->maybe_get_pricing($tier_slug);
+                $pricing = new Lasercommerce_Pricing($thepostid, $tier_slug);
 
                 $regular_id     = $prefix.$tier_slug."_regular_price";
                 $regular_price  = isset($_POST[$regular_id]) ? wc_format_decimal( $_POST[$regular_id] ) : '';
-                $pricing->regular = $regular_price;
+                $pricing->regular_price = $regular_price;
                 
                 $sale_id     = $prefix.$tier_slug."_sale_price";
                 $sale_price  = isset($_POST[$sale_id]) ? wc_format_decimal( $_POST[$sale_id] ) : '';
-                $pricing->sale = $sale_price;
+                $pricing->sale_price = $sale_price;
 
                 $sale_from_id   = $prefix.$tier_slug.'_sale_price_dates_from';
                 $sale_from      = isset( $_POST[$sale_from_id] ) ? wc_clean( $_POST[$sale_from_id] ) : '';
@@ -258,9 +255,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 $sale_to_id     = $prefix.$tier_slug.'_sale_price_dates_to';
                 $sale_to        = isset( $_POST[$sale_to_id] ) ? wc_clean( $_POST[$sale_to_id] ) : '';
                 $pricing->sale_to = $sale_to;
-
-                $price_spec->maybe_set_pricing($tier_slug, $pricing);
-                $price_spec->save();
             }
         );
         //TODO: other product types
@@ -296,16 +290,24 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     private function maybeGetVisiblePricing($_product=''){
         if(WP_DEBUG) error_log("calledalled maybeGetVisiblePricing");
         if($_product) {
+            global $Lasercommerce_Tier_Tree;
+            $currentUserRoles = $this->getCurrentUserRoles();
+            $visibleTiers = $Lasercommerce_Tier_Tree->getAvailableTiers($currentUserRoles);
+            // $visibleTiers = $currentUserRoles;
+            array_push($visibleTiers, ''); 
+            
             $id = isset( $_product->variation_id ) ? $_product->variation_id : $_product->id;
-            $price_spec = new Lasercommerce_Price_Spec($id);
-            $pricing = array(
-                'default' => $price_spec->maybe_get_default_pricing()
-            );
-            foreach( $this->getCurrentUserRoles() as $role ){
-                $pricing[$role] = $price_spec->maybe_get_pricing($role);
+
+            $pricings = array();
+            foreach ($visibleTiers as $role) {
+                $pricing = new Lasercommerce_Price_Spec($id, $role);
+                if(isset($this_pricing->regular_price)){
+                    $pricings[$role] = $pricing;
+                }
             }
-            if(WP_DEBUG) error_log("-> returned ".serialize(array_keys($pricing)));
-            return $pricing;
+
+            if(WP_DEBUG) error_log("-> returned ".serialize(array_keys($pricings)));
+            return $pricings;
         } else { 
             if(WP_DEBUG) error_log("product not valid");
             return null;
@@ -315,11 +317,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
     private function maybeGetLowestPricing($_product=''){
         if(WP_DEBUG) error_log("called maybeGetLowestPricing");
-        $pricing = $this->maybeGetVisiblePricing($_product);
+        $pricings = $this->maybeGetVisiblePricing($_product);
 
-        if(!empty($pricing)){
-            uasort( $pricing, 'Lasercommerce_Pricing::sort_by_regular' );
-            $pricing = array_shift($pricing);
+        if(!empty($pricings)){
+            uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular' );
+            $pricing = array_shift($pricings);
             if(WP_DEBUG) error_log("returned ".(string)($pricing));
             return $pricing;
         } else {
@@ -337,7 +339,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: detect if the price to override is woocommerce price
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
-            $price = $lowestPricing->regular;
+            $price = $lowestPricing->regular_price;
         } 
         if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
         return $price;
@@ -428,7 +430,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if($visiblePricing){
             foreach ($visiblePricing as $role => $pricing) {
                 if($pricing){
-                    $regular = $pricing->regular;
+                    $regular = $pricing->regular_price;
                     if($regular){
                         $visiblePrices[$role] = $regular;
                     }
