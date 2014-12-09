@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
-include_once('Lasercommerce_Price_Spec.php');
+include_once('Lasercommerce_Pricing.php');
 
 /**
  * Registers Wordpress and woocommerce hooks to modify prices
@@ -158,7 +158,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if( $tier_name == "" ) $tier_name = $tier_slug;
         $prefix = $this->getOptionNamePrefix(); 
         
-        // The following code was inspred by WooCommerce:
+        // The following code was inspred by the same code in WooCommerce in order to match the style:
         // https://github.com/woothemes/woocommerce/blob/master/includes/admin/meta-boxes/class-wc-meta-box-product-data.php
 
         add_action( 
@@ -168,7 +168,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 if( !isset($thepostid) ){
                     $thepostid = $post->ID;
                 }
-
+                if(WP_DEBUG) error_log("product options admin for $thepostid, $tier_slug");
                 echo '<div class="options_group show_if_simple">';
 
                 $pricing = new Lasercommerce_Pricing($thepostid, $tier_slug);
@@ -185,7 +185,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     ) 
                 );   
                 // Special Price
-               woocommerce_wp_text_input( 
+                woocommerce_wp_text_input( 
                     array( 
                         'id' => $prefix.$tier_slug."_sale_price", 
                         'value' => $sale_price,
@@ -195,19 +195,17 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     ) 
                 );
 
-                // Special active
-                $sale_from    = ( isset($pricing->sale_from) and $pricing->sale_from ) ? date_i18n( 'Y-m-d', floatval($pricing->sale_from) ) : '';
-                $sale_to      = ( isset($pricing->sale_to) and $pricing->sale_to ) ? date_i18n( 'Y-m-d', floatval($pricing->sale_to) ) : '';
-                $sale_from_id = $prefix . $tier_slug . '_sale_price_dates_from';
-                $sale_to_id   = $prefix . $tier_slug . '_sale_price_dates_to';
+                $sale_price_dates_from = ( $date = $pricing->sale_price_dates_from ) ? date_i18n( 'Y-m-d', floatval($date) ) : '';
+                $sale_price_dates_to = ( $date = $pricing->sale_price_dates_to ) ? date_i18n( 'Y-m-d', floatval($date) ) : '';
+                $sale_price_dates_from_id = $prefix . $tier_slug . '_sale_price_dates_from';
+                $sale_price_dates_to_id   = $prefix . $tier_slug . '_sale_price_dates_to';
 
-                echo '  <p class="form-field sale_price_dates_fields">
-                            <label for="'.$sale_from_id.'">' . __( 'Sale Price Dates', 'woocommerce' ) . '</label>
-                            <input type="text" class="short" name="'.$sale_from_id.'" id="'.$sale_from_id.'" value="' . esc_attr( $sale_from ) . '" placeholder="' . _x( 'From&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
-                            <input type="text" class="short" name="'.$sale_to_id.'" id="'.$sale_to_id.'" value="' . esc_attr( $sale_to ) . '" placeholder="' . _x( 'From&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
+                echo '  <p class="form-field sale_price_dates_fields_extra">
+                            <label for="'.$sale_price_dates_from_id.'">' . __( 'Sale Price Dates', 'woocommerce' ) . '</label>
+                            <input type="text" class="short" name="'.$sale_price_dates_from_id.'" id="'.$sale_price_dates_from_id.'" value="' . esc_attr( $sale_price_dates_from ) . '" placeholder="' . _x( 'From&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
+                            <input type="text" class="short" name="'.$sale_price_dates_to_id.'" id="'.$sale_price_dates_to_id.'" value="' . esc_attr( $sale_price_dates_to ) . '" placeholder="' . _x( 'To&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
                             <a href="#" class="cancel_sale_schedule">'. __( 'Cancel', 'woocommerce' ) .'</a>
                         </p>';
-                // TODO: test above javascript is working
 
                 // TODO: output dynamic pricing rules
 
@@ -248,13 +246,17 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 $sale_price  = isset($_POST[$sale_id]) ? wc_format_decimal( $_POST[$sale_id] ) : '';
                 $pricing->sale_price = $sale_price;
 
-                $sale_from_id   = $prefix.$tier_slug.'_sale_price_dates_from';
-                $sale_from      = isset( $_POST[$sale_from_id] ) ? wc_clean( $_POST[$sale_from_id] ) : '';
-                $pricing->sale_from = $sale_from;
+                $sale_price_dates_from_id   = $prefix.$tier_slug.'_sale_price_dates_from';
+                $sale_price_dates_from      = isset( $_POST[$sale_price_dates_from_id] ) ? wc_clean( $_POST[$sale_price_dates_from_id] ) : '';
+                $sale_price_dates_to_id     = $prefix.$tier_slug.'_sale_price_dates_to';
+                $sale_price_dates_to        = isset( $_POST[$sale_price_dates_to_id] ) ? wc_clean( $_POST[$sale_price_dates_to_id] ) : '';
 
-                $sale_to_id     = $prefix.$tier_slug.'_sale_price_dates_to';
-                $sale_to        = isset( $_POST[$sale_to_id] ) ? wc_clean( $_POST[$sale_to_id] ) : '';
-                $pricing->sale_to = $sale_to;
+                $pricing->sale_price_dates_from = $sale_price_dates_from ? strtotime($sale_price_dates_from) : '';
+                $pricing->sale_price_dates_to   = $sale_price_dates_to   ? strtotime($sale_price_dates_to) : '';
+
+                if(!$sale_price_dates_from and $sale_price_dates_to) {
+                    $pricing->sale_price_dates_from = strtotime( 'NOW', current_time( 'timestamp' ) ) ;
+                }
             }
         );
         //TODO: other product types
@@ -268,6 +270,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      */
     public function maybeAddSaveTierFields($tiers, $names = array()){
         if(WP_DEBUG) error_log("Called maybeAddSaveTierFields: ".serialize($tiers));
+
         foreach($tiers as $tier_slug){
             $tier_name = isset($names[$tier_slug])?$names[$tier_slug]:$tier_slug;
             $this->addTierFields($tier_slug, $tier_name);
@@ -300,13 +303,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
             $pricings = array();
             foreach ($visibleTiers as $role) {
-                $pricing = new Lasercommerce_Price_Spec($id, $role);
-                if(isset($this_pricing->regular_price)){
+                $pricing = new Lasercommerce_Pricing($id, $role);
+                if($pricing->regular_price){
                     $pricings[$role] = $pricing;
                 }
             }
 
-            if(WP_DEBUG) error_log("-> returned ".serialize(array_keys($pricings)));
+            if(WP_DEBUG) error_log("-> maybeGetVisiblePricing returned ".serialize(array_keys($pricings)));
             return $pricings;
         } else { 
             if(WP_DEBUG) error_log("product not valid");
@@ -320,9 +323,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
-            uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular' );
-            $pricing = array_shift($pricings);
-            if(WP_DEBUG) error_log("returned ".(string)($pricing));
+            uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
+            $pricing = array_pop($pricings);
+            if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
             return $pricing;
         } else {
             return null;
@@ -349,16 +352,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: detect if the price to override is woocommerce price
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
-            $price = $lowestPricing->sale;
+            $price = $lowestPricing->sale_price;
         } 
         if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
         return $price;
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
-        $lowestTier = $this->maybeGetLowestPricing($_product);
-        if($lowestTier){
-            $price = $lowestTier->maybe_get_current_price();
+        $lowestPricing = $this->maybeGetLowestPricing($_product);
+        if($lowestPricing){
+            $price = $lowestPricing->maybe_get_current_price();
         } else {
             $price = '';
         }
@@ -367,9 +370,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeGetCartPrice($price = '', $_product = ''){
-        $lowestTier = $this->maybeGetLowestPricing($_product);
-        if($lowestTier){
-            $price = $lowestTier->maybe_get_current_price();
+        $lowestPricing = $this->maybeGetLowestPricing($_product);
+        if($lowestPricing){
+            $price = $lowestPricing->maybe_get_current_price();
         } else {
             $price = '';
         }
@@ -503,6 +506,20 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(WP_DEBUG) error_log('');
         if(WP_DEBUG) error_log('');
         
+        add_action(
+            'admin_enqueue_scripts', 
+            function(){
+                wp_register_script( 
+                    'jquery-date-picker-field-extra-js', 
+                    plugins_url('/js/jquery.date-picker-field-extra.js', __FILE__), 
+                    array('jquery', 'wc-admin-meta-boxes' ),
+                    0.1
+                );
+                if(WP_DEBUG) error_log("registering script");
+                wp_enqueue_script( 'jquery-date-picker-field-extra-js' );
+                if(WP_DEBUG) error_log("enqueueing script");
+            }
+        );
         
         add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );        
         

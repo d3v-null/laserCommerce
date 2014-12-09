@@ -19,38 +19,8 @@ class Lasercommerce_Price_Spec {
 	 */
 	private $pricing;
 
-	/**
-	 * 	dynamics := {
-	 * 		<rule ID>:<rules>,
-	 * 		...
- 	 *	};
-	 * 	rules := {
-	 * 		‘collector’: {
-	 *			‘type’:<collector type>,
-	 *			‘params’:<collector params>
-	 * 		},
-	 * 		'conditions': {
-	 * 			['include':<tiers>,]
-	 *			['include_ancestors':<tiers>,]
-	 *			['include_descendents':<tiers>,]
-	 *			['exclude_ancestors':<tiers>,]
-	 *			['exclude_descendents':<tiers>,]
-	 *			['active_from':<timestamp>,]
-	 *			['active_to':<timestamp>]
-	 * 		},
-	 * 		'modifier': {
-	 * 			'type':<modifier type>,
-	 * 			'params':<modifier params>
-	 *		}
-	 * 	}
-	 * 	collector type := ‘cat’ | ‘prod’ | 'var’ | ‘catweights’
-	 * 	modifier type := 
-	 */
-	private $dynamics;
-
 	public $optionNamePrefix;
-	public $optionNameSuffix;
-	public $postID;
+	public $id;
 
 	/**
 	 * fills this class' price spec array with data from a given product's metadata
@@ -60,13 +30,12 @@ class Lasercommerce_Price_Spec {
 	public function __construct($postID){
 		global $Lasercommerce_Plugin;
 		if(!isset($Lasercommerce_Plugin)){
-			$Lasercommerce_Plugin = new Lasercommerce_Plugin();
 			// Then dependency lasercommerce is not configured correctly
 			// TODO: Handle this 
+			$Lasercommerce_Plugin = new Lasercommerce_Plugin();
 		}
 
 		$this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix(); 
-		$this->optionNameSuffix = "_price_spec";
 
         $this->postID = sanitize_key($postID);
 
@@ -166,21 +135,21 @@ class Lasercommerce_Price_Spec {
 	public function maybe_get_default_pricing(){
 		$regular 	= get_post_meta( $this->postID, '_regular_price', true);
 		$sale 		= get_post_meta( $this->postID, '_sale_price', true);
-		$sale_from 	= get_post_meta( $this->postID, '_sale_from', true);
-		$sale_to	= get_post_meta( $this->postID, '_sale_to', true);
+		$sale_price_dates_from 	= get_post_meta( $this->postID, '_sale_price_dates_from', true);
+		$sale_price_dates_to	= get_post_meta( $this->postID, '_sale_price_dates_to', true);
 
 		$params = array();
 		if($regular and $regular != '') $params['regular'] = $regular;
 		if($sale and $sale != '') $params['sale'] = $sale;
-		if($sale_from and $sale_from != '') $params['sale_from'] = $sale_from;
-		if($sale_to and $sale_to != '') $params['sale_to'] = $sale_to;
+		if($sale_price_dates_from and $sale_price_dates_from != '') $params['sale_price_dates_from'] = $sale_price_dates_from;
+		if($sale_price_dates_to and $sale_price_dates_to != '') $params['sale_price_dates_to'] = $sale_price_dates_to;
 		if(WP_DEBUG) error_log("maybe_get_default_pricing returned ".serialize($params));
 		return new Lasercommerce_Pricing($params);
 		// $_product = new WC_Product($this->postID);
 		// $regular = $_product->regular_price;
 		// $sale = $_product->sale_price;
-		// $sale_from = $_product->sale_from;
-		// $sale_to = $_product->sale_to;
+		// $sale_price_dates_from = $_product->sale_price_dates_from;
+		// $sale_price_dates_to = $_product->sale_price_dates_to;
 	}
 
 
@@ -378,45 +347,45 @@ class Lasercommerce_Price_Spec {
 		
 	}
 
-	/**
-	 * Calculates the collector quantity for this price spec for a given cart
-	 * @param mixed $cart the cart to be analysed
-	 * @return integer $quantity the collector quantity
-	 */
-	private function get_collector_quantity( $cart ){
-		$type = $this['collector_type'];
-		if(is_null($type)) return null;
-		$params = $this->get_collector_quantity();
-		if(is_null($params)) return null; //ASSUMES THAT ALL COLLECTORS REQUIRE NONEMPTY PARAMS
-		if($params == 0) return 0;
-		$quantity = 0;
-		foreach ($cart as $cart_item_key => $values) {
-			switch ($type) {
-				case 'cat':
-					// calculate the number of products that match the given cat list
-					// TODO: basically if cart line category in cat list, $quantity++
-					break;
-				case 'prod':
-					// calculate the number of products that match the given prod list
-					// TODO: basically if cart line prod in prod list, $quantity++
-					break;
-				case 'var':
-					// calculate the number of products that match the given var list
-					// TODO: basically if cart line var in var list, $quantity++
-					break;
-				case 'catweights':
-					// calculate the number of products that match the given cat list
-					// multiplied by their given weights
-					// TODO: basically if cart line cat in catweight list, $quantity += weight
-					break;
-				default:
-					// TODO: fail if type not recognised
-					break;
-			}
-		}
+	// /**
+	//  * Calculates the collector quantity for this price spec for a given cart
+	//  * @param mixed $cart the cart to be analysed
+	//  * @return integer $quantity the collector quantity
+	//  */
+	// private function get_collector_quantity( $cart ){
+	// 	$type = $this['collector_type'];
+	// 	if(is_null($type)) return null;
+	// 	$params = $this->get_collector_quantity();
+	// 	if(is_null($params)) return null; //ASSUMES THAT ALL COLLECTORS REQUIRE NONEMPTY PARAMS
+	// 	if($params == 0) return 0;
+	// 	$quantity = 0;
+	// 	foreach ($cart as $cart_item_key => $values) {
+	// 		switch ($type) {
+	// 			case 'cat':
+	// 				// calculate the number of products that match the given cat list
+	// 				// TODO: basically if cart line category in cat list, $quantity++
+	// 				break;
+	// 			case 'prod':
+	// 				// calculate the number of products that match the given prod list
+	// 				// TODO: basically if cart line prod in prod list, $quantity++
+	// 				break;
+	// 			case 'var':
+	// 				// calculate the number of products that match the given var list
+	// 				// TODO: basically if cart line var in var list, $quantity++
+	// 				break;
+	// 			case 'catweights':
+	// 				// calculate the number of products that match the given cat list
+	// 				// multiplied by their given weights
+	// 				// TODO: basically if cart line cat in catweight list, $quantity += weight
+	// 				break;
+	// 			default:
+	// 				// TODO: fail if type not recognised
+	// 				break;
+	// 		}
+	// 	}
 		
-		return $quantity;
-	}
+	// 	return $quantity;
+	// }
 
 
 	/**

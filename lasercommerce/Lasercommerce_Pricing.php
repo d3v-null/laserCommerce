@@ -1,14 +1,12 @@
 <?php
 
 include_once('Lasercommerce_Plugin.php');
-global $Lasercommerce_Plugin;
-if(!isset($Lasercommerce_Plugin)){
-	$Lasercommerce_Plugin = new Lasercommerce_Plugin();
-}
 
 class Lasercommerce_Pricing {
 
-	private static $optionNamePrefix = $Lasercommerce_Plugin>getOptionNamePrefix();;
+	private $id;
+	private $role;
+	private $optionNamePrefix;// 
 
 	public static function sort_by_regular_price($a, $b){
 		if(isset($a->regular_price)){
@@ -32,14 +30,19 @@ class Lasercommerce_Pricing {
 
 
 	public function __construct($id, $role=''){
+		global $Lasercommerce_Plugin;
+		if(!isset($Lasercommerce_Plugin)){
+			$Lasercommerce_Plugin = new Lasercommerce_Plugin();
+		}
 		$this->id = $id;
 		$this->role = $role;
+		$this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix();
 	}
 
 	private function get_meta_key($key){
 		//default role
 		if($this->role){
-			return $this->optionNamePrefix() . $this->role . '_' . $key;
+			return $this->optionNamePrefix . $this->role . '_' . $key;
 		} else {
 			return '_'.$key;
 		}
@@ -48,24 +51,25 @@ class Lasercommerce_Pricing {
 
 	public function __get($key){
 		$defaults = array(
-			'regular_price':'',
-			'sale_price':'',
-			'sale_from':'',
-			'sale_to':'',
-			'tax_status':'taxable'
+			'regular_price'=>'',
+			'sale_price'=>'',
+			'sale_price_dates_from'=>'',
+			'sale_price_dates_to'=>'',
+			'tax_status'=>'taxable'
 		);
 		if( in_array($key, array_keys($defaults) ) ){
 			$value = get_post_meta($this->id, $this->get_meta_key($key), true); 
-			$value = $value ? $value : $defaults[$key]
+			$value = $value ? $value : $defaults[$key];
 		} else {
 			$value = '';//get_post_meta($this->id, $this->get_meta_key($key), true) )
 		}
-		return $value
+		if(WP_DEBUG) error_log("get $key returned $value");
+		return $value;
 	}
 
 	public function __isset($key){
 		$value = $this->__get($key);
-		return bool($value);
+		return (bool)($value);
 	}
 
 	public function __set($key, $value){
@@ -75,19 +79,19 @@ class Lasercommerce_Pricing {
 			case 'sale_price':
 				$this->validate_price($value);
 				break;
-			case 'sale_from':
-			case 'sale_to':
+			case 'sale_price_dates_from':
+			case 'sale_price_dates_to':
 				$this->validate_timestamp($value);
 				break;
 			case 'tax_status':
-				i$thi->validate_tax_status($value);
+				$this->validate_tax_status($value);
 				break;
 			default:
 				throw new Exception("Invalid key: $key", 1);
 				break;
 		}
+		if(WP_DEBUG) error_log("set $key to $value");
 		update_post_meta($this->id, $this->get_meta_key($key), $value);
-
 	}
 
 	public static function is_valid_price($price){
@@ -136,14 +140,14 @@ class Lasercommerce_Pricing {
 	}
 
 	public function __toString(){
-		return "Segular: " . $this->regular_price . " Sale: " . $this->sale_price;
+		return "Regular: " . $this->regular_price . " Sale: " . $this->sale_price;
 	}
 	
 	public function is_sale_active_now(){
-		$sale = isset($this->sale_price)?$this->sale:null;
+		$sale = isset($this->sale_price)?$this->sale_price:null;
 		if($sale){
-			$from = isset($this->sale_from)?$this->sale_from:null;
-			$to = isset($this->sale_to)?$this->sale_to:null;
+			$from = isset($this->sale_price_dates_from)?$this->sale_price_dates_from:null;
+			$to = isset($this->sale_price_dates_to)?$this->sale_price_dates_to:null;
 			$date = new DateTime();
 
 			$now = $date->getTimeStamp();

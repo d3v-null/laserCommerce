@@ -68,5 +68,14 @@ class Lasercommerce_Dynamic_Ruleset
 		}
 		return $value;
 	}
+
+	/**
+	 * Get the rule's post data.
+	 *
+	 * @return object
+	 */
+	public function get_post_data() {
+		return $this->post;
+	}	
 }
 

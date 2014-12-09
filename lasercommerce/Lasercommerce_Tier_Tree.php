@@ -5,7 +5,7 @@
  */
 class Lasercommerce_Tier_Tree {
 
-    public static $rootID = 'default'
+    public static $rootID = 'default';
 
     /**
      * Constructs the helper object
@@ -101,9 +101,9 @@ class Lasercommerce_Tier_Tree {
     public function getDescendents($role){
         $roles = $this->getRoles();
         if(in_array($role, $roles)){
-            return $this->flattenTierTreeRecursive
+            return $this->flattenTierTreeRecursive();
         } else if($role = $this->rootID) {
-            return $this->getRoles()
+            return $this->getRoles();
         }
     }
 
@@ -169,27 +169,6 @@ class Lasercommerce_Tier_Tree {
 
 
     /**
-     * (Depreciated) Returns a list of prices available for a user that can view a given list of roles
-     *
-     * @param integer $postID The ID of the given product / product variation
-     * @param array $roles The list of roles visible to the user
-     * @return array $visibleTiers The list of tiers visible to the user ( role => price )
-    public function getVisibleTiersSimple($postID, $roles){
-
-        $availableTiers = $this->getAvailableTiers($roles);        
-        
-        $visibleTiers = array();
-        foreach( $availableTiers as $role ){
-            $price = $this->getPrice($postID, $role);
-            if( $price ) $visibleTiers[$role] = $price;
-            //If(WP_DEBUG) error_log("--> $role price: $price");
-        }
-        
-        return $visibleTiers;
-    } 
-    */
-
-    /**
      * Gets the postID of a given simple or variable product
      *
      * @param WC_Product $product the product to be analysed
@@ -226,8 +205,7 @@ class Lasercommerce_Tier_Tree {
      */
     public function getNames( ){
         $defaults = array(
-            'special_customer' => 'SSP',
-            'customer' => 'RRP'
+            '' => 'Public',
         );
 
         global $wp_roles;
