@@ -31,9 +31,11 @@
 class Lasercommerce_OptionsManager {
 
     public function getOptionNamePrefix() {
-        $className = sanitize_key( get_class($this) );
-        return preg_replace( "/_plugin$/", "", $className)."_";
+        // $className = sanitize_key( get_class($this) );
+        // return preg_replace( "/_plugin$/", "", $className)."_";
+        return 'lc_';
     }
+
 
 
     /**

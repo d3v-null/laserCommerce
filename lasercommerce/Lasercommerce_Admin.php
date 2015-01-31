@@ -12,7 +12,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * 
      * @param $optionNamePrefix 
      */
-    public function __construct($optionNamePrefix = 'lasercommerce_') {
+    public function __construct($optionNamePrefix = 'lc_') {
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
         $this->optionNamePrefix = $optionNamePrefix;

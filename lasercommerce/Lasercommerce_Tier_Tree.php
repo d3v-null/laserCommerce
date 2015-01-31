@@ -11,7 +11,7 @@ class Lasercommerce_Tier_Tree {
      * Constructs the helper object
      * @param $optionNamePrefix The prefix used to find price tier options
      */
-    public function __construct($optionNamePrefix = 'lasercommerce_') {
+    public function __construct($optionNamePrefix = 'lc_') {
         $this->optionNamePrefix = $optionNamePrefix;
     }
     
@@ -205,7 +205,7 @@ class Lasercommerce_Tier_Tree {
      */
     public function getNames( ){
         $defaults = array(
-            '' => 'Public',
+            // '' => 'Public',
         );
 
         global $wp_roles;
