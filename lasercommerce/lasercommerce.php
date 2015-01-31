@@ -4,7 +4,7 @@
    Plugin URI: http://dev.laserphile.com/plugins/lasercommerce
    Version: 0.1
    Author: Derwent
-   Description: An all-in-one solution for WooCommerce stores that need fine-grained control over their products pricing and visibility for an arbitrary number of pri
+   Description: Custom pricing, special scheduling and visibility for an arbitrary number of price tiers
    Text Domain: lasercommerce
    License: BSD 3-Clause
   */

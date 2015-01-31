@@ -515,9 +515,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     array('jquery', 'wc-admin-meta-boxes' ),
                     0.1
                 );
-                if(WP_DEBUG) error_log("registering script");
                 wp_enqueue_script( 'jquery-date-picker-field-extra-js' );
-                if(WP_DEBUG) error_log("enqueueing script");
             }
         );
         

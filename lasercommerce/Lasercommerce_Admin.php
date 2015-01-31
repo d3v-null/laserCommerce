@@ -22,6 +22,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
+        // add_action( 'admin_enqueue_scripts', array($this, 'nestable_init'));
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'nestable_init' ) ); //TODO: check priority is right
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output_sections' ) );
         add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output' ) );
@@ -73,7 +74,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                         'name'  => 'Price Tiers',
                         'type'  => 'price_tiers',
                         'id'    => $this->optionNamePrefix . 'price_tiers',
-                        'default' => '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]'
+                        // 'default' => '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]'
                     ),
                     array(
                         'type' => 'sectionend',
@@ -137,17 +138,17 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         // if (!isset($Lasercommerce_Tier_Tree)) {
         //     $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree();
         // }
+        $names = $Lasercommerce_Tier_Tree->getNames();
         $availableRoles = array_keys($names);
         $usedRoles = $Lasercommerce_Tier_Tree->getRoles();
         $tree = $Lasercommerce_Tier_Tree->getTierTree();
-        $names = $Lasercommerce_Tier_Tree->getNames();
         if(!$usedRoles){
             $unusedRoles = $availableRoles;
         } else {
             $unusedRoles = array_diff($availableRoles, $usedRoles);
         }
         IF(WP_DEBUG) error_log("-> availableRoles: ".serialize($availableRoles));
-        IF(WP_DEBUG) error_log("-> tree: ".serialize($tree));
+        IF(WP_DEBUG) error_log("-> tree: ".          serialize($tree));
         IF(WP_DEBUG) error_log("-> usedRoles: ".     serialize($usedRoles));
         IF(WP_DEBUG) error_log("-> unusedRoles: ".   serialize($unusedRoles));
         IF(WP_DEBUG) error_log("-> names: ".         serialize($names));
@@ -182,38 +183,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                     } ?>
                 </ol>
             </div>
-            <input type="hidden" name="<?php echo esc_attr( $field['id'] ); ?>" id="<?php echo esc_attr( $field['id'] ); ?>"  style="width:100%; max-width:600px" value="">    
-            <!-- input id='nestable-unused-output' style="width:100%"-->    
-
-            <script >
-                (function ($) {
-                    $(document).ready(function()
-                    {
-                        var updateOutput = function (e)
-                        {
-                            var list    = e.length ? e : $(e.target),
-                                output  = list.data('output');
-                            if (window.JSON) {
-                                output.val(window.JSON.stringify(list.nestable('serialize')));
-                            } else {
-                                output.val('JSON browser support required');
-                            }
-                        };
-
-                        $('#nestable-used').nestable({
-                            group: 1
-                        })
-                        .on('change', updateOutput);
-                        $('#nestable-unused').nestable({
-                            group: 1
-                        })
-
-                        updateOutput($('#nestable-used').data('output', $('#<?php echo esc_attr( $field['id'] ); ?>')));
-
-                        //$('.dd').nestable();
-                    });
-                }(jQuery));            
-            </script>
+            <input type="" name="<?php echo esc_attr( $field['id'] ); ?>" class="lc_admin_tier_tree" id="<?php echo esc_attr( $field['id'] ); ?>"  style="width:100%; max-width:600px" value="">    
         <?php }
     }
     /**
