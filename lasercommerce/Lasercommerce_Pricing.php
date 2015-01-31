@@ -62,7 +62,7 @@ class Lasercommerce_Pricing {
 		} else {
 			$value = '';//get_post_meta($this->id, $this->get_meta_key($key), true) )
 		}
-		if(WP_DEBUG) error_log("get $key returned $value");
+		//if(WP_DEBUG) error_log("get $key returned $value");
 		return $value;
 	}
 
@@ -89,7 +89,7 @@ class Lasercommerce_Pricing {
 				throw new Exception("Invalid key: $key", 1);
 				break;
 		}
-		if(WP_DEBUG) error_log("set $key to $value");
+		// if(WP_DEBUG) error_log("set $key to $value");
 		update_post_meta($this->id, $this->get_meta_key($key), $value);
 	}
 
@@ -139,7 +139,13 @@ class Lasercommerce_Pricing {
 	}
 
 	public function __toString(){
-		return "Regular: " . $this->regular_price . " Sale: " . $this->sale_price;
+		return join(" ", array(
+			"R" . $this->regular_price, 
+			"S" . $this->sale_price ,
+			"F" . $this->sale_price_dates_from ,
+			"T" . $this->sale_price_dates_to,
+			"C" . $this->maybe_get_current_price()
+		));
 	}
 	
 	public function is_sale_active_now(){
@@ -150,20 +156,23 @@ class Lasercommerce_Pricing {
 			$date = new DateTime();
 
 			$now = $date->getTimeStamp();
+			// if(WP_DEBUG) error_log('calling is_sale_active_now on '. (string)$this . " @ f $from t $to n $now" );
 			if($now){
 				if($from){
-					if(strtotime($from) > strtotime($now)){
+					if(($from) > ($now)){
 						return false;
 					}
 				}
 				if($to){
-					if(strtotime($to) < strtotime($now)){
+					if(($to) < ($now)){
 						return false;
 					}
 				}
 			}
+			if(WP_DEBUG) error_log('true');
 			return true;
 		} else {
+			if(WP_DEBUG) error_log('false');
 			return false;
 		}
 		

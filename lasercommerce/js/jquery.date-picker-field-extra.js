@@ -35,7 +35,7 @@ jQuery(function($){
 
 		$(this).hide();
 		$wrap.find('.cancel_sale_schedule').show();
-		$wrap.find('.sale_price_dates_fields').show();
+		$wrap.find('.sale_price_dates_fields_extra').show();
 
 		return false;
 	});
@@ -44,30 +44,34 @@ jQuery(function($){
 
 		$(this).hide();
 		$wrap.find('.sale_schedule').show();
-		$wrap.find('.sale_price_dates_fields').hide();
-		$wrap.find('.sale_price_dates_fields').find('input').val('');
+		$wrap.find('.sale_price_dates_fields_extra').hide();
+		$wrap.find('.sale_price_dates_fields_extra').find('input').val('');
 
 		return false;
 	});
 
 		// DATE PICKER FIELDS
-	var dates = $( ".sale_price_dates_fields_extra input" ).datepicker({
-		defaultDate: "",
-		dateFormat: "yy-mm-dd",
-		numberOfMonths: 1,
-		showButtonPanel: true,
-		showOn: "button",
-		buttonImage: woocommerce_admin_meta_boxes.calendar_image,
-		buttonImageOnly: true,
-		onSelect: function( selectedDate ) {
-			var option = $(this).is('#_sale_price_dates_from, .sale_price_dates_from') ? "minDate" : "maxDate";
-
-			var instance = $( this ).data( "datepicker" ),
-				date = $.datepicker.parseDate(
-					instance.settings.dateFormat ||
-					$.datepicker._defaults.dateFormat,
-					selectedDate, instance.settings );
-			dates.not( this ).datepicker( "option", option, date );
-		}
+	$('.options_group.pricing_extra').each(function(){
+		console.log(this);
+		var dates = $(this).find( ".sale_price_dates_fields_extra input" ).datepicker({
+			defaultDate: "",
+			dateFormat: "yy-mm-dd",
+			numberOfMonths: 1,
+			showButtonPanel: true,
+			showOn: "button",
+			buttonImage: woocommerce_admin_meta_boxes.calendar_image,
+			buttonImageOnly: true,
+			onSelect: function( selectedDate ) {
+				//var option = $(this).is('#_sale_price_dates_from, .sale_price_dates_from') ? "minDate" : "maxDate";
+				var option = $(this).is('[name*="_sale_price_dates_from"]') ? "minDate" : "maxDate";
+				var instance = $( this ).data( "datepicker" ),
+					date = $.datepicker.parseDate(
+						instance.settings.dateFormat ||
+						$.datepicker._defaults.dateFormat,
+						selectedDate, instance.settings );
+				dates.not( this ).datepicker( "option", option, date );
+			}
+		});
 	});
+
 })

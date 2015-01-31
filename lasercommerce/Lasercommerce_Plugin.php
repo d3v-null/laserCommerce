@@ -153,7 +153,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     private function addTierFields($tier_slug, $tier_name = ""){
         //sanitize tier_slug and $tier_name
         $tier_slug = sanitize_key($tier_slug);
-        $tier_name = sanitize_key($tier_name);
+        //TODO: maybe sanitize tier_name a little
+        //$tier_name = sanitize_key($tier_name);
         if( $tier_name == "" ) $tier_name = $tier_slug;
         $prefix = $this->getOptionNamePrefix(); 
         
@@ -161,14 +162,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         // https://github.com/woothemes/woocommerce/blob/master/includes/admin/meta-boxes/class-wc-meta-box-product-data.php
 
         add_action( 
-            'woocommerce_product_options_pricing',  
+            'woocommerce_product_options_general_product_data',  
             function() use ($tier_slug, $tier_name, $prefix){
                 global $post, $thepostid;
                 if( !isset($thepostid) ){
                     $thepostid = $post->ID;
                 }
                 if(WP_DEBUG) error_log("product options admin for $thepostid, $tier_slug");
-                echo '<div class="options_group show_if_simple">';
+                echo '<div class="options_group pricing_extra show_if_simple">';
 
                 $pricing = new Lasercommerce_Pricing($thepostid, $tier_slug);
                 $regular_price  = (isset($pricing->regular_price)) ? esc_attr($pricing->regular_price) : '' ;
@@ -179,7 +180,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     array( 
                         'id' => $prefix.$tier_slug."_regular_price", 
                         'value' => $regular_price,
-                        'label' => __( "$tier_name Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
+                        'label' => $tier_name . ' ' . __( "Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'data_type' => 'price' 
                     ) 
                 );   
@@ -188,7 +189,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     array( 
                         'id' => $prefix.$tier_slug."_sale_price", 
                         'value' => $sale_price,
-                        'label' => __( "$tier_name Sale Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
+                        'label' => $tier_name . ' ' . __( "Sale Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
                         'description' => '<a href="#" class="sale_schedule">' . __( 'Schedule', 'lasercommerce' ) . '</a>',
                         'data_type' => 'price' 
                     ) 
@@ -306,7 +307,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 }
             }
 
-            if(WP_DEBUG) error_log("-> maybeGetVisiblePricing returned ".serialize(array_keys($pricings)));
+            if(WP_DEBUG) {
+                error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
+                foreach ($pricings as $key => $pricing) {
+                    error_log("$key: ". (string)$pricing);
+                }
+            }
+            
             return $pricings;
         } else { 
             if(WP_DEBUG) error_log("product not valid");
