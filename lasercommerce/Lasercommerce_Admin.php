@@ -161,12 +161,12 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         } else {
             $unusedRoles = array_diff($availableRoles, $usedRoles);
         }
-        IF(WP_DEBUG) error_log("-> availableRoles: ".serialize($availableRoles));
-        IF(WP_DEBUG) error_log("-> tree: ".          serialize($tree));
-        IF(WP_DEBUG) error_log("-> usedRoles: ".     serialize($usedRoles));
-        IF(WP_DEBUG) error_log("-> unusedRoles: ".   serialize($unusedRoles));
-        IF(WP_DEBUG) error_log("-> names: ".         serialize($names));
-        IF(WP_DEBUG) error_log("-> field: ".         serialize($field));
+        // IF(WP_DEBUG) error_log("-> availableRoles: ".serialize($availableRoles));
+        // IF(WP_DEBUG) error_log("-> tree: ".          serialize($tree));
+        // IF(WP_DEBUG) error_log("-> usedRoles: ".     serialize($usedRoles));
+        // IF(WP_DEBUG) error_log("-> unusedRoles: ".   serialize($unusedRoles));
+        // IF(WP_DEBUG) error_log("-> names: ".         serialize($names));
+        // IF(WP_DEBUG) error_log("-> field: ".         serialize($field));
 
         if(isset($field['id'])){
         ?>
@@ -195,9 +195,9 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * @param array $field The array specifying the field being saved
      */
     public function price_tiers_save( $field ){
-        if(WP_DEBUG) error_log('updating price tier! field: '.serialize($field).' POST '.serialize($_POST));
+        // if(WP_DEBUG) error_log('updating price tier! field: '.serialize($field).' POST '.serialize($_POST));
         if( isset( $_POST[ $field['id']]) ){
-            if(WP_DEBUG) error_log('updating option '.$field['id'].' as '.$_POST[$field['id']]);
+            // if(WP_DEBUG) error_log('updating option '.$field['id'].' as '.$_POST[$field['id']]);
             update_option( $field['id'], $_POST[$field['id']]);
         }
     }

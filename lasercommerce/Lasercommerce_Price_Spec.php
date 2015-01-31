@@ -80,9 +80,9 @@ class Lasercommerce_Price_Spec {
 			'dynamics' => array()
 		);
 
-		if(WP_DEBUG) error_log("saving price spec.");
-		if(WP_DEBUG) error_log(" -> pricing: ".esc_attr(serialize($this->pricing)));
-		if(WP_DEBUG) error_log(" -> dynamics ".esc_attr(serialize($this->dynamics)));
+		// if(WP_DEBUG) error_log("saving price spec.");
+		// if(WP_DEBUG) error_log(" -> pricing: ".esc_attr(serialize($this->pricing)));
+		// if(WP_DEBUG) error_log(" -> dynamics ".esc_attr(serialize($this->dynamics)));
 
 
 		foreach ($this->pricing as $role => $pricing) {
@@ -97,9 +97,9 @@ class Lasercommerce_Price_Spec {
 	}
 
 	public static function is_valid_pricing($pricing){
-		if(WP_DEBUG) error_log("type of pricing: ".gettype($pricing));
-		if(WP_DEBUG) error_log("class of pricing: ".get_class($pricing));
-		if(WP_DEBUG) error_log("pricing methods: ".serialize(get_class_methods($pricing)));
+		// if(WP_DEBUG) error_log("type of pricing: ".gettype($pricing));
+		// if(WP_DEBUG) error_log("class of pricing: ".get_class($pricing));
+		// if(WP_DEBUG) error_log("pricing methods: ".serialize(get_class_methods($pricing)));
 
 		return true;
 		return $pricing instanceof Lasercommerce_Pricing;
@@ -143,7 +143,7 @@ class Lasercommerce_Price_Spec {
 		if($sale and $sale != '') $params['sale'] = $sale;
 		if($sale_price_dates_from and $sale_price_dates_from != '') $params['sale_price_dates_from'] = $sale_price_dates_from;
 		if($sale_price_dates_to and $sale_price_dates_to != '') $params['sale_price_dates_to'] = $sale_price_dates_to;
-		if(WP_DEBUG) error_log("maybe_get_default_pricing returned ".serialize($params));
+		// if(WP_DEBUG) error_log("maybe_get_default_pricing returned ".serialize($params));
 		return new Lasercommerce_Pricing($params);
 	}
 }

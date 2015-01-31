@@ -52,7 +52,6 @@ jQuery(function($){
 
 		// DATE PICKER FIELDS
 	$('.options_group.pricing_extra').each(function(){
-		console.log(this);
 		var dates = $(this).find( ".sale_price_dates_fields_extra input" ).datepicker({
 			defaultDate: "",
 			dateFormat: "yy-mm-dd",

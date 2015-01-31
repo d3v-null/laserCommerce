@@ -156,7 +156,6 @@ class Lasercommerce_Pricing {
 			$date = new DateTime();
 
 			$now = $date->getTimeStamp();
-			// if(WP_DEBUG) error_log('calling is_sale_active_now on '. (string)$this . " @ f $from t $to n $now" );
 			if($now){
 				if($from){
 					if(($from) > ($now)){
@@ -169,10 +168,8 @@ class Lasercommerce_Pricing {
 					}
 				}
 			}
-			if(WP_DEBUG) error_log('true');
 			return true;
 		} else {
-			if(WP_DEBUG) error_log('false');
 			return false;
 		}
 		

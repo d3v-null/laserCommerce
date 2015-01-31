@@ -52,11 +52,11 @@ class Lasercommerce_Tier_Tree {
         $tierTree = json_decode($json_string, true);
         if ( !$tierTree ) {
             
-            If(WP_DEBUG) error_log("-> could not decode ");
+            // If(WP_DEBUG) error_log("-> could not decode ");
             return array(); //array('id'=>'administrator'));
         } 
         else {
-            If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree));
+            // If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree));
             return $tierTree; //MIGHT HAVE TO CHANGE THIS TO $tierTree[0]
         } 
     }
@@ -68,7 +68,7 @@ class Lasercommerce_Tier_Tree {
      * @return the roles contained within $node
      */
     private function flattenTierTreeRecursive($node = array()){
-        IF(WP_DEBUG) foreach($node as $k => $v) error_log("node: ($k, ".serialize($v).")");
+        // IF(WP_DEBUG) foreach($node as $k => $v) error_log("node: ($k, ".serialize($v).")");
         if( !isset($node['id']) ) return array();
         $roles = array($node['id']);
         if( isset($node['children'] ) ){
@@ -97,6 +97,10 @@ class Lasercommerce_Tier_Tree {
         }
         return $roles;
     }   
+
+    public function getActiveRoles(){
+        return array_intersect($this->getRoles(), array_keys($this->getNames()));
+    }
 
     public function getDescendents($role){
         $roles = $this->getRoles();

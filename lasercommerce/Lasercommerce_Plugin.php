@@ -267,7 +267,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      * @param array $names A mapping of tier slugs to their names
      */
     public function maybeAddSaveTierFields($tiers, $names = array()){
-        if(WP_DEBUG) error_log("Called maybeAddSaveTierFields: ".serialize($tiers));
+        //if(WP_DEBUG) error_log("Called maybeAddSaveTierFields: ".serialize($tiers));
 
         foreach($tiers as $tier_slug){
             $tier_name = isset($names[$tier_slug])?$names[$tier_slug]:$tier_slug;
@@ -281,17 +281,23 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      * @return string $role The role of the current user
      */
     private function getCurrentUserRoles(){
-        $current_user = wp_get_current_user();
-        if(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
-        $roles = $current_user->roles;
-        if(WP_DEBUG) error_log("--> roles: ".serialize($roles));
+        global $Lasercommerce_Roles_Override;
+        if(isset($Lasercommerce_Roles_Override) and is_array($Lasercommerce_Roles_Override)){
+            $roles = $Lasercommerce_Roles_Override;
+        } else {
+            $current_user = wp_get_current_user();
+            //if(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
+            $roles = $current_user->roles;
+            //if(WP_DEBUG) error_log("--> roles: ".serialize($roles));
+        }
         return $roles;
     }
 
     private function maybeGetVisiblePricing($_product=''){
-        if(WP_DEBUG) error_log("calledalled maybeGetVisiblePricing");
+        //if(WP_DEBUG) error_log("calledalled maybeGetVisiblePricing");
         if($_product) {
             global $Lasercommerce_Tier_Tree;
+            
             $currentUserRoles = $this->getCurrentUserRoles();
             $visibleTiers = $Lasercommerce_Tier_Tree->getAvailableTiers($currentUserRoles);
             // $visibleTiers = $currentUserRoles;
@@ -307,29 +313,29 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 }
             }
 
-            if(WP_DEBUG) {
-                error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
-                foreach ($pricings as $key => $pricing) {
-                    error_log("$key: ". (string)$pricing);
-                }
-            }
+            // if(WP_DEBUG) {
+            //     error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
+            //     foreach ($pricings as $key => $pricing) {
+            //         error_log("$key: ". (string)$pricing);
+            //     }
+            // }
             
             return $pricings;
         } else { 
-            if(WP_DEBUG) error_log("product not valid");
+            //if(WP_DEBUG) error_log("product not valid");
             return null;
         }   
 
     }
 
     private function maybeGetLowestPricing($_product=''){
-        if(WP_DEBUG) error_log("called maybeGetLowestPricing");
+        //if(WP_DEBUG) error_log("called maybeGetLowestPricing");
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
             uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
             $pricing = array_pop($pricings);
-            if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
+            //if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
             return $pricing;
         } else {
             return null;
@@ -348,7 +354,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if($lowestPricing){
             $price = $lowestPricing->regular_price;
         } 
-        if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
+        //if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
         return $price;
     }
 
@@ -358,7 +364,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if($lowestPricing){
             $price = $lowestPricing->sale_price;
         } 
-        if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
+        //if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
         return $price;
     }
     
@@ -369,7 +375,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         } else {
             $price = '';
         }
-        if(WP_DEBUG) error_log("maybeGetPrice returned $price");
+        //if(WP_DEBUG) error_log("maybeGetPrice returned $price");
         return $price;        
     }
 
@@ -380,45 +386,45 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         } else {
             $price = '';
         }
-        if(WP_DEBUG) error_log("maybeGetCartPrice returned $price");
+        //if(WP_DEBUG) error_log("maybeGetCartPrice returned $price");
         return $price;    
     }
 
     public function maybeGetPriceInclTax($price ='', $qty, $_this){
-        if(WP_DEBUG) error_log("called maybeGetPriceInclTax");
-        if(WP_DEBUG) error_log("price: ".$price);
+        // if(WP_DEBUG) error_log("called maybeGetPriceInclTax");
+        // if(WP_DEBUG) error_log("price: ".$price);
         return $price;
     }
 
     public function maybeGetPriceExclTax($price ='', $qty, $_this){
-        if(WP_DEBUG) error_log("called maybeGetPriceExclTax");
-        if(WP_DEBUG) error_log("price: ".$price);
+        // if(WP_DEBUG) error_log("called maybeGetPriceExclTax");
+        // if(WP_DEBUG) error_log("price: ".$price);
         return $price;
     }
     
     public function maybeGetPriceHtml($price_html, $_product){
-        if(WP_DEBUG) error_log("called maybeGetPriceHtml");
-        if(WP_DEBUG) error_log("-> html: $price_html");
-        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        // if(WP_DEBUG) error_log("called maybeGetPriceHtml");
+        // if(WP_DEBUG) error_log("-> html: $price_html");
+        // if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        // if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        // if(WP_DEBUG) error_log("-> product: ".$_product->id);
         
         return $price_html;
     }    
 
     public function maybeGetSalePriceHtml($price_html, $_product){
-        if(WP_DEBUG) error_log("called maybeGetSalePriceHtml");
-        if(WP_DEBUG) error_log("-> html: $price_html");
-        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        // if(WP_DEBUG) error_log("called maybeGetSalePriceHtml");
+        // if(WP_DEBUG) error_log("-> html: $price_html");
+        // if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        // if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        // if(WP_DEBUG) error_log("-> product: ".$_product->id);
         
         return $price_html;
     }
     
     public function maybeAddPricingTab( $tabs ){
-        if(WP_DEBUG) error_log("\n\n\n\n");
-        if(WP_DEBUG) error_log("called maybeAddPricingTab");
+        // if(WP_DEBUG) error_log("\n\n\n\n");
+        // if(WP_DEBUG) error_log("called maybeAddPricingTab");
 
         global $Lasercommerce_Tier_Tree;
         global $product;
@@ -489,12 +495,60 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 }
             );
         } else {
-            if(WP_DEBUG) error_log("-> visibleTiers is empty");
+            // if(WP_DEBUG) error_log("-> visibleTiers is empty");
             return $tabs;
         }
 
-        if(WP_DEBUG) error_log("-> returning tabs");
+        // if(WP_DEBUG) error_log("-> returning tabs");
         return $tabs;
+    }
+
+    public function maybeAddExtraPricingColumns(){
+        $prefix = $this->getOptionNamePrefix();
+        add_filter( 
+            'manage_edit-product_columns', 
+            function($columns) use ($prefix){
+                // if(WP_DEBUG) error_log("called maybeAddExtraPricingColumns");
+                // if(WP_DEBUG) foreach ($columns as $key => $value) {
+                //     error_log("$key => $value");
+                // }
+                global $Lasercommerce_Tier_Tree;
+                $names = $Lasercommerce_Tier_Tree->getNames();
+                $roles = $Lasercommerce_Tier_Tree->getActiveRoles();
+                foreach ($roles as $role) { 
+                    $columns[$prefix.$role] = isset($names[$role])?$names[$role]:$role;
+                }
+                //TODO: reorder columns
+                return $columns;
+            },
+            99
+        );
+        add_action(
+            'manage_product_posts_custom_column', 
+            function( $column ) use ($prefix){
+                global $post;
+
+                if ( empty( $the_product ) || $the_product->id != $post->ID ) {
+                    $the_product = wc_get_product( $post );
+                } 
+
+                global $Lasercommerce_Tier_Tree;
+                $roles = $Lasercommerce_Tier_Tree->getActiveRoles();
+
+                if( substr($column, 0, strlen($prefix)) === $prefix ){
+                    $remainder = substr($column, strlen($prefix));
+                    if(WP_DEBUG) error_log("REMAINDER: $remainder");
+                    if(in_array($remainder, $roles)){
+                        global $Lasercommerce_Roles_Override;
+                        $Lasercommerce_Roles_Override = array($remainder);
+                        echo $the_product->get_price_html();
+                        unset($Lasercommerce_Roles_Override);
+                    } else {
+                        echo '<span class="na">&ndash;</span>';
+                    }
+                }
+            }
+        );
     }
 
     public function addVariableProductBulkEditActions(){
@@ -586,6 +640,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         
         //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
         
+        $this->maybeAddExtraPricingColumns();
+
         //TODO: Make modifications to variable product bulk edit
         add_action( 
             'woocommerce_variable_product_bulk_edit_actions', 
