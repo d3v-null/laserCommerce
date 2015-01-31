@@ -53,7 +53,7 @@ class Lasercommerce_Tier_Tree {
         if ( !$tierTree ) {
             
             If(WP_DEBUG) error_log("-> could not decode ");
-            return array(array('id'=>'administrator'));
+            return array(); //array('id'=>'administrator'));
         } 
         else {
             If(WP_DEBUG) error_log("-> decoded: ".  serialize($tierTree));

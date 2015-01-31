@@ -107,7 +107,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * @param array $node The node of the tree to be displayed
      * @param array $names The array containing the mapping of roles to tier names
      */
-    public function output_nestable($node, $names) { 
+    public function output_nestable_li($node, $names) { 
         if(isset($node['id'])) {
             ?>
                 <li class="dd-item" data-id="<?php echo $node['id']; ?>">
@@ -118,7 +118,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                     ?>
                         <ol class="dd-list">
                             <?php foreach( $node['children'] as $child ) {
-                                $this->output_nestable($child, $names); 
+                                $this->output_nestable_li($child, $names); 
                             } ?>
                         </ol>
                     <?php } ?>
@@ -126,6 +126,20 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             <?php 
         }
     }
+
+    public function output_nestable($tree, $names, $id){ ?>
+        <div class="dd" id="<?php echo $id; ?>">
+            <?php if( !empty($tree) ){ 
+                echo '<ol class="dd-list">';
+                foreach ($tree as $node) {
+                    $this->output_nestable_li($node, $names);
+                } 
+                echo '</ol>';
+            } else {
+                echo '<div class="dd-empty"></div>';
+            } ?>
+        </div>
+    <?php }
        
     /**
      * Used by the WC_Settings to output the price tiers setting html
@@ -157,30 +171,18 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         if(isset($field['id'])){
         ?>
             <h2>The Tier Tree</h2>
-            <div class="dd" id="nestable-used">
-                <?php if( !empty($tree) ){ 
-                    ?>
-                        <ol class="dd-list">
-                    <?php foreach ($tree as $node) {
-                        $this->output_nestable($node, $names);
-                    } ?>
-                        </ol>
-                    <?php
-                } ?>
-            </div>
-            <hr>
+            <p>Drag classes to here from "Available User Roles"</p>
+            <?php $this->output_nestable($tree, $names, 'nestable-used');?>
             <h2>Availible User Roles</h2>
             <div class="dd" id="nestable-unused">
                 <ol class="dd-list">
-                    <?php foreach( $unusedRoles as $role ) {
-                        ?>
-                            <li class="dd-item" data-id="<?php echo $role; ?>">
-                                <div class="dd-handle">
-                                    <?php echo isset($names[$role])?$names[$role]:$role; ?>
-                                </div>
-                            </li>
-                        <?php
-                    } ?>
+                    <?php foreach( $unusedRoles as $role ) { ?>
+                        <li class="dd-item" data-id="<?php echo $role; ?>">
+                            <div class="dd-handle">
+                                <?php echo isset($names[$role])?$names[$role]:$role; ?>
+                            </div>
+                        </li>
+                    <?php } ?>
                 </ol>
             </div>
             <input type="" name="<?php echo esc_attr( $field['id'] ); ?>" class="lc_admin_tier_tree" id="<?php echo esc_attr( $field['id'] ); ?>"  style="width:100%; max-width:600px" value="">    

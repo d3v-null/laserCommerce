@@ -20,7 +20,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //  http://plugin.michael-simpson.com/?page_id=31
         return array(
             //'_version' => array('Installed Version'), // Leave this one commented-out. Uncomment to test upgrades.
-            // TODO
             // 'price_tiers' => array(
                 // __('Enter Price Tiers','lasercommerce'), 
                 // serialize(array('customer'=>'Customer'))
@@ -206,8 +205,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                             <input type="text" class="short" name="'.$sale_price_dates_to_id.'" id="'.$sale_price_dates_to_id.'" value="' . esc_attr( $sale_price_dates_to ) . '" placeholder="' . _x( 'To&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
                             <a href="#" class="cancel_sale_schedule">'. __( 'Cancel', 'woocommerce' ) .'</a>
                         </p>';
-
-                // TODO: output dynamic pricing rules
 
                 echo "</div>";
             }

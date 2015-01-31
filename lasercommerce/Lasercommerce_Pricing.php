@@ -28,7 +28,6 @@ class Lasercommerce_Pricing {
 		}
 	}
 
-
 	public function __construct($id, $role=''){
 		global $Lasercommerce_Plugin;
 		if(!isset($Lasercommerce_Plugin)){
