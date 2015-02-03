@@ -281,20 +281,27 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      * @return string $role The role of the current user
      */
     private function getCurrentUserRoles(){
+        if(WP_DEBUG) error_log("called getCurrentUserRoles");
         global $Lasercommerce_Roles_Override;
         if(isset($Lasercommerce_Roles_Override) and is_array($Lasercommerce_Roles_Override)){
+            if(WP_DEBUG) {
+                error_log("-> Override is: ");
+                foreach ($Lasercommerce_Roles_Override as $value) {
+                    error_log("--> $value");
+                }
+            }
             $roles = $Lasercommerce_Roles_Override;
         } else {
             $current_user = wp_get_current_user();
-            //if(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
+            if(WP_DEBUG) error_log("-> current user: ".$current_user->ID);
             $roles = $current_user->roles;
-            //if(WP_DEBUG) error_log("--> roles: ".serialize($roles));
+            if(WP_DEBUG) error_log("--> roles: ".serialize($roles));
         }
         return $roles;
     }
 
     private function maybeGetVisiblePricing($_product=''){
-        //if(WP_DEBUG) error_log("calledalled maybeGetVisiblePricing");
+        if(WP_DEBUG) error_log("calledalled maybeGetVisiblePricing");
         if($_product) {
             global $Lasercommerce_Tier_Tree;
             
@@ -313,12 +320,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 }
             }
 
-            // if(WP_DEBUG) {
-            //     error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
-            //     foreach ($pricings as $key => $pricing) {
-            //         error_log("$key: ". (string)$pricing);
-            //     }
-            // }
+            if(WP_DEBUG) {
+                error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
+                foreach ($pricings as $key => $pricing) {
+                    error_log("$key: ". (string)$pricing);
+                }
+            }
             
             return $pricings;
         } else { 
@@ -329,13 +336,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     private function maybeGetLowestPricing($_product=''){
-        //if(WP_DEBUG) error_log("called maybeGetLowestPricing");
+        if(WP_DEBUG) error_log("called maybeGetLowestPricing");
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
             uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
             $pricing = array_pop($pricings);
-            //if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
+            if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
             return $pricing;
         } else {
             return null;
@@ -350,32 +357,35 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      */
     public function maybeGetRegularPrice($price = '', $_product=''){
         //TODO: detect if the price to override is woocommerce price
+        if(WP_DEBUG) error_log("maybeGetRegularPrice calld with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->regular_price;
         } 
-        //if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
+        if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
         return $price;
     }
 
     public function maybeGetSalePrice($price = '', $_product = ''){ 
         //TODO: detect if the price to override is woocommerce price
+        if(WP_DEBUG) error_log("maybeGetSalePrice calld with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->sale_price;
         } 
-        //if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
+        if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
         return $price;
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
+        if(WP_DEBUG) error_log("maybeGetPrice calld with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->maybe_get_current_price();
         } else {
             $price = '';
         }
-        //if(WP_DEBUG) error_log("maybeGetPrice returned $price");
+        if(WP_DEBUG) error_log("maybeGetPrice returned $price");
         return $price;        
     }
 
@@ -403,21 +413,29 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function maybeGetPriceHtml($price_html, $_product){
-        // if(WP_DEBUG) error_log("called maybeGetPriceHtml");
-        // if(WP_DEBUG) error_log("-> html: $price_html");
-        // if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        // if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        // if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        $user = wp_get_current_user();
+        if(WP_DEBUG) error_log("");
+        if(WP_DEBUG) error_log("");
+        if(WP_DEBUG) error_log("called maybeGetPriceHtml");
+        if(WP_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        if(WP_DEBUG) error_log("-> user: ".$user->ID);
         
         return $price_html;
     }    
 
     public function maybeGetSalePriceHtml($price_html, $_product){
-        // if(WP_DEBUG) error_log("called maybeGetSalePriceHtml");
-        // if(WP_DEBUG) error_log("-> html: $price_html");
-        // if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        // if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        // if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        $user = wp_get_current_user();
+        if(WP_DEBUG) error_log("");
+        if(WP_DEBUG) error_log("");
+        if(WP_DEBUG) error_log("called maybeGetSalePriceHtml");
+        if(WP_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        if(WP_DEBUG) error_log("-> product: ".$_product->id);
+        if(WP_DEBUG) error_log("-> user: ".$user->ID);
         
         return $price_html;
     }
@@ -515,11 +533,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 global $Lasercommerce_Tier_Tree;
                 $names = $Lasercommerce_Tier_Tree->getNames();
                 $roles = $Lasercommerce_Tier_Tree->getActiveRoles();
+                $new_cols = array();
                 foreach ($roles as $role) { 
-                    $columns[$prefix.$role] = isset($names[$role])?$names[$role]:$role;
+                    $new_cols[$prefix.$role] = isset($names[$role])?$names[$role]:$role;
                 }
-                //TODO: reorder columns
-                return $columns;
+                $pos = array_search('price', array_keys($columns)) + 1;
+                return array_slice($columns, 0, $pos) + $new_cols + array_slice($columns, $pos);
             },
             99
         );
@@ -537,12 +556,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
                 if( substr($column, 0, strlen($prefix)) === $prefix ){
                     $remainder = substr($column, strlen($prefix));
+                    if(WP_DEBUG) error_log("");
+                    if(WP_DEBUG) error_log("");
                     if(WP_DEBUG) error_log("REMAINDER: $remainder");
                     if(in_array($remainder, $roles)){
                         global $Lasercommerce_Roles_Override;
                         $Lasercommerce_Roles_Override = array($remainder);
                         echo $the_product->get_price_html();
-                        unset($Lasercommerce_Roles_Override);
+                        unset($GLOBALS['Lasercommerce_Roles_Override']);
                     } else {
                         echo '<span class="na">&ndash;</span>';
                     }

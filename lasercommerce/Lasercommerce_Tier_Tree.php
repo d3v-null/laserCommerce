@@ -33,7 +33,7 @@ class Lasercommerce_Tier_Tree {
      */
     public function getOmniscientRoles(){
         //TODO: This
-        return array('administrator');
+        return array(); //array('administrator');
     }
     
     /**
