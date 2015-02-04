@@ -588,13 +588,17 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         add_action(
             'admin_enqueue_scripts', 
             function(){
-                wp_register_script( 
-                    'jquery-date-picker-field-extra-js', 
-                    plugins_url('/js/jquery.date-picker-field-extra.js', __FILE__), 
-                    array('jquery', 'wc-admin-meta-boxes' ),
-                    0.1
-                );
-                wp_enqueue_script( 'jquery-date-picker-field-extra-js' );
+                $screen  = get_current_screen();
+                if( in_array($screen->id, array('edit-product'))){
+                    wp_register_script( 
+                        'jquery-date-picker-field-extra-js', 
+                        plugins_url('/js/jquery.date-picker-field-extra.js', __FILE__), 
+                        array('jquery', 'wc-admin-meta-boxes' ),
+                        0.1
+                    );
+                    wp_enqueue_script( 'jquery-date-picker-field-extra-js' );
+                }
+
             }
         );
         
