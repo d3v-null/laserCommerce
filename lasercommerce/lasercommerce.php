@@ -66,6 +66,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+
+// add_action('init', function(){error_log("hello from init; lasercommerce.php");});
+// error_log("hello from LaserCommerce.php");
+
+
 $Lasercommerce_minimalRequiredPhpVersion = '5.0';
 
 /**

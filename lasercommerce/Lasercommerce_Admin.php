@@ -29,6 +29,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         add_action( 'woocommerce_admin_field_price_tiers', array( $this, 'price_tiers_setting' ) );
         add_action( 'woocommerce_settings_save_' . $this->id, array( $this, 'save' ) );
         add_action( 'woocommerce_update_option_price_tiers', array( $this, 'price_tiers_save' ) );
+        
     }   
 
     /**

@@ -87,12 +87,14 @@ class Lasercommerce_Pricing {
 			'tax_status'=>'taxable'
 		);
 		if( in_array($key, array_keys($defaults) ) ){
-			$value = get_post_meta($this->id, $this->get_meta_key($key), true); 
+			$meta_key = $this->get_meta_key($key);
+			if(WP_DEBUG) error_log("getting $meta_key from ".$this->id);
+			$value = get_post_meta($this->id, $meta_key, true); 
 			$value = $value ? $value : $defaults[$key];
 		} else {
 			$value = '';//get_post_meta($this->id, $this->get_meta_key($key), true) )
 		}
-		//if(WP_DEBUG) error_log("get $key returned $value");
+		// if(WP_DEBUG) error_log("get $key returned $value");
 		return $value;
 	}
 
