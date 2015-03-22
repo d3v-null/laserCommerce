@@ -288,39 +288,41 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         $tier_name = sanitize_key($tier_name);
         if( $tier_name == "" ) $tier_name = $tier_slug;
         $prefix = $this->getOptionNamePrefix(); 
-        add_action( 
-            'woocommerce_process_product_meta_simple',
-            function($post_id) use ($tier_slug, $tier_name, $prefix){
-                // if(WP_DEBUG) error_log("calling process_product_meta_simple callback");
+        $process_product_meta_callback = function($post_id) use ($tier_slug, $tier_name, $prefix){
+            // if(WP_DEBUG) error_log("calling process_product_meta_simple callback");
 
-                global $post, $thepostid;
-                if( !isset($thepostid) ){
-                    $thepostid = $post->ID;
-                }
-
-                $pricing = new Lasercommerce_Pricing($thepostid, $tier_slug);
-
-                $regular_id     = $prefix.$tier_slug."_regular_price";
-                $regular_price  = isset($_POST[$regular_id]) ? wc_format_decimal( $_POST[$regular_id] ) : '';
-                $pricing->regular_price = $regular_price;
-                
-                $sale_id     = $prefix.$tier_slug."_sale_price";
-                $sale_price  = isset($_POST[$sale_id]) ? wc_format_decimal( $_POST[$sale_id] ) : '';
-                $pricing->sale_price = $sale_price;
-
-                $sale_price_dates_from_id   = $prefix.$tier_slug.'_sale_price_dates_from';
-                $sale_price_dates_from      = isset( $_POST[$sale_price_dates_from_id] ) ? wc_clean( $_POST[$sale_price_dates_from_id] ) : '';
-                $sale_price_dates_to_id     = $prefix.$tier_slug.'_sale_price_dates_to';
-                $sale_price_dates_to        = isset( $_POST[$sale_price_dates_to_id] ) ? wc_clean( $_POST[$sale_price_dates_to_id] ) : '';
-
-                $pricing->sale_price_dates_from = $sale_price_dates_from ? strtotime($sale_price_dates_from) : '';
-                $pricing->sale_price_dates_to   = $sale_price_dates_to   ? strtotime($sale_price_dates_to) : '';
-
-                if(!$sale_price_dates_from and $sale_price_dates_to) {
-                    $pricing->sale_price_dates_from = strtotime( 'NOW', current_time( 'timestamp' ) ) ;
-                }
+            global $post, $thepostid;
+            if( !isset($thepostid) ){
+                $thepostid = $post->ID;
             }
-        );
+
+            $pricing = new Lasercommerce_Pricing($thepostid, $tier_slug);
+
+            $regular_id     = $prefix.$tier_slug."_regular_price";
+            $regular_price  = isset($_POST[$regular_id]) ? wc_format_decimal( $_POST[$regular_id] ) : '';
+            $pricing->regular_price = $regular_price;
+            
+            $sale_id     = $prefix.$tier_slug."_sale_price";
+            $sale_price  = isset($_POST[$sale_id]) ? wc_format_decimal( $_POST[$sale_id] ) : '';
+            $pricing->sale_price = $sale_price;
+
+            $sale_price_dates_from_id   = $prefix.$tier_slug.'_sale_price_dates_from';
+            $sale_price_dates_from      = isset( $_POST[$sale_price_dates_from_id] ) ? wc_clean( $_POST[$sale_price_dates_from_id] ) : '';
+            $sale_price_dates_to_id     = $prefix.$tier_slug.'_sale_price_dates_to';
+            $sale_price_dates_to        = isset( $_POST[$sale_price_dates_to_id] ) ? wc_clean( $_POST[$sale_price_dates_to_id] ) : '';
+
+            $pricing->sale_price_dates_from = $sale_price_dates_from ? strtotime($sale_price_dates_from) : '';
+            $pricing->sale_price_dates_to   = $sale_price_dates_to   ? strtotime($sale_price_dates_to) : '';
+
+            if(!$sale_price_dates_from and $sale_price_dates_to) {
+                $pricing->sale_price_dates_from = strtotime( 'NOW', current_time( 'timestamp' ) ) ;
+            }
+        };
+
+        add_action(  'woocommerce_process_product_meta_simple', $process_product_meta_callback );
+        add_action(  'woocommerce_process_product_meta_bundle', $process_product_meta_callback );
+        add_action(  'woocommerce_process_product_meta_composite', $process_product_meta_callback );
+
         //TODO: other product types 
         /* for variable: do_action( 'woocommerce_save_product_variation', $variation_id, $i ); */
         add_action( 
