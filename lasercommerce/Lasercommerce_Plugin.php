@@ -243,29 +243,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         add_action(
             'woocommerce_product_after_variable_attributes', 
             function($loop, $variation_data, $variation) use ($tier_slug, $tier_name, $prefix){
-                $variation_id = $variation->ID;
-                $variation_post_id = $variation_id;
+                if(WP_DEBUG) error_log("called woocommerce_product_after_variable_attributes closure");
 
-                if(WP_DEBUG) {
-                    error_log("called woocommerce_product_after_variable_attributes closure");
-                    global $post, $thepostid;
-                    if( !isset($thepostid) ){
-                        $thepostid = $post->ID;
-                    }   
-                    $variation_id = $variation->ID;
-                    error_log("-> variation_id = ".$variation_id);
-                    error_log("-> variation_post_id = ".$variation_post_id);        
-                    // error_log("-> postID = ".$thepostid);
-                    // error_log("-> variation_data: ".serialize($variation_data));
-                    // error_log("-> variation: ".serialize($variation));
-                }        
+                $variation_id = $variation->ID;
                 
                 $regular_label = $tier_name . ' ' . __( "Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')';
                 $sale_label = $tier_name . ' ' . __( 'Sale Price:', 'woocommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')';
                 $regular_name = 'variable_' . $tier_slug . '_regular_price[' . (string)($loop) . ']';
                 $sale_name = 'variable_' . $tier_slug . '_sale_price[' . (string)($loop) . ']';
 
-                $pricing = new Lasercommerce_Pricing($variation_post_id, $tier_slug);
+                $pricing = new Lasercommerce_Pricing($variation_id, $tier_slug);
                 $regular_price  = (isset($pricing->regular_price)) ? esc_attr($pricing->regular_price) : '' ;
                 $sale_price     = (isset($pricing->sale_price)) ? esc_attr($pricing->sale_price) : '' ;
 
