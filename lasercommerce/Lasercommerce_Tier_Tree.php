@@ -33,7 +33,7 @@ class Lasercommerce_Tier_Tree {
      */
     public function getOmniscientRoles(){
         //TODO: This
-        return array(); //array('administrator');
+        return array('administrator');
     }
     
     /**
@@ -102,15 +102,6 @@ class Lasercommerce_Tier_Tree {
         return array_intersect($this->getRoles(), array_keys($this->getNames()));
     }
 
-    public function getDescendents($role){
-        $roles = $this->getRoles();
-        if(in_array($role, $roles)){
-            return $this->flattenTierTreeRecursive();
-        } else if($role = $this->rootID) {
-            return $this->getRoles();
-        }
-    }
-
     /**
      * Used by getAvailableTiers to recursively determine the price tiers available 
      * for a user that can view a given list of roles
@@ -153,6 +144,14 @@ class Lasercommerce_Tier_Tree {
     public function getAvailableTiers($roles){
         $tree = $this->getTierTree();
         if(empty($roles)) return array();
+        $omniscient = $this->getOmniscientRoles();
+        $activeRoles = $this->getActiveRoles();
+        foreach ($roles as $role) {
+            if (in_array($role, $omniscient) ){
+                $roles = $activeRoles;
+                break;
+            }
+        }
         $tiers = array();
         foreach( $tree as $node ){
             foreach($this->filterRolesRecursive($node, $roles) as $role){

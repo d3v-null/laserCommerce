@@ -619,7 +619,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeVariableProductSync( $product_id, $children ){
-
+        
     }
 
     public function maybeIsPurchasable($purchasable, $_product){
