@@ -467,16 +467,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     private function maybeGetLowestPricing($_product=''){
-        if(WP_DEBUG) error_log("called maybeGetLowestPricing");
+        // if(WP_DEBUG) error_log("called maybeGetLowestPricing");
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
             uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
             $pricing = array_pop($pricings);
-            if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
+            // if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
             return $pricing;
         } else {
-            if(WP_DEBUG) error_log("maybeGetLowestPricing return null");
+            // if(WP_DEBUG) error_log("maybeGetLowestPricing return null");
             return null;
         }
     }
@@ -514,10 +514,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->maybe_get_current_price();
-        } else {
-            $price = '';
-        }
-        // if(WP_DEBUG) error_log("maybeGetPrice returned $price");
+        } 
+        // else {
+        //     $price = '';
+        // }
+        if(WP_DEBUG) error_log("maybeGetPrice returned $price");
         return $price;        
     }
 
@@ -622,9 +623,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeIsPurchasable($purchasable, $_product){
-        if(WP_DEBUG) error_log("maybeIsPurchasable closure called | p:$purchasable");
+        // if(WP_DEBUG) error_log("maybeIsPurchasable closure called | p:$purchasable");
         if($_product && $_product->is_type('variable')){
-            if(WP_DEBUG) error_log("is variable");
+            // if(WP_DEBUG) error_log("is variable");
             $children = $_product->get_children();
             if( is_array($children) && !empty($children)){
                 foreach ($children as $child_id) {
