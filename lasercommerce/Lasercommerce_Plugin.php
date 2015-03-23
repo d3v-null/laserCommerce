@@ -192,7 +192,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         add_action( 
             'woocommerce_product_options_general_product_data',  
             function() use ($tier_slug, $tier_name, $prefix){
-                global $post, $thepostid;
+                global $post, $thepostid, $Lasercommerce_Tier_Tree;
                 if( !isset($thepostid) ){
                     $thepostid = $post->ID;
                 }
@@ -481,6 +481,21 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         }
     }
 
+    private function maybeGetHighestPricing($_product=''){
+        // if(WP_DEBUG) error_log("called maybeGetLowestPricing");
+        $pricings = $this->maybeGetVisiblePricing($_product);
+
+        if(!empty($pricings)){
+            uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
+            $pricing = array_shift($pricings);
+            // if(WP_DEBUG) error_log("maybeGetLowestPricing returned ".($pricing->__toString()));
+            return $pricing;
+        } else {
+            // if(WP_DEBUG) error_log("maybeGetLowestPricing return null");
+            return null;
+        }
+    }
+
     /**
      * Gets the regular price of the given simple product, used inw oocommerce_get_regular_price
      * @param mixed $price The regular price as seen by woocommerce core
@@ -619,7 +634,41 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeVariableProductSync( $product_id, $children ){
+        global $Lasercommerce_Tier_Tree;
+        $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
         
+        global $Lasercommerce_Roles_Override;
+        $old_override = $Lasercommerce_Roles_Override;
+        $Lasercommerce_Roles_Override = $omniscient_roles;
+
+        // Main active prices
+        $min_price            = null;
+        $max_price            = null;
+        $min_price_id         = null;
+        $max_price_id         = null;
+
+        // Regular prices
+        $min_regular_price    = null;
+        $max_regular_price    = null;
+        $min_regular_price_id = null;
+        $max_regular_price_id = null;
+
+        // Sale prices
+        $min_sale_price       = null;
+        $max_sale_price       = null;
+        $min_sale_price_id    = null;
+        $max_sale_price_id    = null;
+
+        foreach ($children as $child) {
+            $lowest = $this->maybeGetLowestPricing();
+            $lowestID = $lowest->id;
+            $highest = $this->maybeGetHighestPricing();
+            $highestID = $highest->id;
+        }
+
+        $Lasercommerce_Roles_Override = $old_override;
+
+        //TODO: synchronize max_variation_id
     }
 
     public function maybeIsPurchasable($purchasable, $_product){

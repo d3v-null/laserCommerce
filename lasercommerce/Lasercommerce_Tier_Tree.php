@@ -182,20 +182,20 @@ class Lasercommerce_Tier_Tree {
             //if(WP_DEBUG) error_log( '-> product not set');
             return Null;
         }
-        if( $product->is_type( 'simple' ) ){
-            $postID = $product->id; 
-        } else if( $product->is_type( 'variation' ) ){
+        if( $product->is_type( 'variation' ) ){
             //If(WP_DEBUG) error_log("--> variable product");
             if ( isset( $product->variation_id ) ) {
                 $postID = $product->variation_id;
             } else {
                 //If(WP_DEBUG) error_log("--> !!!!!! variation not set");
-                return Null;
+                $postID = Null;
             }
         } else {
-            //If(WP_DEBUG) error_log("-> !!!!!!!!!!!!!!!! type not simple or variable!");
-            //If(WP_DEBUG) error_log($product->product_type);
-            return Null;
+            if(isset( $product->id )){
+                $postID = $product->id;
+            } else {
+                $podtID = Null;
+            }
         }
         //If(WP_DEBUG) error_log("-> postID: $postID");
         return $postID;
