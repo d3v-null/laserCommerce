@@ -32,6 +32,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+define( 'PRICE_DEBUG', True);
+
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
 include_once('Lasercommerce_Pricing.php');
@@ -496,6 +498,28 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         }
     }
 
+    public function isWCRegularPrice($price='', $_product=''){
+        if(WP_DEBUG and PRICE_DEBUG) error_log("Called isWCRegularPrice with price: $price");
+        if($_product and isset($_product->id)){
+            $WC_regular_price = get_post_meta($_product->id, '_regular_price', True);
+            if( floatval($WC_regular_price) == floatval($price)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isWCSalePrice($price='', $_product=''){
+        if(WP_DEBUG and PRICE_DEBUG) error_log("Called isWCSalePrice with price: $price");
+        if($_product and isset($_product->id)){
+            $WC_sale_price = get_post_meta($_product->id, '_sale_price', True);
+            if( floatval($WC_sale_price) == floatval($price)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Gets the regular price of the given simple product, used inw oocommerce_get_regular_price
      * @param mixed $price The regular price as seen by woocommerce core
@@ -504,65 +528,64 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      */
     public function maybeGetRegularPrice($price = '', $_product=''){
         //TODO: detect if the price to override is woocommerce price
-        // if(WP_DEBUG) error_log("maybeGetRegularPrice called with price: $price");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetRegularPrice called with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->regular_price;
         } 
-        // if(WP_DEBUG) error_log("maybeGetRegularPrice returned $price");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetRegularPrice returned $price");
         return $price;
     }
 
     public function maybeGetSalePrice($price = '', $_product = ''){ 
         //TODO: detect if the price to override is woocommerce price
-        // if(WP_DEBUG) error_log("maybeGetSalePrice called with price: $price");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetSalePrice called with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->sale_price;
         } 
-        // if(WP_DEBUG) error_log("maybeGetSalePrice returned $price");
+        if(WP_DEBUG and PRICE_DEBUG) error_log(" -> maybeGetSalePrice returned $price");
         return $price;
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
-        if(WP_DEBUG) error_log("maybeGetPrice p: $price S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));
-        $lowestPricing = $this->maybeGetLowestPricing($_product);
-        if($lowestPricing){
-            $price = $lowestPricing->maybe_get_current_price();
-        } 
-        // else {
-        //     $price = '';
-        // }
-        if(WP_DEBUG) error_log("maybeGetPrice returned $price");
+        //TODO: detect if the price to override is woocommerce price
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetPrice p: $price S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));
+        if($this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product)){
+            if(WP_DEBUG and PRICE_DEBUG) error_log(" -> Price is a WC price");
+            $lowestPricing = $this->maybeGetLowestPricing($_product);
+            if($lowestPricing){
+                $price = $lowestPricing->maybe_get_current_price();
+            } 
+        }
+        if(WP_DEBUG and PRICE_DEBUG) error_log(" -> maybeGetPrice returned $price");
         return $price;        
     }
 
     public function maybeGetCartPrice($price = '', $_product = ''){
-        // if(WP_DEBUG) error_log("maybeGetCartPrice called with price: $price");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetCartPrice called with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->maybe_get_current_price();
         } else {
             $price = '';
         }
-        //if(WP_DEBUG) error_log("maybeGetCartPrice returned $price");
+        if(WP_DEBUG and PRICE_DEBUG) error_log(" -> maybeGetCartPrice returned $price");
         return $price;    
     }
 
     public function maybeGetPriceInclTax($price ='', $qty, $_this){
-        // if(WP_DEBUG) error_log("called maybeGetPriceInclTax");
-        // if(WP_DEBUG) error_log("price: ".$price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetPriceInclTax with price: ".$price);
         return $price;
     }
 
     public function maybeGetPriceExclTax($price ='', $qty, $_this){
-        // if(WP_DEBUG) error_log("called maybeGetPriceExclTax");
-        // if(WP_DEBUG) error_log("price: ".$price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetPriceExclTax with price: ".$price);
         return $price;
     }
 
     public function maybeGetVariationPrice( $price, $product, $min_or_max, $display ) {
-        // if(WP_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
         $min_price = null;
         $max_price = null;
         if(isset($product->children) && !empty($product->children)){
@@ -586,7 +609,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeGetVariationRegularPrice($price, $product, $min_or_max, $display) {
-        // if(WP_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
         $min_price = null;
         $max_price = null;
         if(isset($product->children) && !empty($product->children)){
@@ -610,7 +633,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeGetVariationSalePrice($price, $product, $min_or_max, $display) {
-        // if(WP_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
+        if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
         $min_price = null;
         $max_price = null;
         if(isset($product->children) && !empty($product->children)){
