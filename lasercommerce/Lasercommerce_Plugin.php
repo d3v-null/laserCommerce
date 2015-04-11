@@ -498,14 +498,31 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         }
     }
 
+    public function isWCPrice($price='', $_product=''){
+        if(WP_DEBUG and PRICE_DEBUG) error_log("Called isWCPrice with price: $price");
+        if($_product and isset($_product->id)){
+            $WC_price = get_post_meta($_product->id, '_price', True);
+            if(WP_DEBUG and PRICE_DEBUG) error_log("-> regular price (".$_product->id.") : ".$WC_price);
+            if( floatval($WC_price) == floatval($price)){
+                if(WP_DEBUG and PRICE_DEBUG) error_log("-> isWCPrice returned true");
+                return true;
+            }
+        }
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> isWCPrice returned false");
+        return false;
+    }
+
     public function isWCRegularPrice($price='', $_product=''){
         if(WP_DEBUG and PRICE_DEBUG) error_log("Called isWCRegularPrice with price: $price");
         if($_product and isset($_product->id)){
             $WC_regular_price = get_post_meta($_product->id, '_regular_price', True);
+            if(WP_DEBUG and PRICE_DEBUG) error_log("-> regular price (".$_product->id.") : ".$WC_regular_price);
             if( floatval($WC_regular_price) == floatval($price)){
+                if(WP_DEBUG and PRICE_DEBUG) error_log("-> isWCRegularPrice returned true");
                 return true;
             }
         }
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> isWCRegularPrice returned false");
         return false;
     }
 
@@ -513,10 +530,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(WP_DEBUG and PRICE_DEBUG) error_log("Called isWCSalePrice with price: $price");
         if($_product and isset($_product->id)){
             $WC_sale_price = get_post_meta($_product->id, '_sale_price', True);
+            if(WP_DEBUG and PRICE_DEBUG) error_log("-> sale price (".$_product->id."): ".$WC_sale_price);
             if( floatval($WC_sale_price) == floatval($price)){
+                if(WP_DEBUG and PRICE_DEBUG) error_log("-> isWCSalePrice returned true");
                 return true;
             }
         }
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> isWCSalePrice returned false");
         return false;
     }
 
@@ -528,6 +548,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      */
     public function maybeGetRegularPrice($price = '', $_product=''){
         //TODO: detect if the price to override is woocommerce price
+        //TODO: output "public price" instead of regular price
         if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetRegularPrice called with price: $price");
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
@@ -540,6 +561,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     public function maybeGetSalePrice($price = '', $_product = ''){ 
         //TODO: detect if the price to override is woocommerce price
         if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetSalePrice called with price: $price");
+        
         $lowestPricing = $this->maybeGetLowestPricing($_product);
         if($lowestPricing){
             $price = $lowestPricing->sale_price;
@@ -549,9 +571,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
     
     public function maybeGetPrice($price = '', $_product = ''){ 
-        //TODO: detect if the price to override is woocommerce price
         if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetPrice p: $price S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));
-        if($this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product)){
+        if($this->isWCPrice($price, $_product) or $this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product)){
             if(WP_DEBUG and PRICE_DEBUG) error_log(" -> Price is a WC price");
             $lowestPricing = $this->maybeGetLowestPricing($_product);
             if($lowestPricing){
@@ -713,28 +734,30 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
     public function maybeGetPriceHtml($price_html, $_product){
         $user = wp_get_current_user();
-        if(WP_DEBUG) error_log("");
-        if(WP_DEBUG) error_log("");
-        if(WP_DEBUG) error_log("called maybeGetPriceHtml");
-        if(WP_DEBUG) error_log("-> html: $price_html");
-        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        if(WP_DEBUG) error_log("-> product: ".$_product->id);
-        if(WP_DEBUG) error_log("-> user: ".$user->ID);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetPriceHtml");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> price: ".$_product->price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> product: ".$_product->id);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> user: ".$user->ID);
         
         return $price_html;
     }    
 
     public function maybeGetSalePriceHtml($price_html, $_product){
         $user = wp_get_current_user();
-        if(WP_DEBUG) error_log("");
-        if(WP_DEBUG) error_log("");
-        if(WP_DEBUG) error_log("called maybeGetSalePriceHtml");
-        if(WP_DEBUG) error_log("-> html: $price_html");
-        if(WP_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        if(WP_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        if(WP_DEBUG) error_log("-> product: ".$_product->id);
-        if(WP_DEBUG) error_log("-> user: ".$user->ID);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetSalePriceHtml");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> price: ".$_product->price); 
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> product: ".$_product->id);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> user: ".$user->ID);
         
         return $price_html;
     }
