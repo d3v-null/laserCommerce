@@ -559,6 +559,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPricing:$min_or_max S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));        
         $min_pricing = null;
         $max_pricing = null;
+        if(!isset($_product->children)) $_product->get_children();
         if(isset($_product->children) && !empty($_product->children)){
             foreach ($_product->children as $child) {
                 $variation = $_product->get_child($child);
