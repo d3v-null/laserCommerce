@@ -39,23 +39,30 @@ class Lasercommerce_Pricing {
 	private $optionNamePrefix;// 
 
 	public static function sort_by_regular_price($a, $b){
+		// if(WP_DEBUG and PRICE_DEBUG) {
+		// 	error_log("sorting by regular price: ".(string)$a.", ".(string)$b);
+		// }
 		if(isset($a->regular_price)){
-			if(isset($b->regualr_price)){ //Both set
+			if(isset($b->regular_price)){ //Both set
 				if($a->regular_price == $b->regular_price){
-					return 0;
+					$val = 0;
 				} else{
-					return ($a->regular_price < $b->regular_price) ? -1 : 1; 
+					$val = ($a->regular_price < $b->regular_price) ? -1 : 1; 
 				}
 			} else { //only a is set
-				return -1;
+				$val = -1;
 			}
 		} else { 
 			if(isset($b->regular_price)){ // only b is set
-				return 1;
+				$val = 1;
 			} else { //neither is set
-				return 0;
+				$val = 0;
 			}
 		}
+		// if(WP_DEBUG and PRICE_DEBUG) {
+		// 	error_log("-> returning ".$val);
+		// }		
+		return $val;
 	}
 
 	public function __construct($id, $role=''){
