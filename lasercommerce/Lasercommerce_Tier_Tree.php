@@ -158,8 +158,8 @@ class Lasercommerce_Tier_Tree {
                 $tiers[] = $role;
             }
         }
-        //IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
-        return $tiers;
+        IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
+        return array_reverse($tiers);
     }
 
     public function getAncestors($roles){

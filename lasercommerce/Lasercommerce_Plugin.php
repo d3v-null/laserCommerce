@@ -557,6 +557,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
     public function maybeGetVariationPricing( $_product, $min_or_max ){
         if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPricing:$min_or_max S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));        
+        //TODO: check product meta for min_variation_id first
+
         $min_pricing = null;
         $max_pricing = null;
         if(!isset($_product->children)) $_product->get_children();
@@ -672,87 +674,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $price;
     }
 
-    // public function maybeGetVariationPrice( $price, $_product, $min_or_max, $display ) {
-    //     if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPrice:$min_or_max p: $price S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));        
-    //     $min_price = null;
-    //     $max_price = null;
-    //     if(isset($_product->children) && !empty($_product->children)){
-    //         foreach ($_product->children as $child) {
-    //             $variation = $_product->get_child($child);
-    //             $discounted_price = $this->maybeGetPrice("", $variation);
-    //             // $discounted_price = $this->maybeGetPrice($price, $variation);
-    //             if($min_price == null || $discounted_price < $min_price){
-    //                 $min_price = $discounted_price;
-    //             }
-    //             if($max_price == null || $discounted_price > $max_price){
-    //                 $max_price = $discounted_price;
-    //             }
-    //         }
-    //     }
-
-    //     if( $min_or_max == 'min'){
-    //         $value = $min_price != null ? $min_price : $price;
-    //     } else {
-    //         $value = $max_price != null ? $max_price : $price;
-    //     }
-    //     if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetVariationPrice:$min_or_max returned $value");
-    //     return $value;
-    // }
-
-    // public function maybeGetVariationRegularPrice($price, $_product, $min_or_max, $display) {
-    //     if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPrice:$min_or_max p: $price S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));       
-    //     $min_price = null;
-    //     $max_price = null;
-    //     if(isset($_product->children) && !empty($_product->children)){
-    //         foreach ($_product->children as $child) {
-    //             $variation = $_product->get_child($child);
-    //             $discounted_price = $this->maybeGetRegularPrice("", $variation);
-    //             // $discounted_price = $this->maybeGetRegularPrice($price, $variation);
-    //             if($min_price == null || $discounted_price < $min_price){
-    //                 $min_price = $discounted_price;
-    //             }
-    //             if($max_price == null || $discounted_price > $max_price){
-    //                 $max_price = $discounted_price;
-    //             }
-    //         }
-    //     }
-
-    //     if( $min_or_max == 'min'){
-    //         $value = $min_price != null ? $min_price : $price;
-    //     } else {
-    //         $value = $max_price != null ? $max_price : $price;
-    //     }
-    //     if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetVariationPrice:$min_or_max returned $value");
-    //     return $value;   
-    // }
-
-    // public function maybeGetVariationSalePrice($price, $_product, $min_or_max, $display) {
-    //     if(WP_DEBUG and PRICE_DEBUG) error_log("maybeGetVariationPrice:$min_or_max called with price: $price");        
-    //     $min_price = null;
-    //     $max_price = null;
-    //     if(isset($_product->children) && !empty($_product->children)){
-    //         foreach ($_product->children as $child) {
-    //             $variation = $_product->get_child($child);
-    //             $discounted_price = $this->maybeGetSalePrice("", $variation);
-    //             // $discounted_price = $this->maybeGetSalePrice($price, $variation);
-    //             if($min_price == null || $discounted_price < $min_price){
-    //                 $min_price = $discounted_price;
-    //             }
-    //             if($max_price == null || $discounted_price > $max_price){
-    //                 $max_price = $discounted_price;
-    //             }
-    //         }
-    //     }
-
-    //     if( $min_or_max == 'min'){
-    //         $value = $min_price != null ? $min_price : $price;
-    //     } else {
-    //         $value = $max_price != null ? $max_price : $price;
-    //     }
-    //     if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetVariationPrice:$min_or_max returned $value");
-    //     return $value;
-    // }
-
     public function maybeVariableProductSync( $product_id, $children ){
         global $Lasercommerce_Tier_Tree;
         $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
@@ -839,13 +760,15 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeAddPricingTab( $tabs ){
-        // if(WP_DEBUG) error_log("\n\n\n\n");
-        // if(WP_DEBUG) error_log("called maybeAddPricingTab");
+        if(WP_DEBUG) error_log("\ncalled maybeAddPricingTab");
 
         global $Lasercommerce_Tier_Tree;
         global $product;
+        global $Lasercommerce_Roles_Override;
+
         if(!isset($product)){
             if(WP_DEBUG) error_log("-> product global not set");
+            return $tabs;
         }
 
         $postID = $Lasercommerce_Tier_Tree->getPostID( $product );
@@ -854,22 +777,17 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             return $tabs;
         }
 
-        $visiblePrices = array();
-        $visiblePricing = $this->maybeGetVisiblePricing($product);
-        if($visiblePricing){
-            foreach ($visiblePricing as $role => $pricing) {
-                if($pricing){
-                    $regular = $pricing->regular_price;
-                    if($regular){
-                        $visiblePrices[$role] = $regular;
-                    }
-                }
-            }  
-        } else {
-            return $tabs;
+        $roles = $this->getCurrentUserRoles();
+        $availableTiers = $Lasercommerce_Tier_Tree->getAvailableTiers($roles);
+        foreach ($availableTiers as $role) {
+            $old_override = $Lasercommerce_Roles_Override;
+            $Lasercommerce_Roles_Override = array($role);
+            $price = $product->get_price_html();
+            if($price) $visiblePrices[$role] = $price;
+            $Lasercommerce_Roles_Override = $old_override;
         }
 
-        if(!empty($visiblePrices)){
+        if(isset($visiblePrices) and sizeof($visiblePrices) > 1){
             wp_register_style( 'pricing_table-css', plugins_url('/css/pricing_table.css', __FILE__));
             wp_enqueue_style( 'pricing_table-css' );
 
@@ -902,7 +820,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             <?php echo isset($names[$tier])?$names[$tier]:$tier; ?>
         </td>
         <td>
-            <?php echo esc_attr($price); ?>
+            <?php echo $price; ?>
         </td>
     </tr>
     <?php } ?>
