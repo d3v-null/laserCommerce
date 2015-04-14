@@ -158,7 +158,7 @@ class Lasercommerce_Tier_Tree {
                 $tiers[] = $role;
             }
         }
-        IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
+        // IF(WP_DEBUG) error_log("availableTiers: ".serialize($tiers));
         return array_reverse($tiers);
     }
 
@@ -178,7 +178,7 @@ class Lasercommerce_Tier_Tree {
      * @return integer $postID The postID of the simple or variable product
      */ 
     public function getPostID( $product ){
-        if(!isset($product)) {
+        if(!isset($product) or !$product) {
             //if(WP_DEBUG) error_log( '-> product not set');
             return Null;
         }

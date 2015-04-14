@@ -455,12 +455,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
             uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
 
-            if(WP_DEBUG and PRICE_DEBUG) {
-                error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
-                foreach ($pricings as $key => $pricing) {
-                    error_log("$key: ". (string)$pricing);
-                }
-            }
+            // if(WP_DEBUG and PRICE_DEBUG) {
+            //     error_log("-> maybeGetVisiblePricing returned: ");//.serialize(array_keys($pricings)));
+            //     foreach ($pricings as $key => $pricing) {
+            //         error_log("$key: ". (string)$pricing);
+            //     }
+            // }
             
             return $pricings;
         } else { 
@@ -474,7 +474,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         global $Lasercommerce_Tier_Tree;
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );  
 
-        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetLowestPricing I: $postID S:".serialize($_product->get_sku()));
+        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetLowestPricing I: ".(string)$postID." S:".serialize($_product->get_sku()));
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
@@ -504,6 +504,57 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetHighestPricing returned null because no visible pricing");
             return null;
         }
+    }
+
+    public function maybeVariableProductSync( $product_id, $children ){
+        //TODO: WHAT IF max_price_id is not the same as max_regular_price_id???
+
+        // OMNISCIENT OVERRIDE BEGIN
+        global $Lasercommerce_Tier_Tree;
+        $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
+        global $Lasercommerce_Roles_Override;
+        $old_override = $Lasercommerce_Roles_Override;
+        $Lasercommerce_Roles_Override = $omniscient_roles;
+
+        $_product = wc_get_product($product_id);
+
+        if($_product){
+            $min_pricing = null;
+            $max_pricing = null;            
+            foreach ($children as $child) {
+                $variation = $_product->get_child($child);
+                $discounted_pricing = $this->maybeGetLowestPricing($variation);
+                if($min_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $min_pricing) < 0){
+                    $min_pricing = $discounted_pricing;
+                }
+                if($max_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $max_pricing) > 0){
+                    $max_pricing = $discounted_pricing;
+                }
+            }
+            foreach (array('min', 'max') as $bound) {
+                $bound_pricing = ${"{$bound}_pricing"};
+                if( $bound_pricing ){
+                    foreach( array('price', 'regular_price', 'sale_price') as $price_type){
+                        $meta_key = $bound.'_'.$price_type.'_variation_id';
+                        update_post_meta( $product_id, '_'.$meta_key, $bound_pricing->id);
+                        // $_product->$meta_key = $bound_pricing->id;
+                        if(WP_DEBUG and PRICE_DEBUG) error_log("-> SYNC setting ". $product_id. ', '.$meta_key .' to '.$bound_pricing->id);
+                    }
+                }
+            }
+
+            // THIS WILL PROBABLY CAUSE ISSUES
+            update_post_meta($product_id, '_price', '');
+            // update_post_meta($product_id, '_price', $min_pricing->maybe_get_current_price());
+        }
+
+        $Lasercommerce_Roles_Override = $old_override;
+        // OMNISCIENT OVERRIDE END
+
+        // TODO: Maybe set _price
+
+
+        //TODO: synchronize max_variation_id
     }
 
     public function isWCPrice($price='', $_product=''){
@@ -556,30 +607,24 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeGetVariationPricing( $_product, $min_or_max ){
-        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPricing:$min_or_max S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));        
-        //TODO: check product meta for min_variation_id first
-
-        $min_pricing = null;
-        $max_pricing = null;
-        if(!isset($_product->children)) $_product->get_children();
-        if(isset($_product->children) && !empty($_product->children)){
-            foreach ($_product->children as $child) {
-                $variation = $_product->get_child($child);
-                $discounted_pricing = $this->maybeGetLowestPricing($variation);
-                if($min_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $min_pricing) < 0){
-                    $min_pricing = $discounted_pricing;
-                }
-                if($max_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $max_pricing) > 0){
-                    $max_pricing = $discounted_pricing;
-                }
-            }
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPricing:$min_or_max | S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));        
+        
+        $meta_key = ($min_or_max == 'max' ? 'max_price_variation_id' : 'min_price_variation_id');
+        $target_id = $_product->$meta_key;
+        if(!$target_id){
+            $_product->variable_product_sync();
+            $target_id = $_product->$meta_key;
         }
 
-        if( $min_or_max == 'min'){
-            $value = $min_pricing ;
+        if(WP_DEBUG and PRICE_DEBUG) error_log("-> creating target with id: ".$target_id);
+        $target = wc_get_product($target_id);
+
+        if($target){
+            $value = $this->maybeGetLowestPricing($target);
         } else {
-            $value = $max_pricing ;
+            $value = null;
         }
+
         if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetVariationPrice:$min_or_max returned ".(string)($value));
         return $value;
     }
@@ -615,7 +660,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     public function maybeGetStarPrice($star = '', $price = '', $_product = ''){
         global $Lasercommerce_Tier_Tree;
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );          
-        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetStarPrice:$star p: $price I: $postID S:".(string)($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetStarPrice:$star | p: $price I: $postID S:".(string)($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));
         //only override if it is a WC price
         $override = ($price == '' or $this->isWCPrice($price, $_product) or $this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product));
         //TODO: Add condition for variable products
@@ -664,68 +709,31 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $this->maybeGetStarPrice('cart', $price, $_product);
     }
 
-    public function maybeGetPriceInclTax($price ='', $qty, $_this){
-        if(WP_DEBUG and PRICE_DEBUG) error_log("Called maybeGetPriceInclTax with price: ".$price);
-        return $price;
+    public function maybeGetPriceInclTax($price ='', $qty, $_product){
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetPriceInclTax with price: ".$price);
+        return $this->maybeGetStarPrice('', $price, $_product);
     }
 
-    public function maybeGetPriceExclTax($price ='', $qty, $_this){
-        if(WP_DEBUG and PRICE_DEBUG) error_log("Called maybeGetPriceExclTax with price: ".$price);
-        return $price;
-    }
-
-    public function maybeVariableProductSync( $product_id, $children ){
-        global $Lasercommerce_Tier_Tree;
-        $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
-        
-        global $Lasercommerce_Roles_Override;
-        $old_override = $Lasercommerce_Roles_Override;
-        $Lasercommerce_Roles_Override = $omniscient_roles;
-
-        // Main active prices
-        $min_price            = null;
-        $max_price            = null;
-        $min_price_id         = null;
-        $max_price_id         = null;
-
-        // Regular prices
-        $min_regular_price    = null;
-        $max_regular_price    = null;
-        $min_regular_price_id = null;
-        $max_regular_price_id = null;
-
-        // Sale prices
-        $min_sale_price       = null;
-        $max_sale_price       = null;
-        $min_sale_price_id    = null;
-        $max_sale_price_id    = null;
-
-        foreach ($children as $child) {
-            $lowest = $this->maybeGetLowestPricing();
-            $lowestID = $lowest->id;
-            $highest = $this->maybeGetHighestPricing();
-            $highestID = $highest->id;
-        }
-
-        $Lasercommerce_Roles_Override = $old_override;
-
-        //TODO: synchronize max_variation_id
+    public function maybeGetPriceExclTax($price ='', $qty, $_product){
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetPriceExclTax with price: ".$price);
+        return $this->maybeGetStarPrice('', $price, $_product);
     }
 
     public function maybeIsPurchasable($purchasable, $_product){
-        // if(WP_DEBUG) error_log("maybeIsPurchasable closure called | p:$purchasable");
+        if(WP_DEBUG) error_log("\nmaybeIsPurchasable closure called | p:".(string)$purchasable." S:".(string)$_product->get_sku());
         if($_product && $_product->is_type('variable')){
-            // if(WP_DEBUG) error_log("is variable");
+            if(WP_DEBUG) error_log("is variable");
             $children = $_product->get_children();
             if( is_array($children) && !empty($children)){
                 foreach ($children as $child_id) {
                     $child = $_product->get_child($child_id);
                     if ($child->is_purchasable()){
-                        return true;
+                        $purchasable = true;
                     }
                 }
             } 
         } 
+        if(WP_DEBUG) error_log("\nmaybeIsPurchasable closure returned: ".(string)$purchasable);
         return $purchasable;
     }
 
@@ -948,6 +956,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         
+        add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
 
 
 
