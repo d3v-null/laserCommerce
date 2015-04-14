@@ -32,7 +32,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PRICE_DEBUG', True);
+define( 'PRICE_DEBUG', False);
+define( 'HTML_DEBUG', True);
 
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
@@ -434,7 +435,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     private function maybeGetVisiblePricing($_product=''){
-        if(WP_DEBUG) error_log("called maybeGetVisiblePricing");
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\ncalled maybeGetVisiblePricing");
         if($_product) {
             global $Lasercommerce_Tier_Tree;
             
@@ -720,9 +721,9 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     public function maybeIsPurchasable($purchasable, $_product){
-        if(WP_DEBUG) error_log("\nmaybeIsPurchasable closure called | p:".(string)$purchasable." S:".(string)$_product->get_sku());
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\nmaybeIsPurchasable closure called | p:".(string)$purchasable." S:".(string)$_product->get_sku());
         if($_product && $_product->is_type('variable')){
-            if(WP_DEBUG) error_log("is variable");
+            if(WP_DEBUG and PRICE_DEBUG) error_log("is variable");
             $children = $_product->get_children();
             if( is_array($children) && !empty($children)){
                 foreach ($children as $child_id) {
@@ -733,38 +734,46 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 }
             } 
         } 
-        if(WP_DEBUG) error_log("\nmaybeIsPurchasable closure returned: ".(string)$purchasable);
+        if(WP_DEBUG and PRICE_DEBUG) error_log("\nmaybeIsPurchasable closure returned: ".(string)$purchasable);
         return $purchasable;
     }
 
-    public function maybeGetPriceHtml($price_html, $_product){
+    public function maybeGetStarHtml($price_html, $_product, $star){
         $user = wp_get_current_user();
-        if(WP_DEBUG and PRICE_DEBUG) error_log("");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetPriceHtml");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> html: $price_html");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> price: ".$_product->price);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> product: ".$_product->id);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> user: ".$user->ID);
+
+        if(WP_DEBUG and HTML_DEBUG) error_log("called maybeGetStarHtml:$star");
+        if(WP_DEBUG and HTML_DEBUG) error_log("-> html: $price_html");
+        if(WP_DEBUG and HTML_DEBUG) error_log("-> price: ".$_product->price);
+        if(WP_DEBUG and HTML_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
+        if(WP_DEBUG and HTML_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
+        if(WP_DEBUG and HTML_DEBUG) error_log("-> product: ".$_product->id);
+        if(WP_DEBUG and HTML_DEBUG) error_log("-> user: ".$user->ID);
         
         return $price_html;
+    }
+
+    public function maybeGetPriceHtml($price_html, $_product){
+        return $this->maybeGetStarHtml($price_html, $_product, 'price');
     }    
 
     public function maybeGetSalePriceHtml($price_html, $_product){
-        $user = wp_get_current_user();
-        if(WP_DEBUG and PRICE_DEBUG) error_log("");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetSalePriceHtml");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> html: $price_html");
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> price: ".$_product->price); 
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> regular_price: ".$_product->regular_price);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> sale_price: ".$_product->sale_price);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> product: ".$_product->id);
-        if(WP_DEBUG and PRICE_DEBUG) error_log("-> user: ".$user->ID);
-        
-        return $price_html;
+        return $this->maybeGetStarHtml($price_html, $_product, 'sale_price');
+    }
+
+    public function maybeGetVariablePriceHtml($price_html, $_product){
+        return $this->maybeGetStarHtml($price_html, $_product, 'variable_price');
+    }
+
+    public function maybeGetVariationPriceHtml($price_html, $_product){
+        return $this->maybeGetStarHtml($price_html, $_product, 'variation_price');
+    }
+
+    public function maybeGetVariationSalePriceHtml($price_html, $_product){
+        return $this->maybeGetStarHtml($price_html, $_product, 'variation_sale_price');
+    }
+
+    public function maybeGetEmptyPriceHtml($price_html, $_product){
+        return $this->maybeGetStarHtml($price_html, $_product, 'empty_price');
     }
 
     public function maybeAddPricingTab( $tabs ){
@@ -946,10 +955,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         add_filter( 'woocommerce_sale_price_html', array(&$this, 'maybeGetSalePriceHtml'), 0, 2);
         add_filter( 'woocommerce_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);     
-        add_filter( 'woocommerce_variable_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_variation_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_variation_sale_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2 );
+        add_filter( 'woocommerce_variable_price_html', array(&$this, 'maybeGetVariablePriceHtml'), 0, 2 );
+        add_filter( 'woocommerce_variation_price_html', array(&$this, 'maybeGetVariationPriceHtml'), 0, 2 );
+        add_filter( 'woocommerce_variation_sale_price_html', array(&$this, 'maybeGetVariationSalePriceHtml'), 0, 2 );
+        add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetEmptyPriceHtml'), 0, 2 );
+        add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);     
 
         add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
