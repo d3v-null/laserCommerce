@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'PRICE_DEBUG', False);
-define( 'HTML_DEBUG', True);
+define( 'HTML_DEBUG', False);
 
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
@@ -414,7 +414,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
      * Gets the role of the current user
      * @return string $role The role of the current user
      */
-    private function getCurrentUserRoles(){
+    public function getCurrentUserRoles(){
         // if(WP_DEBUG) error_log("called getCurrentUserRoles");
         global $Lasercommerce_Roles_Override;
         if(isset($Lasercommerce_Roles_Override) and is_array($Lasercommerce_Roles_Override)){
