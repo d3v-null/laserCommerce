@@ -32,8 +32,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PRICE_DEBUG', False);
+// define( 'PRICE_DEBUG', False);
+define( 'PRICE_DEBUG', True);
 define( 'HTML_DEBUG', False);
+
+
 
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
@@ -435,7 +438,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
     }
 
     private function maybeGetVisiblePricing($_product=''){
-        if(WP_DEBUG and PRICE_DEBUG) error_log("\ncalled maybeGetVisiblePricing");
+        // if(WP_DEBUG and PRICE_DEBUG) error_log("\ncalled maybeGetVisiblePricing");
         if($_product) {
             global $Lasercommerce_Tier_Tree;
             
@@ -465,7 +468,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             
             return $pricings;
         } else { 
-            if(WP_DEBUG) error_log("product not valid");
+            // if(WP_DEBUG) error_log("product not valid");
             return null;
         }   
 
@@ -475,16 +478,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         global $Lasercommerce_Tier_Tree;
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );  
 
-        if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetLowestPricing I: ".(string)$postID." S:".serialize($_product->get_sku()));
+        // if(WP_DEBUG and PRICE_DEBUG) error_log("called maybeGetLowestPricing I: ".(string)$postID." S:".serialize($_product->get_sku()));
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
             uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
             $pricing = array_shift($pricings);
-            if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetLowestPricing returned ".($pricing->__toString()));
+            // if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetLowestPricing returned ".($pricing->__toString()));
             return $pricing;
         } else {
-            if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetLowestPricing returned null because no visible pricing");
+            // if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetLowestPricing returned null because no visible pricing");
             return null;
         }
     }
@@ -493,16 +496,16 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         global $Lasercommerce_Tier_Tree;
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );  
 
-        if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetHighestPricing I: $postID S:".serialize($_product->get_sku()));
+        // if(WP_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetHighestPricing I: $postID S:".serialize($_product->get_sku()));
         $pricings = $this->maybeGetVisiblePricing($_product);
 
         if(!empty($pricings)){
             uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
             $pricing = array_pop($pricings);
-            if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetHighestPricing returned ".($pricing->__toString()));
+            // if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetHighestPricing returned ".($pricing->__toString()));
             return $pricing;
         } else {
-            if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetHighestPricing returned null because no visible pricing");
+            // if(WP_DEBUG and PRICE_DEBUG) error_log("-> maybeGetHighestPricing returned null because no visible pricing");
             return null;
         }
     }
@@ -738,6 +741,90 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $purchasable;
     }
 
+    // function bundled_item_available_variation( $variation_data, $bundled_product, $bundled_variation ) {
+    //     error_log("\nCalled bundled_item_available_variation callback");
+    //     error_log( " | variation_data: ".serialize($variation_data));
+    //     error_log( " | bundled_product: ".serialize($bundled_product));
+    //     error_log( " | bundled_variation: ".serialize($bundled_variation));
+    //     global $woocommerce_bundles;
+
+    //     $bundled_item_id = $this->item_id;
+
+    //     // Disable if certain conditions are met
+    //     if ( ! empty( $this->allowed_variations ) ) {
+
+    //         if ( ! is_array( $this->allowed_variations ) ) {
+    //             error_log(" -> bundled_item_available_variation returning array() because has allowed_variations that is not array`");
+    //             return array();
+    //         }
+
+    //         if ( ! in_array( $bundled_variation->variation_id, $this->allowed_variations ) ) {
+    //             error_log(" -> bundled_item_available_variation returning array() because has allowed_variations and bundled_variation not in allowed_variations");
+    //             return array();
+    //         }
+    //     }
+
+    //     if ( $bundled_variation->price === '' ) {
+    //         error_log(" -> bundled_item_available_variation returning array() because bundled_variation has no price");
+    //         return array();
+    //     }
+
+    //     // Modify product id for JS (deprecated)
+    //     $variation_data[ 'product_id' ]    = $bundled_item_id;
+
+    //     // Add price data
+    //     $variation_data[ 'regular_price' ] = $woocommerce_bundles->helpers->get_product_price_incl_or_excl_tax( $bundled_variation, $bundled_variation->get_regular_price() );
+    //     $variation_data[ 'price' ]         = $woocommerce_bundles->helpers->get_product_price_incl_or_excl_tax( $bundled_variation, $bundled_variation->get_price() );
+
+    //     $variation_data[ 'price_html' ]    = $this->is_priced_per_product() ? ( $variation_data[ 'price_html' ] === '' ? '<p class="price">' . $bundled_variation->get_price_html() . '</p>' : $variation_data[ 'price_html' ] ) : '';
+
+    //     // Modify availability data
+    //     $quantity     = $this->get_quantity();
+    //     $quantity_max = $this->get_quantity( 'max' );
+    //     $availability = $this->get_availability( $bundled_variation );
+
+    //     if ( ! $bundled_variation->is_in_stock() || ! $bundled_variation->has_enough_stock( $quantity ) ) {
+    //         $variation_data[ 'is_in_stock' ] = false;
+    //     }
+
+    //     if ( $bundled_variation->is_on_backorder() && $bundled_product->backorders_require_notification() ) {
+    //         $variation_data[ 'is_on_backorder' ] = 'available-on-backorder';
+    //     }
+
+    //     $availability_html = ( ! empty( $availability[ 'availability' ] ) ) ? apply_filters( 'woocommerce_stock_html', '<p class="stock ' . $availability[ 'class' ] . '">'. $availability[ 'availability' ].'</p>', $availability[ 'availability' ]  ) : '';
+
+    //     $variation_data[ 'availability_html' ] = $availability_html;
+
+    //     $variation_data[ 'min_qty' ] = $quantity;
+    //     $variation_data[ 'max_qty' ] = $quantity_max;
+
+    //     return $variation_data;
+    // }
+
+    public function maybeAvailableVariationPreBundle($variation_data, $_product, $_variation ){
+        error_log("Called maybeAvailableVariationPreBundle callback");
+        $old_price = $_variation->price;
+        $new_price = $this->maybeGetPrice($old_price, $_variation);
+        error_log("-> maybeAvailableVariationPreBundle old price: ". $old_price);
+        error_log("-> maybeAvailableVariationPreBundle new price: ". $new_price);
+        // $_variation->price_old = $old_price;
+        update_post_meta($_variation->id, 'price_old', $old_price);
+        $_variation->price = $new_price;
+        return $variation_data;
+    }
+
+    public function maybeAvailableVariationPostBundle($variation_data, $_product, $_variation ){
+        error_log("Called maybeAvailableVariationPostBundle callback");
+        $old_price = get_post_meta($_variation->id, 'old_price', True);
+        error_log("-> maybeAvailableVariationPreBundle old price: ". $old_price);        
+        $_variation->price = $old_price;
+
+        // error_log("\n\n Variation Data ".serialize($variation_data));
+
+        return $variation_data;
+
+    }
+
     public function maybeGetStarHtml($price_html, $_product, $star){
         $user = wp_get_current_user();
 
@@ -964,11 +1051,13 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
 
-        add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
+        // add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         
         add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
 
-
+        add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
+        add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
+        // add_filter( 'woocommerce_product_is_visible', 
 
         //Filter / Action research:
         //DYNAMIC PRICING
@@ -1017,50 +1106,6 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             
         
         
-        //TODO: make modifications to product visibility based on obfuscation condition
-        // add_filter('product visibility');
-        // add_filter( 'woocommerce_available_variation',
-        // add_filter( 'woocommerce_product_is_visible', 
-        // add_filter( 'woocommerce_is_purchasable', 
-        
-
-        
-        //TODO: make modifications to cart
-        // add_filter( 'woocommerce_calculate_totals', 
-        // add_filter( 'woocommerce_calculate_totals', 
-        // add_filter( 'woocommerce_calculate_totals', 
-        // add_filter( 'woocommerce_calculate_totals', 
-        // 
-        
-        //add_action( 'admin_head',
-        
-        // add_action('admin_menu', array(&$this, 'addSettingsSubMenuPage'));
-
-        // Example adding a script & style just for the options administration page
-        // http://plugin.michael-simpson.com/?page_id=47
-        //        if (strpos($_SERVER['REQUEST_URI'], $this->getSettingsSlug()) !== false) {
-        //            wp_enqueue_script('my-script', plugins_url('/js/my-script.js', __FILE__));
-        //            wp_enqueue_style('my-style', plugins_url('/css/my-style.css', __FILE__));
-        //        }
-
-
-        // Add Actions & Filters
-        // http://plugin.michael-simpson.com/?page_id=37
-
-
-        // Adding scripts & styles to all pages
-        // Examples:
-        //        wp_enqueue_script('jquery');
-        //        wp_enqueue_style('my-style', plugins_url('/css/my-style.css', __FILE__));
-        //        wp_enqueue_script('my-script', plugins_url('/js/my-script.js', __FILE__));
-
-
-        // Register short codes
-        // http://plugin.michael-simpson.com/?page_id=39
-
-
-        // Register AJAX hooks
-        // http://plugin.michael-simpson.com/?page_id=41
 
     }
 
