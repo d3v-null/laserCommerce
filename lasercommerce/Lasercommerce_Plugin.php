@@ -32,8 +32,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// define( 'PRICE_DEBUG', False);
-define( 'PRICE_DEBUG', True);
+define( 'PRICE_DEBUG', False);
+// define( 'PRICE_DEBUG', True);
 define( 'HTML_DEBUG', False);
 
 
@@ -741,89 +741,131 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $purchasable;
     }
 
-    // function bundled_item_available_variation( $variation_data, $bundled_product, $bundled_variation ) {
-    //     error_log("\nCalled bundled_item_available_variation callback");
-    //     error_log( " | variation_data: ".serialize($variation_data));
-    //     error_log( " | bundled_product: ".serialize($bundled_product));
-    //     error_log( " | bundled_variation: ".serialize($bundled_variation));
-    //     global $woocommerce_bundles;
 
-    //     $bundled_item_id = $this->item_id;
+/**
+ * Functions for tricking product bundles into thinking products have prices using a clever ruse
+ */
 
-    //     // Disable if certain conditions are met
-    //     if ( ! empty( $this->allowed_variations ) ) {
+    public function constructCleverRuse($product_id, $new_price){
+        $old_price = get_post_meta($product_id, '_price', True);
+        error_log("Called constructCleverRuse callback| product_id: $product_id");
+        error_log("-> constructCleverRuse old price: ". $old_price);
+        error_log("-> constructCleverRuse new price: ". $new_price);
+        update_post_meta($product_id, 'price_old', $old_price);
+        update_post_meta($product_id, '_price', $new_price);
+    }
 
-    //         if ( ! is_array( $this->allowed_variations ) ) {
-    //             error_log(" -> bundled_item_available_variation returning array() because has allowed_variations that is not array`");
-    //             return array();
-    //         }
-
-    //         if ( ! in_array( $bundled_variation->variation_id, $this->allowed_variations ) ) {
-    //             error_log(" -> bundled_item_available_variation returning array() because has allowed_variations and bundled_variation not in allowed_variations");
-    //             return array();
-    //         }
-    //     }
-
-    //     if ( $bundled_variation->price === '' ) {
-    //         error_log(" -> bundled_item_available_variation returning array() because bundled_variation has no price");
-    //         return array();
-    //     }
-
-    //     // Modify product id for JS (deprecated)
-    //     $variation_data[ 'product_id' ]    = $bundled_item_id;
-
-    //     // Add price data
-    //     $variation_data[ 'regular_price' ] = $woocommerce_bundles->helpers->get_product_price_incl_or_excl_tax( $bundled_variation, $bundled_variation->get_regular_price() );
-    //     $variation_data[ 'price' ]         = $woocommerce_bundles->helpers->get_product_price_incl_or_excl_tax( $bundled_variation, $bundled_variation->get_price() );
-
-    //     $variation_data[ 'price_html' ]    = $this->is_priced_per_product() ? ( $variation_data[ 'price_html' ] === '' ? '<p class="price">' . $bundled_variation->get_price_html() . '</p>' : $variation_data[ 'price_html' ] ) : '';
-
-    //     // Modify availability data
-    //     $quantity     = $this->get_quantity();
-    //     $quantity_max = $this->get_quantity( 'max' );
-    //     $availability = $this->get_availability( $bundled_variation );
-
-    //     if ( ! $bundled_variation->is_in_stock() || ! $bundled_variation->has_enough_stock( $quantity ) ) {
-    //         $variation_data[ 'is_in_stock' ] = false;
-    //     }
-
-    //     if ( $bundled_variation->is_on_backorder() && $bundled_product->backorders_require_notification() ) {
-    //         $variation_data[ 'is_on_backorder' ] = 'available-on-backorder';
-    //     }
-
-    //     $availability_html = ( ! empty( $availability[ 'availability' ] ) ) ? apply_filters( 'woocommerce_stock_html', '<p class="stock ' . $availability[ 'class' ] . '">'. $availability[ 'availability' ].'</p>', $availability[ 'availability' ]  ) : '';
-
-    //     $variation_data[ 'availability_html' ] = $availability_html;
-
-    //     $variation_data[ 'min_qty' ] = $quantity;
-    //     $variation_data[ 'max_qty' ] = $quantity_max;
-
-    //     return $variation_data;
-    // }
+    public function destructCleverRuse($product_id){
+        $old_price = get_post_meta($product_id, '_price', True);
+        $new_price = get_post_meta($product_id, 'price_old', True);
+        error_log("Called destructCleverRuse callback | product_id: $product_id");
+        error_log("-> destructCleverRuse old price: ". $old_price);  
+        error_log("-> destructCleverRuse new price: ". $new_price);  
+        update_post_meta($product_id, '_price', $new_price);
+    }
 
     public function maybeAvailableVariationPreBundle($variation_data, $_product, $_variation ){
-        error_log("Called maybeAvailableVariationPreBundle callback");
-        $old_price = $_variation->price;
-        $new_price = $this->maybeGetPrice($old_price, $_variation);
-        error_log("-> maybeAvailableVariationPreBundle old price: ". $old_price);
-        error_log("-> maybeAvailableVariationPreBundle new price: ". $new_price);
-        // $_variation->price_old = $old_price;
-        update_post_meta($_variation->id, 'price_old', $old_price);
-        $_variation->price = $new_price;
+        global $Lasercommerce_Tier_Tree;
+        $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
+
+        $this->constructCleverRuse($variation_id, $this->maybeGetPrice($_variation->price, $_variation));
         return $variation_data;
     }
 
     public function maybeAvailableVariationPostBundle($variation_data, $_product, $_variation ){
-        error_log("Called maybeAvailableVariationPostBundle callback");
-        $old_price = get_post_meta($_variation->id, 'old_price', True);
-        error_log("-> maybeAvailableVariationPreBundle old price: ". $old_price);        
-        $_variation->price = $old_price;
+        global $Lasercommerce_Tier_Tree;
+        $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
 
-        // error_log("\n\n Variation Data ".serialize($variation_data));
-
+        $this->destructCleverRuse($variation_id);
         return $variation_data;
-
     }
+
+    public function WooBundlesGetVariations( $product_id ){
+        // error_log("Called WooBundlesGetVariations"); 
+        // error_log(" | product_id: $product_id");
+
+        $variations = array();
+
+        $terms        = get_the_terms( $product_id, 'product_type' );
+        $product_type = ! empty( $terms ) && isset( current( $terms )->name ) ? sanitize_title( current( $terms )->name ) : 'simple';
+        if ( $product_type === 'bundle' ) {
+            if(class_exists('WC_PB_Core_Compatibility')){
+                $product = WC_PB_Core_Compatibility::wc_get_product( $product_id );
+                if ( ! $product ) {
+                    return $variations;
+                }
+
+                $bundled_items = $product->get_bundled_items();
+
+                if ( ! $bundled_items ) {
+                    return $add;
+                }        
+                
+                foreach ($bundled_items as $bundled_item_id => $bundled_item) {
+                    $id                   = $bundled_item->product_id;
+                    $bundled_product_type = $bundled_item->product->product_type;
+                    // error_log(" | processing bundled item id: $id");
+
+                    if($bundled_product_type == 'variable'){
+                        $allowed_variations = $bundled_item->get_product_variations();
+                        error_log("  | allowed_variations: ".serialize($allowed_variations));
+                        if($allowed_variations){
+                            foreach ($allowed_variations as $variation) {
+                                if(isset($variation['variation_id'])){
+                                    $variations[] = $variation['variation_id'];
+                                }
+                            }
+                        }
+                    }
+                }        
+            } 
+        }
+        // error_log(" | returning ".serialize($variations));
+        return $variations;
+    }
+
+    public function PreWooBundlesValidation( $add, $product_id, $product_quantity, $variation_id = '', $variations = array(), $cart_item_data = array() ) {
+        error_log("called PreWooBundlesValidation callback");
+        error_log(" | add: $add");
+        error_log(" | product_id: $product_id");
+        $variations = $this->WooBundlesGetVariations( $product_id );
+        error_log(" | variations: ".serialize($variations));
+
+        foreach ($variations as $variation_id) {
+            $this->constructCleverRuse($variation_id, 'X');
+        }
+
+        return $add;
+    }
+
+    public function PostWooBundlesValidation( $add, $product_id, $product_quantity, $variation_id = '', $variations = array(), $cart_item_data = array() ) {
+        error_log("called PostWooBundlesValidation callback | add: $add");
+
+        error_log(" | add: $add");
+        error_log(" | product_id: $product_id");
+        $variations = $this->WooBundlesGetVariations( $product_id );
+        error_log(" | variations: ".serialize($variations));
+
+        foreach ($variations as $variation_id) {
+            $this->destructCleverRuse($variation_id);
+        }
+
+        return $add;
+    }
+
+    public function overrideBundledPrices(){
+        error_log("called override_bundled_prices callback");
+        error_log(" | add: $add");
+        error_log(" | product_id: $product_id");
+        $variations = $this->WooBundlesGetVariations( $product_id );
+        error_log(" | variations: ".serialize($variations));        
+    }
+
+
+/**
+ * Functions for filtering HTML output
+ */
+
 
     public function maybeGetStarHtml($price_html, $_product, $star){
         $user = wp_get_current_user();
@@ -1057,6 +1099,12 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
         add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
+
+        add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PreWooBundlesValidation' ), 9, 6 );
+        // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'woo_bundles_validation' ), 10, 6 );
+        add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PostWooBundlesValidation' ), 11, 6 );
+
+
         // add_filter( 'woocommerce_product_is_visible', 
 
         //Filter / Action research:
