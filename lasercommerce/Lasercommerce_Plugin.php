@@ -748,20 +748,32 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
     public function constructCleverRuse($product_id, $new_price){
         $old_price = get_post_meta($product_id, '_price', True);
+        $old_prices = get_post_meta($product_id, 'prices_old', True);
+        if($old_prices) {
+            $old_prices = $old_prices . '|' . $old_price ;
+        } else{
+            $old_prices = $old_price;
+        }
         error_log("Called constructCleverRuse callback| product_id: $product_id");
         error_log("-> constructCleverRuse old price: ". $old_price);
         error_log("-> constructCleverRuse new price: ". $new_price);
-        update_post_meta($product_id, 'price_old', $old_price);
+        error_log("-> constructCleverRuse old prices: ". $old_prices);
+        update_post_meta($product_id, 'prices_old', $old_prices);
         update_post_meta($product_id, '_price', $new_price);
     }
 
     public function destructCleverRuse($product_id){
-        $old_price = get_post_meta($product_id, '_price', True);
-        $new_price = get_post_meta($product_id, 'price_old', True);
         error_log("Called destructCleverRuse callback | product_id: $product_id");
+        $old_prices = explode('|',get_post_meta($product_id, 'prices_old', True));
+        error_log("-> destructCleverRuse old prices: ". serialize($old_prices));  
+        $old_price = array_pop($old_prices);
         error_log("-> destructCleverRuse old price: ". $old_price);  
-        error_log("-> destructCleverRuse new price: ". $new_price);  
-        update_post_meta($product_id, '_price', $new_price);
+        $old_prices = implode('|', $old_prices);
+        error_log("-> destructCleverRuse old prices: ". serialize($old_prices));  
+        $new_price = get_post_meta($product_id, '_price', True);
+        error_log("-> destructCleverRuse new price: ". $new_price); 
+        update_post_meta($product_id, 'prices_old', $old_prices); 
+        update_post_meta($product_id, '_price', $old_price);
     }
 
     public function maybeAvailableVariationPreBundle($variation_data, $_product, $_variation ){
@@ -808,7 +820,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
                     if($bundled_product_type == 'variable'){
                         $allowed_variations = $bundled_item->get_product_variations();
-                        error_log("  | allowed_variations: ".serialize($allowed_variations));
+                        // error_log("  | allowed_variations: ".serialize($allowed_variations));
                         if($allowed_variations){
                             foreach ($allowed_variations as $variation) {
                                 if(isset($variation['variation_id'])){
