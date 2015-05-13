@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // define( 'PRICE_DEBUG', False);
 define( 'PRICE_DEBUG', True);
 // define( 'HTML_DEBUG', False);
-define( 'HTML_DEBUG', True);
+define( 'HTML_DEBUG', False);
 
 
 
@@ -731,6 +731,14 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
             error_log(" | values: ".serialize($values));
             error_log(" | cart_item_key: ".serialize($cart_item_key));
         }
+        $quantity = isset($values['quantity'])?$values['quantity']:'';
+        $product_id = isset($values['product_id'])?$values['product_id']:'';
+        $variation_id = isset($values['variation_id'])?$values['variation_id']:'';
+
+        // if isset($variation_id){
+        //     $unit_price = 
+        // }
+
         return $price;
     }
 
@@ -1016,6 +1024,50 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $tabs;
     }
 
+    public function maybeAddDynamicPricingTabs( $tabs ){
+        if(WP_DEBUG) error_log("\ncalled maybeAddDynamicPricingTabs");
+
+        global $Lasercommerce_Tier_Tree;
+        global $product;
+
+        if(!isset($product)){
+            if(WP_DEBUG) error_log("-> product global not set");
+            return $tabs;
+        }
+
+        $postID = $Lasercommerce_Tier_Tree->getPostID( $product );
+        if(!isset($postID)){
+            if(WP_DEBUG) error_log("-> no postID");
+            return $tabs;
+        }
+
+        $DPRC_Table = get_post_meta($postID, 'DPRC_Table', True);
+        $DPRP_Table = get_post_meta($postID, 'DPRP_Table', True);
+
+        error_log("DPRC_Table: ".serialize($DPRC_Table));
+        error_log("DPRP_Table: ".serialize($DPRP_Table));
+
+        if( $DPRC_Table != "" or $DPRP_Table != "" ){
+            $tabs['dynamic_pricing'] = array(
+                'title' => __('Dynamic Pricing', 'LaserCommerce'),
+                'priority' => 50,
+                'callback' => function() use ($DPRC_Table, $DPRP_Table) {
+                    if( $DPRC_Table != "" ){
+                        echo "<h2>" . __('Category Pricing Rules') . "</h2>";
+                        echo $DPRC_Table;
+                    }
+                    if( $DPRC_Table != ""){
+                        echo "<h2>" . __('Product Pricing Rules') . "</h2>";
+                        echo $DPRP_Table;
+                    }
+                }
+            );
+        }
+
+        return $tabs;
+
+    }
+
     public function maybeAddExtraPricingColumns(){
         $prefix = $this->getOptionNamePrefix();
         add_filter( 
@@ -1129,7 +1181,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
 
-        // add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
+        add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
+        add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddDynamicPricingTabs'));
         
         add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
 
