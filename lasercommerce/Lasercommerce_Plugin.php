@@ -1044,8 +1044,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         $DPRC_Table = get_post_meta($postID, 'DPRC_Table', True);
         $DPRP_Table = get_post_meta($postID, 'DPRP_Table', True);
 
-        error_log("DPRC_Table: ".serialize($DPRC_Table));
-        error_log("DPRP_Table: ".serialize($DPRP_Table));
+        if(WP_DEBUG and HTML_DEBUG) error_log("DPRC_Table: ".serialize($DPRC_Table));
+        if(WP_DEBUG and HTML_DEBUG) error_log("DPRP_Table: ".serialize($DPRP_Table));
 
         if( $DPRC_Table != "" or $DPRP_Table != "" ){
             $tabs['dynamic_pricing'] = array(
