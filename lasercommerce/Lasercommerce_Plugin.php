@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // define( 'PRICE_DEBUG', False);
-define( 'PRICE_DEBUG', True);
+define( 'PRICE_DEBUG', False);
 // define( 'HTML_DEBUG', False);
 define( 'HTML_DEBUG', False);
 
