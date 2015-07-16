@@ -438,6 +438,11 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         return $roles;
     }
 
+    private function getMajorTiers(){
+        global $Lasercommerce_Tier_Tree;
+        return $Lasercommerce_Tier_Tree->getMajorTiers();
+    }
+
     private function maybeGetVisiblePricing($_product=''){
         // if(WP_DEBUG and PRICE_DEBUG) error_log("\ncalled maybeGetVisiblePricing");
         if($_product) {
@@ -1116,6 +1121,35 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         );
     }
 
+    public function lasercommerce_loop_prices(){
+        global $product;
+        error_log("called lasercommerce_loop_prices");
+
+        $visiblePrices = $this->maybeGetVisiblePricing($product);
+        error_log(" -> visiblePrices: ".serialize($visiblePrices));
+        $majorTiers = $this->getMajorTiers();
+        error_log(" -> majorTiers: ".serialize($majorTiers));
+
+        $majorPrices = array();
+        foreach ($majorTiers as $tier) {
+            if (isset($majorPrices[$tier])){
+                $majorPrices[$tier] = $majorPrices[$tier];
+            }
+        }
+        error_log(" -> majorPrices: ".serialize($majorPrices));
+
+        foreach($majorPrices as $tier => $price) {
+            if($price_html = $product->get_price_html($price)) { ?>
+                <span class="price">
+                    <?php 
+                        echo $price_html; 
+                        echo $tier;
+                    ?>
+                </span>
+            <?php }
+        }
+    }
+
     public function product_admin_scripts($hook){
         // error_log("hello");
         $screen  = get_current_screen();
@@ -1183,6 +1217,10 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
         add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddDynamicPricingTabs'));
+
+        //price display
+        remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price');
+        add_action('woocommerce_after_shop_loop_item_title', array(&$this, 'lasercommerce_loop_prices'), 10, 0);
         
         add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
 

@@ -171,6 +171,11 @@ class Lasercommerce_Tier_Tree {
     }
 
 
+    public function getMajorTiers(){
+        //TODO: make this actually read off settings
+        return array('rn', 'wn', 'dp');
+    }
+
     /**
      * Gets the postID of a given simple or variable product
      *
