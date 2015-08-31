@@ -32,16 +32,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// define( 'PRICE_DEBUG', False);
-define( 'PRICE_DEBUG', False);
-// define( 'HTML_DEBUG', False);
-define( 'HTML_DEBUG', False);
+if( !defined('LASERCOMMERCE_DEBUG')){
+    define( 'PRICE_DEBUG', False);
+    define( 'HTML_DEBUG', False);
+} else {
+    if(!defined('HTML_DEBUG'))
+        define( 'HTML_DEBUG', LASERCOMMERCE_DEBUG);
+    if(!defined('PRICE_DEBUG'))
+        define( 'PRICE_DEBUG', LASERCOMMERCE_DEBUG);
+        
+}
+
 
 
 
 include_once('Lasercommerce_LifeCycle.php');
 include_once('Lasercommerce_Tier_Tree.php');
 include_once('Lasercommerce_Pricing.php');
+// include_once('Lasercommerce_UIE.php');
 
 /**
  * Registers Wordpress and woocommerce hooks to modify prices
@@ -1075,16 +1083,18 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
 
     public function maybeAddExtraPricingColumns(){
         $prefix = $this->getOptionNamePrefix();
+        global $Lasercommerce_Tier_Tree;
+        $roles = $Lasercommerce_Tier_Tree->getMajorTiers();
         add_filter( 
             'manage_edit-product_columns', 
-            function($columns) use ($prefix){
+            function($columns) use ($prefix, $roles){
                 // if(WP_DEBUG) error_log("called maybeAddExtraPricingColumns");
                 // if(WP_DEBUG) foreach ($columns as $key => $value) {
                 //     error_log("$key => $value");
                 // }
                 global $Lasercommerce_Tier_Tree;
                 $names = $Lasercommerce_Tier_Tree->getNames();
-                $roles = $Lasercommerce_Tier_Tree->getActiveRoles();
+                
                 $new_cols = array();
                 foreach ($roles as $role) { 
                     $new_cols[$prefix.$role] = isset($names[$role])?$names[$role]:$role;
@@ -1096,7 +1106,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         );
         add_action(
             'manage_product_posts_custom_column', 
-            function( $column ) use ($prefix){
+            function( $column ) use ($prefix, $roles){
                 global $post;
 
                 if ( empty( $the_product ) || $the_product->id != $post->ID ) {
@@ -1104,7 +1114,7 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                 } 
 
                 global $Lasercommerce_Tier_Tree;
-                $roles = $Lasercommerce_Tier_Tree->getActiveRoles();
+                // $roles = $Lasercommerce_Tier_Tree->getMajorTiers();
 
                 if( substr($column, 0, strlen($prefix)) === $prefix ){
                     $remainder = substr($column, strlen($prefix));
@@ -1116,6 +1126,74 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
                     } else {
                         echo '<span class="na">&ndash;</span>';
                     }
+                }
+            }
+        );
+    }
+
+    public function maybeAddBulkEditOptions(){
+        global $Lasercommerce_Tier_Tree;
+        $roles = $Lasercommerce_Tier_Tree->getMajorTiers();
+        add_action(
+            'woocommerce_product_bulk_edit_end',
+            function() use ($roles) {
+                global $Lasercommerce_Tier_Tree;
+                $names = $Lasercommerce_Tier_Tree->getNames();
+
+                foreach ($roles as $role) {
+                    $regular_price_id = $role."_regular_price";
+                    $sale_price_id = $role."_sale_price";
+                    $role_name = isset($names[$role])?$names[$role]:$role;
+                    ?>
+<div class="inline-edit-group">
+    <label class="alignleft">
+        <span class="title"><?php echo $role_name;?> <?php _e( 'Price', 'woocommerce' ); ?></span>
+        <span class="input-text-wrap">
+            <select class="change_regular_price change_to change_<?php echo $regular_price_id;?>" name="change_<?php echo $regular_price_id;?>">
+            <?php
+                $options = array(
+                    ''  => __( '— No Change —', 'woocommerce' ),
+                    '1' => __( 'Change to:', 'woocommerce' ),
+                    '2' => __( 'Increase by (fixed amount or %):', 'woocommerce' ),
+                    '3' => __( 'Decrease by (fixed amount or %):', 'woocommerce' )
+                );
+                foreach ($options as $key => $value) {
+                    echo '<option value="' . esc_attr( $key ) . '">' . $value . '</option>';
+                }
+            ?>
+            </select>
+        </span>
+    </label>
+    <label class="change-input">
+        <input type="text" name="_<?php echo $regular_price_id;?>" class="text regular_price <?php echo $regular_price_id;?>" placeholder="<?php echo sprintf( __( 'Enter price (%s)', 'woocommerce' ), get_woocommerce_currency_symbol() ); ?>" value="" />
+    </label>
+</div>
+
+<div class="inline-edit-group">
+    <label class="alignleft">
+        <span class="title"><?php echo $role_name;?> <?php _e( 'Sale', 'woocommerce' ); ?></span>
+        <span class="input-text-wrap">
+            <select class="change_sale_price change_to change_<?php echo $sale_price_id;?>" name="change_<?php echo $sale_price_id;?>">
+            <?php
+                $options = array(
+                    ''  => __( '— No Change —', 'woocommerce' ),
+                    '1' => __( 'Change to:', 'woocommerce' ),
+                    '2' => __( 'Increase by (fixed amount or %):', 'woocommerce' ),
+                    '3' => __( 'Decrease by (fixed amount or %):', 'woocommerce' ),
+                    '4' => __( 'Decrease regular price by (fixed amount or %):', 'woocommerce' )
+                );
+                foreach ( $options as $key => $value ) {
+                    echo '<option value="' . esc_attr( $key ) . '">' . $value . '</option>';
+                }
+            ?>
+            </select>
+        </span>
+    </label>
+    <label class="change-input">
+        <input type="text" name="_<?php echo $sale_price_id;?>" class="text sale_price <?php echo $sale_price_id;?>" placeholder="<?php echo sprintf( __( 'Enter sale price (%s)', 'woocommerce' ), get_woocommerce_currency_symbol() ); ?>" value="" />
+    </label>
+</div>
+                    <?php                    
                 }
             }
         );
@@ -1272,6 +1350,8 @@ class Lasercommerce_Plugin extends Lasercommerce_LifeCycle {
         //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
         
         $this->maybeAddExtraPricingColumns();
+
+        // $this->maybeAddBulkEditOptions();
 
         //TODO: Make modifications to variable product bulk edit
         add_action( 

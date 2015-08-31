@@ -173,7 +173,9 @@ class Lasercommerce_Tier_Tree {
 
     public function getMajorTiers(){
         //TODO: make this actually read off settings
-        return array('rn', 'wn', 'dp');
+        $active_roles = $this->getActiveRoles();
+        $major_roles = array('rn', 'wn', 'dn');
+        return array_intersect($active_roles, $major_roles);
     }
 
     /**
