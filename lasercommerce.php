@@ -73,6 +73,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 $Lasercommerce_minimalRequiredPhpVersion = '5.0';
 
+if( !defined('LASERCOMMERCE_DEBUG')){
+    define( 'PRICE_DEBUG', False);
+    define( 'HTML_DEBUG', False);
+} else {
+    if(!defined('HTML_DEBUG'))
+        define( 'HTML_DEBUG', LASERCOMMERCE_DEBUG);
+    if(!defined('PRICE_DEBUG'))
+        define( 'PRICE_DEBUG', LASERCOMMERCE_DEBUG);  
+}
+
+define("LASERCOMMECE_BASE", dirname(__FILE__));
+
 /**
  * Check the PHP version and give a useful error message if the user's version is less than the required version
  * @return boolean true if version check passed. If false, triggers an error which WP will handle, by displaying

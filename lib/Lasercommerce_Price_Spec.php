@@ -35,8 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-include_once('../Lasercommerce_Pricing.php');
-
 class Lasercommerce_Price_Spec {
 	
 	/**
@@ -59,11 +57,6 @@ class Lasercommerce_Price_Spec {
 	 */
 	public function __construct($postID){
 		global $Lasercommerce_Plugin;
-		if(!isset($Lasercommerce_Plugin)){
-			// Then dependency lasercommerce is not configured correctly
-			// TODO: Handle this 
-			$Lasercommerce_Plugin = new Lasercommerce_Plugin();
-		}
 
 		$this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix(); 
 

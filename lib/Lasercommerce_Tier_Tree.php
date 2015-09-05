@@ -1,9 +1,11 @@
 <?php
 
+error_log("Lasercommerce_Tier_Tree");
 /**
  * helper class for dealing with price tier tree
  */
 class Lasercommerce_Tier_Tree {
+
 
     public static $rootID = 'default';
 

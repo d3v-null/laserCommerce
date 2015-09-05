@@ -33,6 +33,7 @@ include_once('Lasercommerce_InstallIndicator.php');
 class Lasercommerce_LifeCycle extends Lasercommerce_InstallIndicator {
 
     public function install() {
+        if(LASERCOMMERCE_DEBUG) error_log("LASERCOMMERCE_LIFECYCLE: Called install");
 
         // Initialize Plugin Options
         $this->initOptions();

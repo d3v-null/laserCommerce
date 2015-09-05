@@ -29,9 +29,12 @@
 */
 
 function Lasercommerce_init($file) {
+    if(LASERCOMMERCE_DEBUG) error_log( "LASERCOMMERCE_INIT: start");
 
-    require_once('Lasercommerce_Plugin.php');
+    require_once(LASERCOMMECE_BASE.'/Lasercommerce_Plugin.php');
     $aPlugin = new Lasercommerce_Plugin();
+    global $Lasercommerce_Plugin;
+    $Lasercommerce_Plugin = $aPlugin;
 
     // Install the plugin
     // NOTE: this file gets run each time you *activate* the plugin.
@@ -50,6 +53,7 @@ function Lasercommerce_init($file) {
     // Add callbacks to hooks
     $aPlugin->addActionsAndFilters();
 
+
     if (!$file) {
         $file = __FILE__;
     }
@@ -57,8 +61,10 @@ function Lasercommerce_init($file) {
     
     
     // Register the Plugin Activation Hook
-    register_activation_hook($file, array(&$aPlugin, 'activate'));
+    register_activation_hook($file, array(&$Lasercommerce_Plugin, 'activate'));
 
     // Register the Plugin Deactivation Hook
-    register_deactivation_hook($file, array(&$aPlugin, 'deactivate'));
+    register_deactivation_hook($file, array(&$Lasercommerce_Plugin, 'deactivate'));
+
+    if(LASERCOMMERCE_DEBUG) error_log( "LASERCOMMERCE_INIT: end");
 }

@@ -3,9 +3,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-include_once('lib/Lasercommerce_Tier_Tree.php');
-
-
 class LaserCommerce_Admin extends WC_Settings_Page{
     /**
      * Constructs the settings page class, hooking into woocommerce settings api
@@ -16,10 +13,6 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
         $this->optionNamePrefix = $optionNamePrefix;
-        global $Lasercommerce_Tier_Tree;
-        if( !isset($Lasercommerce_Tier_Tree) ) {
-            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $optionNamePrefix );
-        }
         
         add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         // add_action( 'admin_enqueue_scripts', array($this, 'nestable_init'));
@@ -37,8 +30,15 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * functionality in the tier tree interface
      */
     public function nestable_init(){
-        wp_register_script( 'jquery-nestable-js', plugins_url('/js/jquery.nestable.js', __FILE__), array('jquery'));
-        wp_register_style( 'nestable-css', plugins_url('/css/nestable.css', __FILE__));
+        $_procedure = "LASERCOMMERCE_ADMIN: ";
+        $script_loc = plugins_url('js/jquery.nestable.js', dirname(__FILE__));
+        $css_loc = plugins_url('css/nestable.css', dirname(__FILE__));
+        if(LASERCOMMERCE_DEBUG){
+            error_log($_procedure."script_loc: ".serialize($script_loc));
+            error_log($_procedure."css_loc: ".serialize($css_loc));
+        }
+        wp_register_script( 'jquery-nestable-js', $script_loc, array('jquery'));
+        wp_register_style( 'nestable-css', $css_loc);
 
         wp_enqueue_script( 'jquery-nestable-js' );
         wp_enqueue_style( 'nestable-css' );

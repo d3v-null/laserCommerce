@@ -1,7 +1,5 @@
 <?php
 
-include_once('../Lasercommerce_Tier_Tree.php');
-
 /**
  * Lasercommerce Dynamic Rulesset Class
  * 

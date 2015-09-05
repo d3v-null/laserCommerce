@@ -30,13 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-include_once('../Lasercommerce_Plugin.php');
-
 class Lasercommerce_Pricing {
 
 	private $id;
 	private $role;
-	private $optionNamePrefix;// 
+	private $optionNamePrefix;
 
 	public static function sort_by_regular_price($a, $b){
 		// if(WP_DEBUG and PRICE_DEBUG) {
@@ -67,9 +65,6 @@ class Lasercommerce_Pricing {
 
 	public function __construct($id, $role=''){
 		global $Lasercommerce_Plugin;
-		if(!isset($Lasercommerce_Plugin)){
-			$Lasercommerce_Plugin = new Lasercommerce_Plugin();
-		}
 		$this->id = $id;
 		$this->role = $role;
 		$this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix();
