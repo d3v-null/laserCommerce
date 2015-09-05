@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-include_once('Lasercommerce_Tier_Tree.php');
+include_once('lib/Lasercommerce_Tier_Tree.php');
 
 
 class LaserCommerce_Admin extends WC_Settings_Page{

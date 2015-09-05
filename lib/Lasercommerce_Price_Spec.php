@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-include_once('Lasercommerce_Pricing.php');
+include_once('../Lasercommerce_Pricing.php');
 
 class Lasercommerce_Price_Spec {
 	

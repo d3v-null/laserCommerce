@@ -47,8 +47,8 @@ if( !defined('LASERCOMMERCE_DEBUG')){
 
 
 include_once('Lasercommerce_LifeCycle.php');
-include_once('Lasercommerce_Tier_Tree.php');
-include_once('Lasercommerce_Pricing.php');
+include_once('lib/Lasercommerce_Tier_Tree.php');
+include_once('lib/Lasercommerce_Pricing.php');
 // include_once('Lasercommerce_UIE.php');
 
 /**
