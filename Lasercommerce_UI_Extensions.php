@@ -353,8 +353,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         $DPRC_Table = get_post_meta($postID, 'DPRC_Table', True);
         $DPRP_Table = get_post_meta($postID, 'DPRP_Table', True);
 
-        if(LASERCOMMERCE_DEBUG and HTML_DEBUG) error_log("DPRC_Table: ".serialize($DPRC_Table));
-        if(LASERCOMMERCE_DEBUG and HTML_DEBUG) error_log("DPRP_Table: ".serialize($DPRP_Table));
+        if(LASERCOMMERCE_HTML_DEBUG) error_log("DPRC_Table: ".serialize($DPRC_Table));
+        if(LASERCOMMERCE_HTML_DEBUG) error_log("DPRP_Table: ".serialize($DPRP_Table));
 
         if( $DPRC_Table != "" or $DPRP_Table != "" ){
             $tabs['dynamic_pricing'] = array(
@@ -517,21 +517,24 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }        
 
     public function lasercommerce_loop_prices(){
+        $_procedure = "LASERCOMMERCE_LOOPPRICES: ";
+
         global $product;
-        error_log("called lasercommerce_loop_prices");
-
+        
         $visiblePrices = $this->maybeGetVisiblePricing($product);
-        error_log(" -> visiblePrices: ".serialize($visiblePrices));
         $majorTiers = $this->getMajorTiers();
-        error_log(" -> majorTiers: ".serialize($majorTiers));
-
         $majorPrices = array();
         foreach ($majorTiers as $tier) {
             if (isset($majorPrices[$tier])){
                 $majorPrices[$tier] = $majorPrices[$tier];
             }
         }
-        error_log(" -> majorPrices: ".serialize($majorPrices));
+
+        if(LASERCOMMERCE_DEBUG){
+            error_log($_procedure."visiblePrices: ".serialize($visiblePrices));
+            error_log($_procedure."majorTiers: ".serialize($majorTiers));
+            error_log($_procedure."majorPrices: ".serialize($majorPrices));
+        }
 
         foreach($majorPrices as $tier => $price) {
             if($price_html = $product->get_price_html($price)) { ?>

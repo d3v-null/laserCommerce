@@ -1,6 +1,5 @@
 <?php
 
-error_log("Lasercommerce_Tier_Tree");
 /**
  * helper class for dealing with price tier tree
  */

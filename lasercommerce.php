@@ -74,18 +74,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 $Lasercommerce_minimalRequiredPhpVersion = '5.0';
 
 if( !defined('LASERCOMMERCE_DEBUG')){
-    define( 'PRICE_DEBUG', False);
-    define( 'HTML_DEBUG', False);
-} else {
-    if(!defined('HTML_DEBUG'))
-        define( 'HTML_DEBUG', LASERCOMMERCE_DEBUG);
-    if(!defined('PRICE_DEBUG'))
-        define( 'PRICE_DEBUG', LASERCOMMERCE_DEBUG);  
-}
+    define( 'LASERCOMMERCE_DEBUG', False);
+} 
+if( !defined('LASERCOMMERCE_PRICING_DEBUG')){
+    define( 'LASERCOMMERCE_PRICING_DEBUG', False);
+} 
+if( !defined('LASERCOMMERCE_HTML_DEBUG')){
+    define( 'LASERCOMMERCE_HTML_DEBUG', False);
+} 
 
 if(LASERCOMMERCE_DEBUG) error_log("Lasercommerce Debugging enabled");
-if(PRICE_DEBUG) error_log("Lasercommerce Price Debugging enabled");
-if(HTML_DEBUG) error_log("Lasercommerce HTML Debugging enabled");
+if(LASERCOMMERCE_PRICING_DEBUG) error_log("Lasercommerce Price Debugging enabled");
+if(LASERCOMMERCE_HTML_DEBUG) error_log("Lasercommerce HTML Debugging enabled");
 
 define("LASERCOMMECE_BASE", dirname(__FILE__));
 
