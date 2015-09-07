@@ -180,23 +180,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
      * @return string $role The role of the current user
      */
     public function getCurrentUserRoles(){
-        // if(LASERCOMMERCE_DEBUG) error_log("called getCurrentUserRoles");
-        global $Lasercommerce_Roles_Override;
-        if(isset($Lasercommerce_Roles_Override) and is_array($Lasercommerce_Roles_Override)){
-            // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) {
-            //     error_log("-> Override is: ");
-            //     foreach ($Lasercommerce_Roles_Override as $value) {
-            //         error_log("--> $value");
-            //     }
-            // }
-            $roles = $Lasercommerce_Roles_Override;
-        } else {
-            $current_user = wp_get_current_user();
-            // if(LASERCOMMERCE_DEBUG) error_log("-> current user: ".$current_user->ID);
-            $roles = $current_user->roles;
-        }
-        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("--> roles: ".serialize($roles));
-        return $roles;
+        trigger_error("Deprecated function called: getCurrentUserRoles", E_USER_NOTICE);
     }    
 
     private function getMajorTiers(){
@@ -209,8 +193,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if($_product) {
             global $Lasercommerce_Tier_Tree;
             
-            $currentUserRoles = $this->getCurrentUserRoles();
-            $visibleTiers = $Lasercommerce_Tier_Tree->getAvailableTiers($currentUserRoles);
+            $visibleTiers = $Lasercommerce_Tier_Tree->getAvailableTiers();
             // $visibleTiers = $currentUserRoles;
             array_push($visibleTiers, ''); 
             
@@ -378,7 +361,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function maybeGetVariationPricing( $_product, $min_or_max ){
-        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPricing:$min_or_max | S:".serialize($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));        
+        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("\nCalled maybeGetVariationPricing:$min_or_max | S:".serialize($_product->get_sku())." ));        
         
         $meta_key = ($min_or_max == 'max' ? 'max_price_variation_id' : 'min_price_variation_id');
         $target_id = $_product->$meta_key;
@@ -431,7 +414,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetStarPrice($star = '', $price = '', $_product = ''){
         global $Lasercommerce_Tier_Tree;
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );          
-        if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("Called maybeGetStarPrice:$star | p: $price I: $postID S:".(string)($_product->get_sku())." r:".serialize($this->getCurrentUserRoles()));
+        if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("Called maybeGetStarPrice:$star | p: $price I: $postID S:".(string)($_product->get_sku()));
         //only override if it is a WC price
         $override = ($price == '' or $this->isWCPrice($price, $_product) or $this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product));
         //TODO: Add condition for variable products

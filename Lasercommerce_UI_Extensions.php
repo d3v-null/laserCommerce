@@ -266,8 +266,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             return $tabs;
         }
 
-        $roles = $this->getCurrentUserRoles();
-        $availableTiers = $Lasercommerce_Tier_Tree->getAvailableTiers($roles);
+        $availableTiers = $Lasercommerce_Tier_Tree->getAvailableTiers();
         foreach ($availableTiers as $role) {
             $old_override = $Lasercommerce_Roles_Override;
             $Lasercommerce_Roles_Override = array($role);

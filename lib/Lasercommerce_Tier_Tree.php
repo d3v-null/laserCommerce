@@ -138,12 +138,40 @@ class Lasercommerce_Tier_Tree {
     }
     
     /**
-     * Gets a list of the price tiers available to a user who can view the given list of roles
+     * Gets a list of the price tiers available to a user
      *
-     * @param array $roles A list of roles that the user can see
+     * @param array $user a user or userID
      * @return array $available_tiers the list of price tiers available to the user
      */
-    public function getAvailableTiers($roles){
+    public function getAvailableTiers($user = Null){
+        $_procedure = "LASERCOMMERCE_TIER_TREE_GET_AVAILABLE_TIERS: ";
+        global $Lasercommerce_Roles_Override;
+        if(isset($Lasercommerce_Roles_Override) and is_array($Lasercommerce_Roles_Override)){
+            // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) {
+            //     error_log("-> Override is: ");
+            //     foreach ($Lasercommerce_Roles_Override as $value) {
+            //         error_log("--> $value");
+            //     }
+            // }
+            $roles = $Lasercommerce_Roles_Override;
+        } else {
+            if(!$user){
+                $user = wp_get_current_user();
+            } elseif(is_numeric($user)){
+                $user = get_user_by('id', $user);
+            } else {
+                // assert( $user instanceof WP_User);
+            }
+            // if(LASERCOMMERCE_DEBUG) error_log("-> user: ".$current_user->ID);
+            if(isset($user->roles)){
+                $roles = $user->roles;
+            } else {
+                if(LASERCOMMERCE_DEBUG) error_log($_procedure."called with bad user");
+                $roles = array();
+            }
+        }
+        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("--> roles: ".serialize($roles));
+
         $tree = $this->getTierTree();
         if(empty($roles)) return array();
         $omniscient = $this->getOmniscientRoles();
