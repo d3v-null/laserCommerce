@@ -42,6 +42,8 @@ include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Pricing.php');
  */
 class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
+    public $_class = "LC_";
+
     /**
      * See: http://plugin.michael-simpson.com/?page_id=31
      * @return array of option meta data.
@@ -164,63 +166,46 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $Lasercommerce_Tier_Tree->getMajorTiers();
     }
 
-    public function isWCPrice($price='', $_product=''){
-        $_procedure = 'ISWCPRICE: ';
+    public function isWCStarPrice($star='', $price='', $_product=''){
+        $_procedure = $this->_class.'ISWCSTARPRICE|$star: ';
+        global $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace .= $_procedure; 
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("Called isWCPrice with price: $price S:".serialize($_product->get_sku()));
         global $Lasercommerce_Tier_Tree;
         $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );
+        $value = false;
         if($_product and isset($postID)){
-            $WC_price = get_post_meta($postID, '_price', True);
-            // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> price (".$postID.") : ".$WC_price);
+            switch ($star) {
+                case '':
+                    $WC_price = get_post_meta($postID, '_price', True);
+                    break;
+                case 'regular':
+                    $WC_price = get_post_meta($postID, '_regular_price', True);
+                    break;
+                case 'sale':
+                    $WC_price = get_post_meta($postID, '_sale_price', True);
+            }
+            if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price);
             if( floatval($WC_price) == floatval($price)){
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> isWCPrice returned true");
-                return true;
+                $value = true;
             }
         }
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> isWCPrice returned false");
-        return false;
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned ".serialize($value));
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
+
+        return $value;        
     }
 
-    public function isWCRegularPrice($price='', $_product=''){
-        $_procedure = 'ISWCREGULARPRICE: ';
-
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("Called isWCRegularPrice with price: $price S:".serialize($_product->get_sku()));
-        global $Lasercommerce_Tier_Tree;
-        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );        
-        if($_product and isset($postID)){
-            $WC_regular_price = get_post_meta($postID, '_regular_price', True);
-            // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> regular price (".$postID.") : ".$WC_regular_price);
-            if( floatval($WC_regular_price) == floatval($price)){
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> isWCRegularPrice returned true");
-                return true;
-            }
-        }
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> isWCRegularPrice returned false");
-        return false;
-    }
-
-    public function isWCSalePrice($price='', $_product=''){
-        $_procedure = 'ISWCSALEPRICE: ';
-
-        // TODO: ignore if blank
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("Called isWCSalePrice with price: $price S:".serialize($_product->get_sku()));
-        global $Lasercommerce_Tier_Tree;
-        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );        
-        if($_product and isset($postID)){
-            $WC_sale_price = get_post_meta($postID, '_sale_price', True);
-            // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> sale price (".$postID."): ".$WC_sale_price);
-            if( floatval($WC_sale_price) == floatval($price)){
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> isWCSalePrice returned true");
-                return true;
-            }
-        }
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> isWCSalePrice returned false");
-        return false;
-    }    
+    public function isWCPrice($price='', $_product=''){ return $this->isWCStarPrice('', $price, $_product); }
+    public function isWCRegularPrice($price='', $_product=''){ return $this->isWCStarPrice('regular', $price, $_product); }
+    public function isWCSalePrice($price='', $_product=''){ return $this->isWCStarPrice('sale', $price, $_product); }    
 
     public function maybeGetVisiblePricing($_product=''){
-        $_procedure = 'MAYBEGETVISIBLEPRICING: ';
+        $_procedure = $this->_class.'MAYBEGETVISIBLEPRICING: ';
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -253,13 +238,12 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $value = null;
         }   
 
-        if(LASERCOMMERCE_PRICING_DEBUG) {
-            error_log($_procedure."returned ");
-            if($value){
-                foreach ($value as $key => $pricing) {
-                    error_log($_procedure." -> $key: ".(string)($pricing));
-                }
+        if(LASERCOMMERCE_PRICING_DEBUG and $value) {
+            $string = "";
+            foreach ($value as $key => $pricing) {
+                $string .= ("$key: ".(string)($pricing));
             }
+            error_log($_procedure."returned ".$string);
         }
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
@@ -270,7 +254,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function maybeGetStarPricing( $star='', $_product=''){
-        $_procedure = "MAYBEGETSTARPRICING|$star: ";
+        $_procedure = $this->_class."MAYBEGETSTARPRICING|$star: ";
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -305,7 +289,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetHighestPricing($_product=''){ return $this->maybeGetStarPricing('highest', $_product); }
 
     public function maybeGetVariationPricing( $_product, $min_or_max ){
-        $_procedure = 'MAYBEGETVARIATIONPRICING: ';
+        $_procedure = $this->_class.'MAYBEGETVARIATIONPRICING: ';
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -339,7 +323,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function maybeGetVariationStarPrice( $star = '', $price = '', $_product, $min_or_max, $display){
-        $_procedure = "MAYBEGETVARIATIONSTARPRICE|$star: ";
+        $_procedure = $this->_class."MAYBEGETVARIATIONSTARPRICE|$star: ";
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -377,7 +361,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
      * Generalization of maybeGet*Price
      */
     public function maybeGetStarPrice($star = '', $price = '', $_product = ''){
-        $_procedure = "MAYBEGETSTARPRICE|$star: ";
+        $_procedure = $this->_class."MAYBEGETSTARPRICE|$star: ";
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -397,7 +381,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         } else {
             $lowestPricing = $this->maybeGetLowestPricing($_product);
         }
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing: ".$lowestPricing->__toString());
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing: ".(string)$lowestPricing);
 
         if($lowestPricing and $override) {
             switch ($star) {
@@ -435,7 +419,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetPriceExclTax($price ='', $qty, $_product){ return $this->maybeGetStarPrice('', $price, $_product); }
 
     public function maybeGetCartItemPrice( $price, $values, $cart_item_key ){
-        $_procedure = "MAYBEGETCARTITEMPRICE: ";
+        $_procedure = $this->_class."MAYBEGETCARTITEMPRICE: ";
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
@@ -462,7 +446,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function maybeGetCartItemSubtotal( $subtotal, $values, $cart_item_key ) {
-        $_procedure = "MAYBEGETCARTITEMSUBTOTAL: ";
+        $_procedure = $this->_class."MAYBEGETCARTITEMSUBTOTAL: ";
 
         if (LASERCOMMERCE_PRICING_DEBUG) {
             error_log($_procedure);
@@ -474,9 +458,16 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function maybeIsPurchasable($purchasable, $_product){
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("\nmaybeIsPurchasable closure called | p:".(string)$purchasable." S:".(string)$_product->get_sku());
+        $_procedure = $this->_class."MAYBEISPURCHASABLE: ";
+
+        global $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace .= $_procedure; 
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".(string)$_product->get_sku());
         if($_product && $_product->is_type('variable')){
-            // if(LASERCOMMERCE_PRICING_DEBUG) error_log("is variable");
+            if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."is variable");
             $children = $_product->get_children();
             if( is_array($children) && !empty($children)){
                 foreach ($children as $child_id) {
@@ -487,7 +478,11 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 }
             } 
         } 
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("\nmaybeIsPurchasable closure returned: ".(string)$purchasable);
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchasable);
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
+
         return $purchasable;
     }
 
@@ -546,7 +541,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
      */    
 
     public function maybeGetStarHtml($price_html, $_product, $star){
-        $_procedure = "MAYBEGETSTARHTML|$star: ";
+        $_procedure = $this->_class."MAYBEGETSTARHTML|$star: ";
 
         $user = wp_get_current_user();
 
@@ -594,7 +589,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function addActionsAndFilters() {
         // Admin filters:
         global $lasercommerce_pricing_trace;
-        $_procedure = "LASERCOMMERCE_PLUGIN: ";
+        $_procedure = $this->_class."LASERCOMMERCE_PLUGIN: ";
         $lasercommerce_pricing_trace = $_procedure;
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");  
         
@@ -634,7 +629,17 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         parent::addActionsAndFilters();
 
+        // MEMBERSHIPS STUFF
+
+            // add_filter( 'woocommerce_product_is_visible', array( $this, 'product_is_visible' ), 10, 2 );
+            // add_filter( 'woocommerce_variation_is_visible', array( $this, 'variation_is_visible' ), 10, 2 );
+
+        // remove_filter( 'woocommerce_product_is_visible', array('WC_Memberships_Restrictions', 'product_is_visible'));
+        // remove_filter( 'woocommerce_variation_is_visible', array('WC_Memberships_Restrictions', 'variation_is_visible'));
+
         // BUNDLES STUFF
+
+
 
         // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
         // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
