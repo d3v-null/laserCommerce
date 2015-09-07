@@ -64,7 +64,7 @@ class Lasercommerce_Tier_Tree {
     }
     
     /**
-     * Used by getRoles to geta flattened version of the Tree
+     * Used by getTiers to geta flattened version of the Tree
      * 
      * @param array $node an array containing the node to be flattened recursively
      * @return the roles contained within $node
@@ -84,24 +84,32 @@ class Lasercommerce_Tier_Tree {
         // IF(WP_DEBUG) error_log("names: ".serialize($names));
         return $roles;
     }
+
+    public function getRoles(){
+        trigger_error("Deprecated function called: getTiers", E_USER_NOTICE);
+    }
     
     /**
-     * Gets a list of all the roles in the Tree
+     * Gets a list of all the tiers in the Tree
      *
-     * @return array roles A list or roles in the tree
+     * @return array tiers A list or tiers in the tree
      */
-    public function getRoles(){
+    public function getTiers(){
         $tree = $this->getTierTree();
-        $roles = array();
+        $tiers = array();
         foreach( $tree as $node ){
-            $roles = array_merge($roles, $this->flattenTierTreeRecursive($node));
+            $tiers = array_merge($tiers, $this->flattenTierTreeRecursive($node));
             // IF(WP_DEBUG) error_log("merge: ".serialize($names));
         }
-        return $roles;
+        return $tiers;
     }   
 
     public function getActiveRoles(){
-        return array_intersect($this->getRoles(), array_keys($this->getNames()));
+        trigger_error("Deprecated function called: getTiers", E_USER_NOTICE);
+    }
+
+    public function getActiveTiers(){
+        return array_intersect($this->getTiers(), array_keys($this->getNames()));
     }
 
     /**
@@ -175,7 +183,7 @@ class Lasercommerce_Tier_Tree {
         $tree = $this->getTierTree();
         if(empty($roles)) return array();
         $omniscient = $this->getOmniscientRoles();
-        $activeRoles = $this->getActiveRoles();
+        $activeRoles = $this->getActiveTiers();
         foreach ($roles as $role) {
             if (in_array($role, $omniscient) ){
                 $roles = $activeRoles;
@@ -203,7 +211,7 @@ class Lasercommerce_Tier_Tree {
 
     public function getMajorTiers(){
         //TODO: make this actually read off settings
-        $active_roles = $this->getActiveRoles();
+        $active_roles = $this->getActiveTiers();
         $major_roles = array('rn', 'wn', 'dn');
         return array_intersect($active_roles, $major_roles);
     }

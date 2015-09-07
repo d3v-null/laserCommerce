@@ -32,17 +32,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if( !defined('LASERCOMMERCE_DEBUG')){
-    define( 'PRICE_DEBUG', False);
-    define( 'HTML_DEBUG', False);
-} else {
-    if(!defined('HTML_DEBUG'))
-        define( 'HTML_DEBUG', False);
-    if(!defined('PRICE_DEBUG'))
-        define( 'PRICE_DEBUG', False);
-        
-}
-
 include_once(LASERCOMMECE_BASE.'/Lasercommerce_UI_Extensions.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Tier_Tree.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Pricing.php');
@@ -260,57 +249,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         }
     }
 
-    public function maybeVariableProductSync( $product_id, $children ){
-        //TODO: WHAT IF max_price_id is not the same as max_regular_price_id???
-
-        // OMNISCIENT OVERRIDE BEGIN
-        global $Lasercommerce_Tier_Tree;
-        $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
-        global $Lasercommerce_Roles_Override;
-        $old_override = $Lasercommerce_Roles_Override;
-        $Lasercommerce_Roles_Override = $omniscient_roles;
-
-        $_product = wc_get_product($product_id);
-
-        if($_product){
-            $min_pricing = null;
-            $max_pricing = null;            
-            foreach ($children as $child) {
-                $variation = $_product->get_child($child);
-                $discounted_pricing = $this->maybeGetLowestPricing($variation);
-                if($min_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $min_pricing) < 0){
-                    $min_pricing = $discounted_pricing;
-                }
-                if($max_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $max_pricing) > 0){
-                    $max_pricing = $discounted_pricing;
-                }
-            }
-            foreach (array('min', 'max') as $bound) {
-                $bound_pricing = ${"{$bound}_pricing"};
-                if( $bound_pricing ){
-                    foreach( array('price', 'regular_price', 'sale_price') as $price_type){
-                        $meta_key = $bound.'_'.$price_type.'_variation_id';
-                        update_post_meta( $product_id, '_'.$meta_key, $bound_pricing->id);
-                        // $_product->$meta_key = $bound_pricing->id;
-                        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("-> SYNC setting ". $product_id. ', '.$meta_key .' to '.$bound_pricing->id);
-                    }
-                }
-            }
-
-            // THIS WILL PROBABLY CAUSE ISSUES
-            update_post_meta($product_id, '_price', '');
-            // update_post_meta($product_id, '_price', $min_pricing->maybe_get_current_price());
-        }
-
-        $Lasercommerce_Roles_Override = $old_override;
-        // OMNISCIENT OVERRIDE END
-
-        // TODO: Maybe set _price
-
-
-        //TODO: synchronize max_variation_id
-    }
-
     public function isWCPrice($price='', $_product=''){
         // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("Called isWCPrice with price: $price S:".serialize($_product->get_sku()));
         global $Lasercommerce_Tier_Tree;
@@ -519,135 +457,186 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $purchasable;
     }
 
+    public function maybeVariableProductSync( $product_id, $children ){
+        //TODO: WHAT IF max_price_id is not the same as max_regular_price_id???
+
+        // OMNISCIENT OVERRIDE BEGIN
+        global $Lasercommerce_Tier_Tree;
+        $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
+        global $Lasercommerce_Roles_Override;
+        $old_override = $Lasercommerce_Roles_Override;
+        $Lasercommerce_Roles_Override = $omniscient_roles;
+
+        $_product = wc_get_product($product_id);
+
+        if($_product){
+            $min_pricing = null;
+            $max_pricing = null;            
+            foreach ($children as $child) {
+                $variation = $_product->get_child($child);
+                $discounted_pricing = $this->maybeGetLowestPricing($variation);
+                if($min_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $min_pricing) < 0){
+                    $min_pricing = $discounted_pricing;
+                }
+                if($max_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $max_pricing) > 0){
+                    $max_pricing = $discounted_pricing;
+                }
+            }
+            foreach (array('min', 'max') as $bound) {
+                $bound_pricing = ${"{$bound}_pricing"};
+                if( $bound_pricing ){
+                    foreach( array('price', 'regular_price', 'sale_price') as $price_type){
+                        $meta_key = $bound.'_'.$price_type.'_variation_id';
+                        update_post_meta( $product_id, '_'.$meta_key, $bound_pricing->id);
+                        // $_product->$meta_key = $bound_pricing->id;
+                        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("-> SYNC setting ". $product_id. ', '.$meta_key .' to '.$bound_pricing->id);
+                    }
+                }
+            }
+
+            // THIS WILL PROBABLY CAUSE ISSUES
+            update_post_meta($product_id, '_price', '');
+            // update_post_meta($product_id, '_price', $min_pricing->maybe_get_current_price());
+        }
+
+        $Lasercommerce_Roles_Override = $old_override;
+        // OMNISCIENT OVERRIDE END
+
+        // TODO: Maybe set _price
+
+
+        //TODO: synchronize max_variation_id
+    }    
+
 /**
  * Functions for tricking product bundles into thinking products have prices using a clever ruse
  */
 
-    public function constructCleverRuse($product_id, $new_price){
-        $old_price = get_post_meta($product_id, '_price', True);
-        $old_prices = get_post_meta($product_id, 'prices_old', True);
-        if($old_prices) {
-            $old_prices = $old_prices . '|' . $old_price ;
-        } else{
-            $old_prices = $old_price;
-        }
-        // error_log("Called constructCleverRuse callback| product_id: $product_id");
-        // error_log("-> constructCleverRuse old price: ". $old_price);
-        // error_log("-> constructCleverRuse new price: ". $new_price);
-        // error_log("-> constructCleverRuse old prices: ". $old_prices);
-        update_post_meta($product_id, 'prices_old', $old_prices);
-        update_post_meta($product_id, '_price', $new_price);
-    }
+    // public function constructCleverRuse($product_id, $new_price){
+    //     $old_price = get_post_meta($product_id, '_price', True);
+    //     $old_prices = get_post_meta($product_id, 'prices_old', True);
+    //     if($old_prices) {
+    //         $old_prices = $old_prices . '|' . $old_price ;
+    //     } else{
+    //         $old_prices = $old_price;
+    //     }
+    //     // error_log("Called constructCleverRuse callback| product_id: $product_id");
+    //     // error_log("-> constructCleverRuse old price: ". $old_price);
+    //     // error_log("-> constructCleverRuse new price: ". $new_price);
+    //     // error_log("-> constructCleverRuse old prices: ". $old_prices);
+    //     update_post_meta($product_id, 'prices_old', $old_prices);
+    //     update_post_meta($product_id, '_price', $new_price);
+    // }
 
-    public function destructCleverRuse($product_id){
-        // error_log("Called destructCleverRuse callback | product_id: $product_id");
-        $old_prices = explode('|',get_post_meta($product_id, 'prices_old', True));
-        // error_log("-> destructCleverRuse old prices: ". serialize($old_prices));  
-        $old_price = array_pop($old_prices);
-        // error_log("-> destructCleverRuse old price: ". $old_price);  
-        $old_prices = implode('|', $old_prices);
-        // error_log("-> destructCleverRuse old prices: ". serialize($old_prices));  
-        $new_price = get_post_meta($product_id, '_price', True);
-        // error_log("-> destructCleverRuse new price: ". $new_price); 
-        update_post_meta($product_id, 'prices_old', $old_prices); 
-        update_post_meta($product_id, '_price', $old_price);
-    }
+    // public function destructCleverRuse($product_id){
+    //     // error_log("Called destructCleverRuse callback | product_id: $product_id");
+    //     $old_prices = explode('|',get_post_meta($product_id, 'prices_old', True));
+    //     // error_log("-> destructCleverRuse old prices: ". serialize($old_prices));  
+    //     $old_price = array_pop($old_prices);
+    //     // error_log("-> destructCleverRuse old price: ". $old_price);  
+    //     $old_prices = implode('|', $old_prices);
+    //     // error_log("-> destructCleverRuse old prices: ". serialize($old_prices));  
+    //     $new_price = get_post_meta($product_id, '_price', True);
+    //     // error_log("-> destructCleverRuse new price: ". $new_price); 
+    //     update_post_meta($product_id, 'prices_old', $old_prices); 
+    //     update_post_meta($product_id, '_price', $old_price);
+    // }
 
-    public function maybeAvailableVariationPreBundle($variation_data, $_product, $_variation ){
-        global $Lasercommerce_Tier_Tree;
-        $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
+    // public function maybeAvailableVariationPreBundle($variation_data, $_product, $_variation ){
+    //     global $Lasercommerce_Tier_Tree;
+    //     $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
 
-        $this->constructCleverRuse($variation_id, $this->maybeGetPrice($_variation->price, $_variation));
-        return $variation_data;
-    }
+    //     $this->constructCleverRuse($variation_id, $this->maybeGetPrice($_variation->price, $_variation));
+    //     return $variation_data;
+    // }
 
-    public function maybeAvailableVariationPostBundle($variation_data, $_product, $_variation ){
-        global $Lasercommerce_Tier_Tree;
-        $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
+    // public function maybeAvailableVariationPostBundle($variation_data, $_product, $_variation ){
+    //     global $Lasercommerce_Tier_Tree;
+    //     $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
 
-        $this->destructCleverRuse($variation_id);
-        return $variation_data;
-    }
+    //     $this->destructCleverRuse($variation_id);
+    //     return $variation_data;
+    // }
 
-    public function WooBundlesGetVariations( $product_id ){
-        // error_log("Called WooBundlesGetVariations"); 
-        // error_log(" | product_id: $product_id");
+    // public function WooBundlesGetVariations( $product_id ){
+    //     // error_log("Called WooBundlesGetVariations"); 
+    //     // error_log(" | product_id: $product_id");
 
-        $variations = array();
+    //     $variations = array();
 
-        $terms        = get_the_terms( $product_id, 'product_type' );
-        $product_type = ! empty( $terms ) && isset( current( $terms )->name ) ? sanitize_title( current( $terms )->name ) : 'simple';
-        if ( $product_type === 'bundle' ) {
-            if(class_exists('WC_PB_Core_Compatibility')){
-                $product = WC_PB_Core_Compatibility::wc_get_product( $product_id );
-                if ( ! $product ) {
-                    return $variations;
-                }
+    //     $terms        = get_the_terms( $product_id, 'product_type' );
+    //     $product_type = ! empty( $terms ) && isset( current( $terms )->name ) ? sanitize_title( current( $terms )->name ) : 'simple';
+    //     if ( $product_type === 'bundle' ) {
+    //         if(class_exists('WC_PB_Core_Compatibility')){
+    //             $product = WC_PB_Core_Compatibility::wc_get_product( $product_id );
+    //             if ( ! $product ) {
+    //                 return $variations;
+    //             }
 
-                $bundled_items = $product->get_bundled_items();
+    //             $bundled_items = $product->get_bundled_items();
 
-                if ( ! $bundled_items ) {
-                    return $add;
-                }        
+    //             if ( ! $bundled_items ) {
+    //                 return $add;
+    //             }        
                 
-                foreach ($bundled_items as $bundled_item_id => $bundled_item) {
-                    $id                   = $bundled_item->product_id;
-                    $bundled_product_type = $bundled_item->product->product_type;
-                    // error_log(" | processing bundled item id: $id");
+    //             foreach ($bundled_items as $bundled_item_id => $bundled_item) {
+    //                 $id                   = $bundled_item->product_id;
+    //                 $bundled_product_type = $bundled_item->product->product_type;
+    //                 // error_log(" | processing bundled item id: $id");
 
-                    if($bundled_product_type == 'variable'){
-                        $allowed_variations = $bundled_item->get_product_variations();
-                        // error_log("  | allowed_variations: ".serialize($allowed_variations));
-                        if($allowed_variations){
-                            foreach ($allowed_variations as $variation) {
-                                if(isset($variation['variation_id'])){
-                                    $variations[] = $variation['variation_id'];
-                                }
-                            }
-                        }
-                    }
-                }        
-            } 
-        }
-        // error_log(" | returning ".serialize($variations));
-        return $variations;
-    }
+    //                 if($bundled_product_type == 'variable'){
+    //                     $allowed_variations = $bundled_item->get_product_variations();
+    //                     // error_log("  | allowed_variations: ".serialize($allowed_variations));
+    //                     if($allowed_variations){
+    //                         foreach ($allowed_variations as $variation) {
+    //                             if(isset($variation['variation_id'])){
+    //                                 $variations[] = $variation['variation_id'];
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }        
+    //         } 
+    //     }
+    //     // error_log(" | returning ".serialize($variations));
+    //     return $variations;
+    // }
 
-    public function PreWooBundlesValidation( $add, $product_id, $product_quantity, $variation_id = '', $variations = array(), $cart_item_data = array() ) {
-        // error_log("called PreWooBundlesValidation callback");
-        // error_log(" | add: $add");
-        // error_log(" | product_id: $product_id");
-        $variations = $this->WooBundlesGetVariations( $product_id );
-        // error_log(" | variations: ".serialize($variations));
+    // public function PreWooBundlesValidation( $add, $product_id, $product_quantity, $variation_id = '', $variations = array(), $cart_item_data = array() ) {
+    //     // error_log("called PreWooBundlesValidation callback");
+    //     // error_log(" | add: $add");
+    //     // error_log(" | product_id: $product_id");
+    //     $variations = $this->WooBundlesGetVariations( $product_id );
+    //     // error_log(" | variations: ".serialize($variations));
 
-        foreach ($variations as $variation_id) {
-            $this->constructCleverRuse($variation_id, 'X');
-        }
+    //     foreach ($variations as $variation_id) {
+    //         $this->constructCleverRuse($variation_id, 'X');
+    //     }
 
-        return $add;
-    }
+    //     return $add;
+    // }
 
-    public function PostWooBundlesValidation( $add, $product_id, $product_quantity, $variation_id = '', $variations = array(), $cart_item_data = array() ) {
-        // error_log("called PostWooBundlesValidation callback | add: $add");
-        // error_log(" | add: $add");
-        // error_log(" | product_id: $product_id");
-        $variations = $this->WooBundlesGetVariations( $product_id );
-        // error_log(" | variations: ".serialize($variations));
+    // public function PostWooBundlesValidation( $add, $product_id, $product_quantity, $variation_id = '', $variations = array(), $cart_item_data = array() ) {
+    //     // error_log("called PostWooBundlesValidation callback | add: $add");
+    //     // error_log(" | add: $add");
+    //     // error_log(" | product_id: $product_id");
+    //     $variations = $this->WooBundlesGetVariations( $product_id );
+    //     // error_log(" | variations: ".serialize($variations));
 
-        foreach ($variations as $variation_id) {
-            $this->destructCleverRuse($variation_id);
-        }
+    //     foreach ($variations as $variation_id) {
+    //         $this->destructCleverRuse($variation_id);
+    //     }
 
-        return $add;
-    }
+    //     return $add;
+    // }
 
-    public function overrideBundledPrices(){
-        // error_log("called override_bundled_prices callback");
-        // error_log(" | add: $add");
-        // error_log(" | product_id: $product_id");
-        $variations = $this->WooBundlesGetVariations( $product_id );
-        // error_log(" | variations: ".serialize($variations));        
-    }
+    // public function overrideBundledPrices(){
+    //     // error_log("called override_bundled_prices callback");
+    //     // error_log(" | add: $add");
+    //     // error_log(" | product_id: $product_id");
+    //     $variations = $this->WooBundlesGetVariations( $product_id );
+    //     // error_log(" | variations: ".serialize($variations));        
+    // }
 
 
 /**
@@ -709,7 +698,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if( !isset($Lasercommerce_Tier_Tree) ) {
             $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
         }     
-        $this->maybeAddSaveTierFields( $Lasercommerce_Tier_Tree->getRoles(), $Lasercommerce_Tier_Tree->getNames() );
+        $this->maybeAddSaveTierFields( $Lasercommerce_Tier_Tree->getTiers(), $Lasercommerce_Tier_Tree->getNames() );
 
         
         //Price / Display filters:
@@ -737,12 +726,13 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
 
         add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
-        add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
-        add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
 
-        add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PreWooBundlesValidation' ), 9, 6 );
+        // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
+        // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
+
+        // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PreWooBundlesValidation' ), 9, 6 );
         // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'woo_bundles_validation' ), 10, 6 );
-        add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PostWooBundlesValidation' ), 11, 6 );
+        // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PostWooBundlesValidation' ), 11, 6 );
 
         // add_filter( 'woocommerce_product_is_visible', 
 

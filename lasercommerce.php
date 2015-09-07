@@ -83,6 +83,10 @@ if( !defined('LASERCOMMERCE_DEBUG')){
         define( 'PRICE_DEBUG', LASERCOMMERCE_DEBUG);  
 }
 
+if(LASERCOMMERCE_DEBUG) error_log("Lasercommerce Debugging enabled");
+if(PRICE_DEBUG) error_log("Lasercommerce Price Debugging enabled");
+if(HTML_DEBUG) error_log("Lasercommerce HTML Debugging enabled");
+
 define("LASERCOMMECE_BASE", dirname(__FILE__));
 
 /**
