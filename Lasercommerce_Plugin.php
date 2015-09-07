@@ -212,21 +212,20 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace .= $_procedure; 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure);
         if($_product) {
             global $Lasercommerce_Tier_Tree;
             
             $visibleTiers = $Lasercommerce_Tier_Tree->getAvailableTiers();
-            // $visibleTiers = $currentUserRoles;
+            
             array_push($visibleTiers, ''); 
             
             $id = $Lasercommerce_Tier_Tree->getPostID( $_product );
 
             $pricings = array();
-            foreach ($visibleTiers as $role) {
-                $pricing = new Lasercommerce_Pricing($id, $role);
+            foreach ($visibleTiers as $tier) {
+                $pricing = new Lasercommerce_Pricing($id, $tier);
                 if($pricing->regular_price){
-                    $pricings[$role] = $pricing;
+                    $pricings[$tier] = $pricing;
                 }
             }
 
@@ -464,19 +463,23 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
-
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".(string)$_product->get_sku());
-        if($_product && $_product->is_type('variable')){
-            if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."is variable");
-            $children = $_product->get_children();
-            if( is_array($children) && !empty($children)){
-                foreach ($children as $child_id) {
-                    $child = $_product->get_child($child_id);
-                    if ($child->is_purchasable()){
-                        $purchasable = true;
+
+        if($_product) {
+            if($_product->is_type('variable')){
+                if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."is variable");
+                $children = $_product->get_children();
+                if($children){
+                    foreach ($children as $child_id) {
+                        $child = $_product->get_child($child_id);
+                        if($this->maybeIsPurchasable($purchasable, $child)) $purchasable = true;
+                        break;
                     }
-                }
-            } 
+                } 
+            } else {
+                $pricings = $this->maybeGetVisiblePricing($_product);
+                if($pricings) $purchasable = true;
+            }
         } 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchasable);
 
