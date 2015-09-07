@@ -85,7 +85,7 @@ class Lasercommerce_Tier_Tree {
     }
 
     public function getRoles(){
-        trigger_error("Deprecated function called: getTiers", E_USER_NOTICE);
+        trigger_error("Deprecated function called: getRoles, use getTiers instead", E_USER_NOTICE);
     }
     
     /**

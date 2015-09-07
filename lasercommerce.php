@@ -73,6 +73,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 $Lasercommerce_minimalRequiredPhpVersion = '5.0';
 
+define('LASERCOMMERCE_DOMAIN', 'lasercommerce');
+
 if( !defined('LASERCOMMERCE_DEBUG')){
     define( 'LASERCOMMERCE_DEBUG', False);
 } 
