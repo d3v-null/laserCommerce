@@ -8,10 +8,18 @@ include_once('Lasercommerce_LifeCycle.php');
 class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 {
     
-    function __construct($optionNamePrefix='lc_')
-    {
-        # code...
-    }
+    /**
+     * include the lasercommerce admin tab in woocommerce settings
+     * 
+     * @param array $settings An array specifying the settings to display in the admin page
+     * @return array $settings 
+     */
+    public function includeAdminPage($settings){
+        $pluginDir = plugin_dir_path( __FILE__ );
+        include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Admin.php');
+        $settings[] = new Lasercommerce_Admin($this->getOptionNamePrefix());
+        return $settings;
+    }    
 
     /**
      * Used by maybeAddSaveTierField to add price fields to the product admin interface for a given tier
@@ -539,6 +547,9 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
     public function addActionsAndFilters() {
         if(LASERCOMMERCE_DEBUG) error_log("LASERCOMMERCE_UIE: Called addActionsAndFilters");
+
+        add_action( 'admin_enqueue_scripts', array( &$this, 'product_admin_scripts') );
+        add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );              
 
         add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
         add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddDynamicPricingTabs'));
