@@ -32,9 +32,8 @@ function Lasercommerce_init($file) {
     if(LASERCOMMERCE_DEBUG) error_log( "LASERCOMMERCE_INIT: start");
 
     require_once(LASERCOMMECE_BASE.'/Lasercommerce_Plugin.php');
-    $aPlugin = new Lasercommerce_Plugin();
     global $Lasercommerce_Plugin;
-    $Lasercommerce_Plugin = $aPlugin;
+    $Lasercommerce_Plugin = new Lasercommerce_Plugin();
 
     // Install the plugin
     // NOTE: this file gets run each time you *activate* the plugin.
@@ -42,23 +41,21 @@ function Lasercommerce_init($file) {
     // but it does not call any of its code.
     // So here, the plugin tracks whether or not it has run its install operation, and we ensure it is run only once
     // on the first activation
-    if (!$aPlugin->isInstalled()) {
-        $aPlugin->install();
+    if (!$Lasercommerce_Plugin->isInstalled()) {
+        $Lasercommerce_Plugin->install();
     }
     else {
         // Perform any version-upgrade activities prior to activation (e.g. database changes)
-        $aPlugin->upgrade();
+        $Lasercommerce_Plugin->upgrade();
     }
 
     // Add callbacks to hooks
-    $aPlugin->addActionsAndFilters();
+    $Lasercommerce_Plugin->addActionsAndFilters();
 
 
     if (!$file) {
         $file = __FILE__;
     }
-    
-    
     
     // Register the Plugin Activation Hook
     register_activation_hook($file, array(&$Lasercommerce_Plugin, 'activate'));

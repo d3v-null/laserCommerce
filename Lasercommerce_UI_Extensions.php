@@ -17,7 +17,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     public function includeAdminPage($settings){
         $pluginDir = plugin_dir_path( __FILE__ );
         include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Admin.php');
-        $settings[] = new Lasercommerce_Admin($this->getOptionNamePrefix());
+        $settings[] = new Lasercommerce_Admin($this);
         return $settings;
     }    
 
