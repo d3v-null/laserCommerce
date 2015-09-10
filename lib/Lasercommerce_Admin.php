@@ -197,13 +197,44 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                         $this->output_nestable_li($node, $names);
                     }
                 } else {
-                    echo "<div id="dd-empty-placeholder"></div>";
+                    echo '<div id="dd-empty-placeholder"></div>';
                 }
                 echo '</ol>';
             } else {
                 echo '<div class="dd-empty"></div>';
             } ?>
         </div>
+        <script type="text/javascript">
+;
+(function ($) {
+    $(document).ready(function()
+    {
+
+        console.log("calling nestable");
+        var updateOutput = function (e){
+            var list    = e.length ? e : $(e.target),
+                output  = list.data('output');
+            if (window.JSON) {
+                output.val(window.JSON.stringify(list.nestable('serialize')));
+            } else {
+                output.val('JSON browser support required');
+            }
+        };
+        var nestable_wrapper = $('.dd#<?php echo $nestable_id;?>');
+        nestable_wrapper.nestable({
+            group: 1
+        })
+        .on('change', updateOutput);
+
+        updateOutput(nestable_wrapper.data( 
+            'output',
+            $('.lc_admin_tier_tree')
+        )); 
+
+    });        
+
+})(jQuery); 
+        </script>
     <?php }
        
     /**
