@@ -141,10 +141,39 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      */
     public function output_nestable_li($node, $names) { 
         if(isset($node['id'])) {
+            $node_id = $node['id'];
+            $node_name_id = $node_id."_name";
+            $node_major_id = $node_id."_major";
+            // $node_name = isset($names[$node_id])?$names[$node_id]:$node_id; 
+            $node_name = isset($node['name'])?$node['name']:$node_id; 
+            $node_major = isset($node['major'])?$node['major']:false; 
             ?>
-                <li class="dd-item" data-id="<?php echo $node['id']; ?>">
+                <li class="dd-item" data-id="<?php echo $node_id; ?>">
                     <div class="dd-handle">
-                        <?php echo isset($names[$node['id']])?$names[$node['id']]:$node['id']; ?>
+                        <!--<div class="lc_node_section">
+                            <i class="fa fa-grip"></i>
+                        </div> -->
+                        <div class="lc_node_section lc_node_id">
+                            <h3><?php echo $node_id; ?></h3>
+                        </div>
+                        <div class="lc_node_section lc_node_major">
+                            <label for="<?php echo $node_major_id; ?>">Major</label>
+                            <input 
+                                id="<?php echo $node_major_id;?>" 
+                                name="<?php echo $node_major_id;?>" 
+                                type="checkbox" 
+                                <?php if($node_major) echo "checked"; ?>
+                            />
+                        </div>
+                        <div class="lc_node_section lc_node_name">
+                            <label for="<?php echo $node_name_id;?>">Name</label>
+                            <input 
+                                id="<?php echo $node_name_id;?>" 
+                                name="<?php echo $node_name_id;?>" 
+                                type="text"
+                                value="<?php echo $node_name; ?>"
+                            />
+                        </div>
                     </div>
                     <?php if(isset($node['children'])) { 
                     ?>
@@ -159,13 +188,17 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
 
-    public function output_nestable($tree, $names, $id){ ?>
-        <div class="dd" id="<?php echo $id; ?>">
+    public function output_nestable($tree, $names, $nestable_id){ ?>
+        <div class="dd" id="<?php echo $nestable_id; ?>">
             <?php if( !empty($tree) ){ 
                 echo '<ol class="dd-list">';
-                foreach ($tree as $node) {
-                    $this->output_nestable_li($node, $names);
-                } 
+                if($tree) {
+                    foreach ($tree as $node) {
+                        $this->output_nestable_li($node, $names);
+                    }
+                } else {
+                    echo "<div id="dd-empty-placeholder"></div>";
+                }
                 echo '</ol>';
             } else {
                 echo '<div class="dd-empty"></div>';
@@ -186,32 +219,32 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             'desc_tip' => '',
             'type'  => $data['type']
         ) );
-        $description = $field_description['description'];
+        $description_html = $field_description['description'];
         $tooltip_html = $field_description['tooltip_html'];
 
         global $Lasercommerce_Tier_Tree;
 
         $names = $Lasercommerce_Tier_Tree->getNames();
-        $availableTiers = array_keys($names);
-        $usedTiers = $Lasercommerce_Tier_Tree->getTiers();
         $tree = $Lasercommerce_Tier_Tree->getTierTree();
-        if(!$usedTiers){
-            $unusedTiers = $availableTiers;
-        } else {
-            $unusedTiers = array_diff($availableTiers, $usedTiers);
-        }
+        // $availableTiers = array_keys($names);
+        // $usedTiers = $Lasercommerce_Tier_Tree->getTiers();
+        // if(!$usedTiers){
+        //     $unusedTiers = $availableTiers;
+        // } else {
+        //     $unusedTiers = array_diff($availableTiers, $usedTiers);
+        // }
 
         if(LASERCOMMERCE_DEBUG) {
-            error_log($_procedure."id:".serialize($data['id']));
-            error_log($_procedure."default:".serialize($data['default']));
-            error_log($_procedure."value:".serialize($option_value));
-            error_log($_procedure."description:".serialize($description));
-            error_log($_procedure."tooltip_html:".serialize($tooltip_html));
-            error_log($_procedure."availableTiers: ".serialize($availableTiers));
-            error_log($_procedure."tree: ".          serialize($tree));
-            error_log($_procedure."usedTiers: ".     serialize($usedTiers));
-            error_log($_procedure."unusedTiers: ".   serialize($unusedTiers));
-            error_log($_procedure."names: ".         serialize($names));
+            error_log($_procedure."id:".                serialize($data['id']));
+            error_log($_procedure."default:".           serialize($data['default']));
+            error_log($_procedure."value:".             serialize($option_value));
+            error_log($_procedure."description_html:".  serialize($description_html));
+            error_log($_procedure."tooltip_html:".      serialize($tooltip_html));
+            error_log($_procedure."tree: ".             serialize($tree));
+            error_log($_procedure."names: ".            serialize($names));
+            // error_log($_procedure."availableTiers: ".   serialize($availableTiers));
+            // error_log($_procedure."usedTiers: ".        serialize($usedTiers));
+            // error_log($_procedure."unusedTiers: ".      serialize($unusedTiers));
         }
 
         ob_start();
@@ -224,20 +257,15 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     <td class="forminp">
         <fieldset>
             <legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
-            <?php echo $description ?>
-            <i class="fa fa-wordpress"></i>
-            <div class="dd" id="nestable-unused">
-                <ol class="dd-list">
-                    <?php foreach( $unusedTiers as $tier ) { ?>
-                        <li class="dd-item" data-id="<?php echo $tier; ?>">
-                            <div class="dd-handle">
-                                <i class="fa fa-grip"></i>
-                                <?php echo isset($names[$tier])?$names[$tier]:$tier; ?>
-                            </div>
-                        </li>
-                    <?php } ?>
-                </ol>
-            </div>
+            <?php 
+                echo $description_html;
+                $this->output_nestable($tree, $names, 'nestable-used');
+                // $unused_tree = array();
+                // foreach( $unusedTiers as $tier ) {
+                //     $unused_tree[] = array("id" => $tier);
+                // }
+                // $this->output_nestable($unused_tree, $names, 'nestable-unused');
+            ?>
             <input type="" name="<?php echo esc_attr( $data['id'] ); ?>" class="lc_admin_tier_tree" id="<?php echo esc_attr( $data['id'] ); ?>"  style="width:100%; max-width:600px" value="<?php echo esc_attr($option_value) ?>">    
         </fieldset>
     </td>
