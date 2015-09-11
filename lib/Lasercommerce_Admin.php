@@ -45,14 +45,14 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * functionality in the tier tree interface
      */
     public function nestable_init(){
-        $script_loc = plugins_url('js/jquery.nestable.js', dirname(__FILE__));
-        $css_loc = plugins_url('css/nestable.css', dirname(__FILE__));
 
-        wp_register_script( 'jquery-nestable-js', $script_loc, array('jquery'));
-        wp_register_style( 'nestable-css', $css_loc);
+        wp_register_script( 'jquery-nestable-js', plugins_url('js/jquery.nestable.js', dirname(__FILE__)), array('jquery'));
+        wp_register_style( 'nestable-css', plugins_url('css/nestable.css', dirname(__FILE__)));
+        wp_register_style( 'nestable-shaded-handle-css', plugins_url('css/nestable-shaded-handle.css', dirname(__FILE__)));
 
         wp_enqueue_script( 'jquery-nestable-js' );
         wp_enqueue_style( 'nestable-css' );
+        wp_enqueue_style( 'nestable-shaded-handle-css' );
 
         global $wp_styles, $is_IE;
         wp_enqueue_style( 'prefix-font-awesome', '//netdna.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css', array(), '4.4.0' );
@@ -139,8 +139,9 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * @param array $node The node of the tree to be displayed
      * @param array $names The array containing the mapping of roles to tier names
      */
-    public function output_nestable_li($node, $names) { 
+    public function output_nestable_li($node) { 
         if(isset($node['id'])) {
+            error_log("NODE: ".serialize($node));
             $node_id = $node['id'];
             $node_name_id = $node_id."_name";
             $node_major_id = $node_id."_major";
@@ -148,19 +149,27 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             $node_name = isset($node['name'])?$node['name']:$node_id; 
             $node_major = isset($node['major'])?$node['major']:false; 
             ?>
-                <li class="dd-item" data-id="<?php echo $node_id; ?>">
+                <li 
+                    class="dd-item" 
+                    data-id="<?php echo $node_id; ?>" 
+                    data-name="<?php echo $node_name?>" 
+                    <?php if($node_major) echo "data-major" ?>
+                >
                     <div class="dd-handle">
-                        <!--<div class="lc_node_section">
-                            <i class="fa fa-grip"></i>
-                        </div> -->
+                        <!-- <i class="fa fa-grip"></i>
+                        -->
                         <div class="lc_node_section lc_node_id">
                             <h3><?php echo $node_id; ?></h3>
                         </div>
+                    </div>
+                    <div class="dd-content">
                         <div class="lc_node_section lc_node_major">
                             <label for="<?php echo $node_major_id; ?>">Major</label>
                             <input 
                                 id="<?php echo $node_major_id;?>" 
                                 name="<?php echo $node_major_id;?>" 
+                                class="lc_node lc_node_major"
+                                data-updates="major"
                                 type="checkbox" 
                                 <?php if($node_major) echo "checked"; ?>
                             />
@@ -170,7 +179,9 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                             <input 
                                 id="<?php echo $node_name_id;?>" 
                                 name="<?php echo $node_name_id;?>" 
+                                class="lc_node lc_node_name"
                                 type="text"
+                                data-updates="name"
                                 value="<?php echo $node_name; ?>"
                             />
                         </div>
@@ -179,7 +190,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                     ?>
                         <ol class="dd-list">
                             <?php foreach( $node['children'] as $child ) {
-                                $this->output_nestable_li($child, $names); 
+                                $this->output_nestable_li($child); 
                             } ?>
                         </ol>
                     <?php } ?>
@@ -188,22 +199,26 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
     }
 
-    public function output_nestable($tree, $names, $nestable_id){ ?>
-        <div class="dd" id="<?php echo $nestable_id; ?>">
-            <?php if( !empty($tree) ){ 
+    public function output_nestable($id, $tree){ 
+        $nestable_id = $id.'_nestable';
+
+    ?>
+        <div class="dd dd-shaded-handle" id="<?php echo esc_attr($nestable_id); ?>">
+            <?php 
                 echo '<ol class="dd-list">';
                 if($tree) {
                     foreach ($tree as $node) {
-                        $this->output_nestable_li($node, $names);
+                        $this->output_nestable_li($node);
                     }
                 } else {
                     echo '<div id="dd-empty-placeholder"></div>';
                 }
                 echo '</ol>';
-            } else {
-                echo '<div class="dd-empty"></div>';
-            } ?>
+            ?>
         </div>
+        <textarea disabled rows=10 class="tier_tree_field" id="<?php echo esc_attr( $id ); ?>" style="width:100%; max-width:600px;" >
+            <?php //echo esc_attr($option_value) ?>
+        </textarea> 
         <script type="text/javascript">
 ;
 (function ($) {
@@ -214,27 +229,47 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         var updateOutput = function (e){
             var list    = e.length ? e : $(e.target),
                 output  = list.data('output');
+                console.log(output);
             if (window.JSON) {
                 output.val(window.JSON.stringify(list.nestable('serialize')));
             } else {
                 output.val('JSON browser support required');
             }
         };
-        var nestable_wrapper = $('.dd#<?php echo $nestable_id;?>');
-        nestable_wrapper.nestable({
-            group: 1
-        })
-        .on('change', updateOutput);
-
-        updateOutput(nestable_wrapper.data( 
+        var nestable_wrapper = $('.dd#'+<?php echo "'".esc_attr($nestable_id)."'";?>);
+        var field_wrapper = $('.tier_tree_field#'+<?php echo "'".esc_attr( $id )."'"; ?>);
+        // console.log(nestable_wrapper);
+        // console.log(field_wrapper);
+        nestable_wrapper.data( 
             'output',
-            $('.lc_admin_tier_tree')
-        )); 
+            field_wrapper
+        );
+        nestable_wrapper.nestable({
+            // group: 1,
+            // includeContent: true
+        })
+        nestable_wrapper.on('change', updateOutput);
 
+        updateOutput(nestable_wrapper); 
+
+        nestable_wrapper
+        .find('.dd-item input.lc_node')
+        .on('change', function(e){
+            // console.log("e: " + e);
+            var input = e.length ? e : $(e.target)
+            var val = input.val();
+            // console.log("val: " + val);
+            var li = input.parents('.dd-item').first();
+            // console.log("li: " + li);
+            // console.log("li.data('name'): " + li.data('name'));
+            li.data('name', val);
+            updateOutput(li)
+            console.log(li.data('id') + " set to " + li.data('name'));
+        });
     });        
 
 })(jQuery); 
-        </script>
+        </script>        
     <?php }
        
     /**
@@ -255,7 +290,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
 
         global $Lasercommerce_Tier_Tree;
 
-        $names = $Lasercommerce_Tier_Tree->getNames();
+        // $names = $Lasercommerce_Tier_Tree->getNames();
+        // $tree = $Lasercommerce_Tier_Tree->getTierTree($option_value);
         $tree = $Lasercommerce_Tier_Tree->getTierTree();
         // $availableTiers = array_keys($names);
         // $usedTiers = $Lasercommerce_Tier_Tree->getTiers();
@@ -268,15 +304,17 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         if(LASERCOMMERCE_DEBUG) {
             error_log($_procedure."id:".                serialize($data['id']));
             error_log($_procedure."default:".           serialize($data['default']));
-            error_log($_procedure."value:".             serialize($option_value));
             error_log($_procedure."description_html:".  serialize($description_html));
             error_log($_procedure."tooltip_html:".      serialize($tooltip_html));
+            error_log($_procedure."option_value:".      serialize($option_value));
             error_log($_procedure."tree: ".             serialize($tree));
-            error_log($_procedure."names: ".            serialize($names));
+            // error_log($_procedure."names: ".            serialize($names));
             // error_log($_procedure."availableTiers: ".   serialize($availableTiers));
             // error_log($_procedure."usedTiers: ".        serialize($usedTiers));
             // error_log($_procedure."unusedTiers: ".      serialize($unusedTiers));
         }
+
+        $nestable_id = 'nestable-used';
 
         ob_start();
 ?>
@@ -290,14 +328,14 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             <legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
             <?php 
                 echo $description_html;
-                $this->output_nestable($tree, $names, 'nestable-used');
+                $this->output_nestable('lc_tier_tree', $tree);
                 // $unused_tree = array();
                 // foreach( $unusedTiers as $tier ) {
                 //     $unused_tree[] = array("id" => $tier);
                 // }
                 // $this->output_nestable($unused_tree, $names, 'nestable-unused');
             ?>
-            <input type="" name="<?php echo esc_attr( $data['id'] ); ?>" class="lc_admin_tier_tree" id="<?php echo esc_attr( $data['id'] ); ?>"  style="width:100%; max-width:600px" value="<?php echo esc_attr($option_value) ?>">    
+ 
         </fieldset>
     </td>
 </tr>

@@ -42,12 +42,12 @@ class Lasercommerce_Tier_Tree {
      *
      * @return array tier_tree The tree of price tiers
      */
-    public function getTierTree(){
+    public function getTierTree($json_string = ''){
         //If(WP_DEBUG) error_log("Getting Tier Tree");
         //todo: this
 
         //$json_string = '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]';
-        $json_string = get_option($this->optionNamePrefix.'price_tiers');
+        if(!$json_string) $json_string = get_option($this->optionNamePrefix.'price_tiers');
         //If(WP_DEBUG) error_log("-> JSON string: $json_string");
 
         $tierTree = json_decode($json_string, true);

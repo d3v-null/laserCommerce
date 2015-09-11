@@ -1,0 +1,86 @@
+.dd-shaded-handle .dd-content{
+    display: block;
+    height: 30px;
+    margin: 5px 0;
+    padding: 5px 10px 5px 40px;
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    background: -webkit-linear-gradient(top, #fafafa 0%, #eee 100%);
+    background: -moz-linear-gradient(top, #fafafa 0%, #eee 100%);
+    background: linear-gradient(top, #fafafa 0%, #eee 100%);
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;    
+}
+
+.dd-shaded-handle .dd-content:hover{
+    color: #2ea8e5;
+    background: #fff;
+}
+
+/*.dd-shaded-handle .dd-item > button {
+    margin-left: 30px;
+}*/
+
+.dd-shaded-handle .dd-handle{
+    position: absolute;
+    margin: 0;
+    left: 0;
+    top: 0;
+    cursor: pointer;
+    /*width: 30px;*/
+    /*text-indent: 0%;*/
+    /*white-space: nowrap;*/
+    /*overflow: hidden;*/
+    border: 1px solid #aaa;
+    background: #ddd;
+    background: -webkit-linear-gradient(top, #ddd 0%, #bbb 100%);
+    background: -moz-linear-gradient(top, #ddd 0%, #bbb 100%);
+    background: linear-gradient(top, #ddd 0%, #bbb 100%);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dd-shaded-handle .dd-handle:before {
+    content: "\f142 \202F \f142 \202F \f142";
+    font-family: FontAwesome;
+    /*display: block;*/
+    /*position: absolute;*/
+    /*left: 0;*/
+    /*top: 3px;*/
+    width: 100%;
+    text-align: center;
+    text-indent: 0;
+    /*color: #fff;*/
+    font-size: 20px;
+    font-weight: normal;
+}
+
+.dd-shaded-handle .dd-handle:hover {
+    background: #ddd;
+}
+
+.dd-shaded-handle .dd-item .lc_node_section {
+    display: block;
+    height: 100%;
+    float: right;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    vertical-align: middle;
+}
+
+.dd-shaded-handle .dd-item .lc_node_section * {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    /*vertical-align: middle;*/
+}
