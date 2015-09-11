@@ -201,6 +201,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
 
     public function output_nestable($id, $tree){ 
         $nestable_id = $id.'_nestable';
+        $trash_id = $id.'_trash';
 
     ?>
         <div class="dd dd-shaded-handle" id="<?php echo esc_attr($nestable_id); ?>">
@@ -216,6 +217,11 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 echo '</ol>';
             ?>
         </div>
+        <p><?php _e('Trash', LASERCOMMERCE_DOMAIN); ?></p>
+        <div class="dd dd-shaded-handle" id="<?php echo esc_attr($trash_id); ?>">
+            <div class="dd-empty"></div>
+        </div>
+
         <textarea disabled rows=10 class="tier_tree_field" id="<?php echo esc_attr( $id ); ?>" style="width:100%; max-width:600px;" >
             <?php //echo esc_attr($option_value) ?>
         </textarea> 
@@ -226,46 +232,74 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     {
 
         console.log("calling nestable");
-        var updateOutput = function (e){
-            var list    = e.length ? e : $(e.target),
-                output  = list.data('output');
-                console.log(output);
-            if (window.JSON) {
-                output.val(window.JSON.stringify(list.nestable('serialize')));
-            } else {
-                output.val('JSON browser support required');
-            }
-        };
+
         var nestable_wrapper = $('.dd#'+<?php echo "'".esc_attr($nestable_id)."'";?>);
         var field_wrapper = $('.tier_tree_field#'+<?php echo "'".esc_attr( $id )."'"; ?>);
-        // console.log(nestable_wrapper);
-        // console.log(field_wrapper);
-        nestable_wrapper.data( 
-            'output',
-            field_wrapper
-        );
+        var trash_wrapper = $('.dd#'+<?php echo "'".esc_attr($trash_id)."'";?>);
+
+        var updateOutput = function(l, e){
+            console.log("output closure called");
+            var output = l.data('output');
+            console.log("output");
+            console.log(output);
+            if(output === undefined) return;
+            if (window.JSON) {
+                output.val(window.JSON.stringify(l.nestable('serialize')));
+            } else {
+                output.val('JSON browser support required');
+            }   
+        }
+
+        // var updateField = (function(output){                
+        //     return function (l, e){
+        //         console.log("output closure called");
+        //         console.log(this);
+        //         console.log(l);
+        //         console.log(e);
+        //         if (window.JSON) {
+        //             output.val(window.JSON.stringify(l.nestable('serialize')));
+        //         } else {
+        //             output.val('JSON browser support required');
+        //         }            
+        //     }
+        // })(field_wrapper);
+
         nestable_wrapper.nestable({
-            // group: 1,
-            // includeContent: true
+            group: 1,
+            callback: updateOutput,
         })
-        nestable_wrapper.on('change', updateOutput);
 
-        updateOutput(nestable_wrapper); 
+        trash_wrapper.nestable({
+            group: 1,
+        })
 
+        nestable_wrapper.data('output', field_wrapper);
+
+        nestable_obj = nestable_wrapper.data('nestable');
+        nestable_obj.options.callback.call(nestable_obj, nestable_obj.el)
+
+        //code for updating the output when a user changes an input
         nestable_wrapper
         .find('.dd-item input.lc_node')
-        .on('change', function(e){
-            // console.log("e: " + e);
-            var input = e.length ? e : $(e.target)
-            var val = input.val();
-            // console.log("val: " + val);
-            var li = input.parents('.dd-item').first();
-            // console.log("li: " + li);
-            // console.log("li.data('name'): " + li.data('name'));
-            li.data('name', val);
-            updateOutput(li)
-            console.log(li.data('id') + " set to " + li.data('name'));
-        });
+        .on(
+            'change', 
+            (function(nestable_wrapper){    
+                return function(e){
+                    var input = e.length ? e : $(e.target)
+                    var val = input.val();
+                    var li = input.parents('.dd-item').first();
+                    var updates = input.data('updates');
+
+                    if(val && updates){
+                        li.data(updates, val);
+                    }
+                    console.log(li.data('id') + " set " + updates + " to " + li.data(updates));
+
+                    nestable_obj = nestable_wrapper.data('nestable');
+                    nestable_obj.options.callback.call(nestable_obj, nestable_obj.el, this)
+                };
+            })(nestable_wrapper)
+        )
     });        
 
 })(jQuery); 
