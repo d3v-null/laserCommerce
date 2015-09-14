@@ -44,6 +44,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     public $_class = "LC_";
 
+    public $tier_tree_key = 'tier_tree';
+    public $tier_key_key = 'tier_key';
+
     /**
      * See: http://plugin.michael-simpson.com/?page_id=31
      * @return array of option meta data.

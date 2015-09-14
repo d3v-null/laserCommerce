@@ -29,15 +29,37 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         add_action( 'woocommerce_get_settings_' . $this->id, array( &$this, 'add_settings'), 10, 2);
 
         add_action( 'woocommerce_admin_field_tier_tree', array( $this, 'admin_field_tier_tree' ) );
+
+        add_action('woocommerce_update_option', array(&$this, 'update_option_tier_tree'));
+
+        $tier_tree_option_name = $this->prefix_option($this->get_tier_tree_key());
+        add_filter( 'woocommerce_admin_settings_sanitize_option_'.$tier_tree_option_name, array(&$this, 'sanitize_option_tier_tree'), 10, 3 );
         // add_action( 'woocommerce_update_option_tier_tree', array( $this, 'tier_tree_save' ) );
     }   
 
     public function get_option( $option_name, $default ){
         return $this->plugin->getOption( $option_name, $default );
+        // return WC_Admin_Settings::get_option( $option_name, $default );
     }
 
     public function set_option( $option_name, $option_value ){
         return $this->plugin->updateOption( $option_name, $default );
+    }
+    
+    public function prefix_option( $option_name ){
+        return $this->plugin->prefix( $option_name );
+    }    
+
+    public function unprefix_option( $option_name ){
+        return $this->plugin->unPrefix( $option_name );
+    }
+
+    public function get_tier_key_key(){
+        return $this->plugin->tier_key_key;
+    }
+
+    public function get_tier_tree_key(){
+        return $this->plugin->tier_tree_key;
     }
 
     /**
@@ -99,14 +121,14 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 'name'  => 'Tier Key',
                 'description' => __('They usermeta key that determines a users tier', LASERCOMMERCE_DOMAIN),
                 'type'  => 'text',
-                'id'    => 'tier_key'
+                'id'    => $this->prefix_option($this->get_tier_key_key())
             );
             $settings[] = array(
                 'name'  => 'Tier Tree',
                 'type'  => 'tier_tree',
                 'description'   => __('Drag classes to here from "Available User Roles"', LASERCOMMERCE_DOMAIN),
-                'id'    => 'tier_tree',
-                'default' => '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]'
+                'id'    => $this->prefix_option($this->get_tier_tree_key()),
+                'default' => '[{"major":"","name":"Normal Wholesale","id":"wn","children":[{"major":"","name":"Preferred Wholesale","id":"wp"}]}]'
             );
             $settings[] = array(
                 'type' => 'sectionend',
@@ -131,73 +153,6 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     //         WC_Admin_Settings::output_fields($settings );
     //     }
     // }
-
-    /**
-     * Used by tier_tree_setting to recursively output the html for nestable fields 
-     * this is the drag and drop field used in the configuration of the price tier
-     * 
-     * @param array $node The node of the tree to be displayed
-     * @param array $names The array containing the mapping of roles to tier names
-     */
-    public function output_nestable_li($node) { 
-        if(isset($node['id'])) {
-            error_log("NODE: ".serialize($node));
-            $node_id = $node['id'];
-            $node_name_id = $node_id."_name";
-            $node_major_id = $node_id."_major";
-            // $node_name = isset($names[$node_id])?$names[$node_id]:$node_id; 
-            $node_name = isset($node['name'])?$node['name']:$node_id; 
-            $node_major = isset($node['major'])?$node['major']:false; 
-            ?>
-<li 
-    class="dd-item" 
-    data-id="<?php echo $node_id; ?>" 
-    data-name="<?php echo $node_name?>" 
-    <?php if($node_major) echo "data-major" ?>
->
-    <div class="dd-handle">
-        <!-- <i class="fa fa-grip"></i>
-        -->
-        <div class="lc_node_section lc_node_id">
-            <h3><?php echo $node_id; ?></h3>
-        </div>
-    </div>
-    <div class="dd-content">
-        <div class="lc_node_section lc_node_major">
-            <label for="<?php echo $node_major_id; ?>">Major</label>
-            <input 
-                id="<?php echo $node_major_id;?>" 
-                name="<?php echo $node_major_id;?>" 
-                class="lc_node lc_node_major"
-                data-updates="major"
-                type="checkbox" 
-                <?php if($node_major) echo "checked"; ?>
-            />
-        </div>
-        <div class="lc_node_section lc_node_name">
-            <label for="<?php echo $node_name_id;?>">Name</label>
-            <input 
-                id="<?php echo $node_name_id;?>" 
-                name="<?php echo $node_name_id;?>" 
-                class="lc_node lc_node_name"
-                type="text"
-                data-updates="name"
-                value="<?php echo $node_name; ?>"
-            />
-        </div>
-    </div>
-    <?php if(isset($node['children'])) { 
-    ?>
-        <ol class="dd-list">
-            <?php foreach( $node['children'] as $child ) {
-                $this->output_nestable_li($child); 
-            } ?>
-        </ol>
-    <?php } ?>
-</li>
-            <?php 
-        }
-    }
 
     public function output_nestable($id, $json){ 
         $nestable_id = $id.'_nestable';
@@ -229,9 +184,11 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             <div class="dd-empty"></div>
         </div>
 
-        <textarea 
+        <textarea
             class="tier_tree_field" 
+            type="text"
             id="<?php echo esc_attr( $id ); ?>" 
+            name="<?php echo esc_attr( $id ); ?>" 
             <?php if(LASERCOMMERCE_DEBUG) {
                 echo 'style="width:100%; max-width:600px;" ';
                 echo 'rows=10 ';
@@ -239,7 +196,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 echo 'style="display:hidden"';
             } ?>
         >
-            <?php //echo esc_attr($option_value) ?>
+            <?php echo wp_kses_data($json) ?>
         </textarea> 
         <script type="text/javascript">
 ;
@@ -315,22 +272,24 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             if (item.children) {
 
                 html += "<ol class='dd-list'>";
-                $.each(item.children, function (index, sub) {
-                    html += buildItem(sub);
-                });
+                $.each(
+                    item.children, 
+                    function (index, sub) {
+                        html += buildItem(sub);
+                    }
+                );
                 html += "</ol>";
-
             }
-
             html += "</li>";
 
             return html;
         }
 
-        var output = "";
+        var output = '<ol class="dd-list">';
         $.each(JSON.parse(nestable_json), function (index, item) {
             output += buildItem(item);
         });
+        output += '</ol>';
         nestable_wrapper.html(output);
 
         nestable_wrapper.nestable({
@@ -363,7 +322,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                         if(!val) val = "";
                         li.data(updates, val);
                     }
-                    console.log(li.data('id') + " set " + updates + " to " + li.data(updates));
+                    // console.log(li.data('id') + " set " + updates + " to " + li.data(updates));
 
                     nestable_obj = nestable_wrapper.data('nestable');
                     nestable_obj.options.callback.call(nestable_obj, nestable_obj.el, this)
@@ -383,7 +342,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     public function admin_field_tier_tree( $data ) {
         $_procedure = $this->_class."GEN_TT_HTML: ";
 
-        $option_value = $this->get_option($data['id'], $data['default']);
+        $option_value = $this->get_option($this->unprefix_option($data['id']), $data['default']);
         $field_description = WC_Admin_Settings::get_field_description( array(
             'desc' => $data['description'],
             'desc_tip' => '',
@@ -392,11 +351,11 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         $description_html = $field_description['description'];
         $tooltip_html = $field_description['tooltip_html'];
 
-        global $Lasercommerce_Tier_Tree;
+        // global $Lasercommerce_Tier_Tree;
 
         // $names = $Lasercommerce_Tier_Tree->getNames();
         // $tree = $Lasercommerce_Tier_Tree->getTierTree($option_value);
-        $tree = $Lasercommerce_Tier_Tree->getTierTree();
+        // $tree = $Lasercommerce_Tier_Tree->getTierTree();
         // $availableTiers = array_keys($names);
         // $usedTiers = $Lasercommerce_Tier_Tree->getTiers();
         // if(!$usedTiers){
@@ -411,7 +370,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             error_log($_procedure."description_html:".  serialize($description_html));
             error_log($_procedure."tooltip_html:".      serialize($tooltip_html));
             error_log($_procedure."option_value:".      serialize($option_value));
-            error_log($_procedure."tree: ".             serialize($tree));
+            // error_log($_procedure."tree: ".             serialize($tree));
             // error_log($_procedure."names: ".            serialize($names));
             // error_log($_procedure."availableTiers: ".   serialize($availableTiers));
             // error_log($_procedure."usedTiers: ".        serialize($usedTiers));
@@ -432,7 +391,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             <legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
             <?php 
                 echo $description_html;
-                $this->output_nestable('lc_tier_tree', $option_value);
+                $this->output_nestable($data['id'], $option_value);
                 // $unused_tree = array();
                 // foreach( $unusedTiers as $tier ) {
                 //     $unused_tree[] = array("id" => $tier);
@@ -454,9 +413,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
      * @param array $field The array specifying the field being saved
      */
     public function tier_tree_save( $field ){
-        // if(WP_DEBUG) error_log('updating price tier! field: '.serialize($field).' POST '.serialize($_POST));
+        $_procedure = $this->_class."TT_SAVE: ";
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure.'updating price tier! field: '.serialize($field).' POST '.serialize($_POST));
         if( isset( $_POST[ $field['id']]) ){
-            if(WP_DEBUG) error_log('updating option '.$field['id'].' as '.$_POST[$field['id']]);
+            if(LASERCOMMERCE_DEBUG) error_log($_procedure.'updating option '.$field['id'].' as '.$_POST[$field['id']]);
             $this->set_option( $field['id'], $_POST[$field['id']]);
         }
     }
@@ -467,17 +427,34 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         //todo: this
     }
 
+    public function sanitize_option_tier_tree($value, $option, $raw_value) {
+        $_procedure = $this->_class."SANITIZE_OPTION_TT: ";
+        error_log($_procedure."POST: ".serialize($_POST));
+        error_log($_procedure."value: ".serialize($value));
+        error_log($_procedure."option: ".serialize($option));
+        error_log($_procedure."raw_value: ".serialize($raw_value));
+        return sanitize_text_field($value);
+    }
+
+    public function update_option_tier_tree ($option){
+        $_procedure = $this->_class."UPDATE_OPTION_TT: ";
+        if ( $option['id'] == $this->prefix_option($this->get_tier_tree_key()) ){
+            error_log($_procedure."updating option tier tree");
+            error_log($_procedure."option: ".serialize($option));
+        }
+    }
+
     /**
      * Used by WC_Settings API to save all of the fields in the current section
       */
-    public function save() {
-        global $current_section;
+    // public function save() {
+    //     global $current_section;
         
-        if( !$current_section ) {
-            $settings = $this->get_settings();
+    //     if( !$current_section ) {
+    //         $settings = $this->get_settings();
             
-            WC_Admin_Settings::save_fields( $settings );
-        }
-    }
+    //         WC_Admin_Settings::save_fields( $settings );
+    //     }
+    // }
 }
 ?>

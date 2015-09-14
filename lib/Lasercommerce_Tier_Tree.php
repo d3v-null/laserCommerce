@@ -10,12 +10,36 @@ class Lasercommerce_Tier_Tree {
 
     /**
      * Constructs the helper object
-     * @param $optionNamePrefix The prefix used to find price tier options
      */
-    public function __construct($optionNamePrefix = 'lc_') {
-        $this->optionNamePrefix = $optionNamePrefix;
+    public function __construct() {
+        global $Lasercommerce_Plugin;
+        $this->plugin = $Lasercommerce_Plugin;
     }
+
+    public function prefix_option($option){
+        return $this->plugin->prefix($option);
+    }
+
+    public function unprefix_option( $option_name ){
+        return $this->plugin->unPrefix( $option_name );
+    }    
     
+    public function get_tier_key_key(){
+        return $this->plugin->tier_key_key;
+    }
+
+    public function get_tier_tree_key(){
+        return $this->plugin->tier_tree_key;
+    }
+
+    public function get_option( $option_name, $default ){
+        return $this->plugin->getOption( $option_name, $default );
+    }    
+
+    public function set_option( $option_name, $option_value ){
+        return $this->plugin->updateOption( $option_name, $default );
+    }    
+
     /**
      * (Depreciated!) Gets the price of a given post for a given role
      * 
@@ -24,7 +48,7 @@ class Lasercommerce_Tier_Tree {
      * @return string price
      */
     public function getPrice( $postID, $role ){
-        return get_post_meta( $postID, $this->optionNamePrefix.$role.'_price', true);
+        return get_post_meta( $postID, $this->prefix_option($role.'_price'), true);
     }
 
     /**
@@ -46,8 +70,7 @@ class Lasercommerce_Tier_Tree {
         //If(WP_DEBUG) error_log("Getting Tier Tree");
         //todo: this
 
-        //$json_string = '[{"id":"special_customer","children":[{"id":"wholesale_buyer","children":[{"id":"distributor","children":[{"id":"international_distributor"}]},{"id":"mobile_operator"},{"id":"gym_owner"},{"id":"salon"},{"id":"home_studio"}]}]}]';
-        if(!$json_string) $json_string = get_option($this->optionNamePrefix.'price_tiers');
+        if(!$json_string) $json_string = get_option($this->prefix_option('price_tiers'));
         //If(WP_DEBUG) error_log("-> JSON string: $json_string");
 
         $tierTree = json_decode($json_string, true);
