@@ -49,7 +49,7 @@ function Lasercommerce_init($file) {
         $Lasercommerce_Plugin->upgrade();
     }
 
-    // Add callbacks to hooks
+    $Lasercommerce_Plugin->initTree();
     $Lasercommerce_Plugin->addActionsAndFilters();
 
 

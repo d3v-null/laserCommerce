@@ -47,6 +47,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public $tier_tree_key = 'tier_tree';
     public $tier_key_key = 'tier_key';
 
+    public function initTree(){
+        global $Lasercommerce_Tier_Tree;
+        if( !isset($Lasercommerce_Tier_Tree) ) {
+            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
+        }     
+        $this->tree = $Lasercommerce_Tier_Tree;
+    }
+
     /**
      * See: http://plugin.michael-simpson.com/?page_id=31
      * @return array of option meta data.
@@ -164,9 +172,43 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         trigger_error("Deprecated function called: getCurrentUserRoles", E_USER_NOTICE);
     }    
 
+    /**
+     * Gets the postID of a given simple or variable product
+     *
+     * @param WC_Product $_product the product to be analysed
+     * @return integer $postID The postID of the simple or variable product
+     */ 
+    public function getProductPostID( $_product = null ){
+        $_procedure = $this->_class."GET_PRODUCT_POST_ID: ";
+
+        if(!isset($_product) or !$_product) {
+            global $product;
+            if(!isset($product) or !$product){
+                if(LASERCOMMERCE_DEBUG) error_log($_procedure."product global not set");
+                return Null;
+            } else {
+                $_product = $product;
+            }
+        }
+        if( $_product->is_type( 'variation' ) ){
+            if ( isset( $_product->variation_id ) ) {
+                $postID = $_product->variation_id;
+            } else {
+                if(LASERCOMMERCE_DEBUG) error_log($_procedure."variation not set");
+                $postID = Null;
+            }
+        } else {
+            if(isset( $_product->id )){
+                $postID = $_product->id;
+            } else {
+                $podtID = Null;
+            }
+        }
+        return $postID;
+    }
+
     public function getMajorTiers(){
-        global $Lasercommerce_Tier_Tree;
-        return $Lasercommerce_Tier_Tree->getMajorTiers();
+        return $this->tree->getMajorTiers();
     }
 
     public function isWCStarPrice($star='', $price='', $_product=''){
@@ -177,7 +219,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         global $Lasercommerce_Tier_Tree;
-        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );
+        $postID = $this->getProductPostID( $_product );
         $value = false;
         if($_product and isset($postID)){
             switch ($star) {
@@ -216,17 +258,15 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         if($_product) {
-            global $Lasercommerce_Tier_Tree;
+            $visibleTiers = $this->tree->getVisibleTiers();
+            array_push($visibleTiers, array('id'=>'')); 
+            $visibleTierIDs = $this->tree->getIDs($visibleTiers);
             
-            $visibleTiers = $Lasercommerce_Tier_Tree->getAvailableTiers();
-            
-            array_push($visibleTiers, ''); 
-            
-            $id = $Lasercommerce_Tier_Tree->getPostID( $_product );
+            $product_id = $this->getProductPostID( $_product );
 
             $pricings = array();
-            foreach ($visibleTiers as $tier) {
-                $pricing = new Lasercommerce_Pricing($id, $tier);
+            if(is_array($visibleTierIDs)) foreach ($visibleTierIDs as $tier) {
+                $pricing = new Lasercommerce_Pricing($product_id, $tier);
                 if($pricing->regular_price){
                     $pricings[$tier] = $pricing;
                 }
@@ -263,8 +303,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace .= $_procedure; 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
-        global $Lasercommerce_Tier_Tree;
-        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );  
+        $postID = $this->getProductPostID( $_product );  
 
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."I: $postID S:".serialize($_product->get_sku()));
 
@@ -370,8 +409,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace .= $_procedure; 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
-        global $Lasercommerce_Tier_Tree;
-        $postID = $Lasercommerce_Tier_Tree->getPostID( $_product );   
+        $postID = $this->getProductPostID( $_product );   
 
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p: $price I: $postID S:".(string)($_product->get_sku()));
         //only override if it is a WC price
@@ -496,11 +534,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         //TODO: WHAT IF max_price_id is not the same as max_regular_price_id???
 
         // OMNISCIENT OVERRIDE BEGIN
-        global $Lasercommerce_Tier_Tree;
-        $omniscient_roles = $Lasercommerce_Tier_Tree->getOmniscientRoles();
-        global $Lasercommerce_Roles_Override;
-        $old_override = $Lasercommerce_Roles_Override;
-        $Lasercommerce_Roles_Override = $omniscient_roles;
+        $omniscient_tiers = $this->tree->getOmniscientTiers();
+        global $Lasercommerce_Tiers_Override;
+        $old_override = $Lasercommerce_Tiers_Override;
+        $Lasercommerce_Tiers_Override = $omniscient_tiers;
 
         $_product = wc_get_product($product_id);
 
@@ -534,7 +571,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             // update_post_meta($product_id, '_price', $min_pricing->maybe_get_current_price());
         }
 
-        $Lasercommerce_Roles_Override = $old_override;
+        $Lasercommerce_Tiers_Override = $old_override;
         // OMNISCIENT OVERRIDE END
 
         // TODO: Maybe set _price
@@ -600,11 +637,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");  
         
         //helper class for tier tree functions    
-        global $Lasercommerce_Tier_Tree;
-        if( !isset($Lasercommerce_Tier_Tree) ) {
-            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
-        }     
-        $this->maybeAddSaveTierFields( $Lasercommerce_Tier_Tree->getTiers(), $Lasercommerce_Tier_Tree->getNames() );
+
+        $this->maybeAddSaveTierFields( $this->tree->getTiers() );
 
         
         //Price / Display filters:
@@ -732,7 +766,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     // public function maybeAvailableVariationPreBundle($variation_data, $_product, $_variation ){
     //     global $Lasercommerce_Tier_Tree;
-    //     $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
+    //     $variation_id = $Lasercommerce_Tier_Tree->getProductPostID( $_variation );
 
     //     $this->constructCleverRuse($variation_id, $this->maybeGetPrice($_variation->price, $_variation));
     //     return $variation_data;
@@ -740,7 +774,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     // public function maybeAvailableVariationPostBundle($variation_data, $_product, $_variation ){
     //     global $Lasercommerce_Tier_Tree;
-    //     $variation_id = $Lasercommerce_Tier_Tree->getPostID( $_variation );
+    //     $variation_id = $Lasercommerce_Tier_Tree->getProductPostID( $_variation );
 
     //     $this->destructCleverRuse($variation_id);
     //     return $variation_data;
