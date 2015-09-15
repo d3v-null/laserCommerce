@@ -46,6 +46,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     public $tier_tree_key = 'tier_tree';
     public $tier_key_key = 'tier_key';
+    public $default_tier_key = 'default_tier';
 
     public function initTree(){
         global $Lasercommerce_Tier_Tree;
@@ -208,7 +209,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function getMajorTiers(){
-        return $this->tree->getMajorTiers();
+        trigger_error("Deprecated function called: getMajorTiers", E_USER_NOTICE);
     }
 
     public function isWCStarPrice($star='', $price='', $_product=''){
@@ -218,7 +219,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace .= $_procedure; 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
-        global $Lasercommerce_Tier_Tree;
         $postID = $this->getProductPostID( $_product );
         $value = false;
         if($_product and isset($postID)){
@@ -259,16 +259,15 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         if($_product) {
             $visibleTiers = $this->tree->getVisibleTiers();
-            array_push($visibleTiers, array('id'=>'')); 
-            $visibleTierIDs = $this->tree->getIDs($visibleTiers);
+            array_push($visibleTiers, new Lasercommerce_Tier('') ); 
             
             $product_id = $this->getProductPostID( $_product );
 
             $pricings = array();
-            if(is_array($visibleTierIDs)) foreach ($visibleTierIDs as $tier) {
-                $pricing = new Lasercommerce_Pricing($product_id, $tier);
+            if(is_array($visibleTiers)) foreach ($visibleTiers as $tier) {
+                $pricing = new Lasercommerce_Pricing($product_id, $tier->id);
                 if($pricing->regular_price){
-                    $pricings[$tier] = $pricing;
+                    $pricings[$tier->id] = $pricing;
                 }
             }
 
@@ -637,8 +636,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");  
         
         //helper class for tier tree functions    
-
-        $this->maybeAddSaveTierFields( $this->tree->getTiers() );
 
         
         //Price / Display filters:

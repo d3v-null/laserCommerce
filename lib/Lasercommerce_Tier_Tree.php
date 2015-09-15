@@ -1,5 +1,7 @@
 <?php
 
+include_once('Lasercommerce_Tier.php');
+
 /**
  * helper class for dealing with price tier tree
  */
@@ -52,7 +54,7 @@ class Lasercommerce_Tier_Tree {
 
     public function getOmniscientTiers(){
         //TODO: This
-        return array('administrator');
+        return array(new Lasercommerce_Tier('ADMIN'));
     }
     
     /**
@@ -79,7 +81,7 @@ class Lasercommerce_Tier_Tree {
     }
     
     /**
-     * Used by getTiers to geta flattened version of the Tree
+     * Used by getTreeTiers to geta flattened version of the Tree
      * 
      * @param array $node an array containing the node to be flattened recursively
      * @return the tiers contained within $node
@@ -94,7 +96,8 @@ class Lasercommerce_Tier_Tree {
 
         if( !isset($node['id']) ) return array();
 
-        $tiers = array( $node );
+        $tiers = array( new Lasercommerce_Tier($node['id'], $node['name'], $node['major']) );
+
         if( isset($node['children'] ) ){
             foreach( $node['children'] as $child ){
                 if(LASERCOMMERCE_DEBUG) error_log($_procedure."child: ".serialize($child));
@@ -107,7 +110,7 @@ class Lasercommerce_Tier_Tree {
         return $tiers;
     }
 
-    public function getTiers(){
+    public function getTreeTiers(){
         $_procedure = $this->_class."GET_TIERS: ";
         $tree = $this->getTierTree();
         $tiers = array();
@@ -117,27 +120,63 @@ class Lasercommerce_Tier_Tree {
         return $tiers;
     }
 
-    public function getIDs($tiers){
+    public function getTier($tierID){
+        $tiers = $this->getTreeTiers();
+        foreach ($tiers as $tier) {
+            if($tierID === $tier->id){
+                return $tier;
+            }
+        }
+    }    
+
+    public function getTierID($tier){
+        return $tier->id;
+        // if(isset($tier['id'])){
+        //     return $tier['id'];
+        // } else {
+        //     return null;
+        // }
+    }
+
+    public function getTierName($tier){
+        return $tier->name;
+        // if(isset($tier['name'])){
+        //     return $tier['name'];
+        // } else {
+        //     return $this->getTierID($tier);
+        // }
+    }
+
+    public function getTierIDs($tiers){
         $tierIDs = array();
         if(is_array($tiers)) foreach ($tiers as $tier) {
-            if(isset($tier['id'])){
-                $tierIDs[] = $tier['id'];
-            }
+            $tierID = $this->getTierID($tier);
+            if($tierID) $tierIDs[] = $tierID;
         }
         return $tierIDs;
     }    
 
+    public function getTiers($tierIDs){
+        $tiers = array();
+        if(is_array($tierIDs)) foreach ($tierIDs as $tierID) {
+            $tier = $this->getTier($tierID);
+            if($tier) $tiers[] = $tier;
+        }
+        return $tiers;
+    }
+
     /**
-     * Gets a list of all the tier IDs in the Tree
+     * Gets a list of all the tier IDs in the provided list of tiers.
+     * if no list provided, get list of all ids in the Tree
      *
      * @return array tiers A list or tiers in the tree
      */
-    public function getTierIDs(){
-        return $this->getIDs($this->getTiers());
+    public function getTreeTierIDs(){
+        return $this->getTierIDs($this->getTreeTiers());
     }  
 
     public function getActiveTiers(){
-        trigger_error("Deprecated function called: getActiveTiers, use getTiers instead", E_USER_NOTICE);;
+        trigger_error("Deprecated function called: getActiveTiers, use getTreeTiers instead", E_USER_NOTICE);;
     }
 
     private function filterRolesRecursive($node, $roles){
@@ -168,7 +207,7 @@ class Lasercommerce_Tier_Tree {
         // IF(WP_DEBUG) error_log("-> good node: ".in_array( $node['id'], $tiers ));
         // IF(WP_DEBUG) error_log("-> good children: ".!empty($tiers));
         
-        if(!empty($visibleTiers) or in_array( $node['id'], $this->getIDs($visibleTiers) )){
+        if(!empty($visibleTiers) or in_array( $node['id'], $this->getTierIDs($visibleTiers) )){
             // IF(WP_DEBUG) error_log("--> adding role: ".$node['id'] );
             $visibleTiers[] = $node;
         }
@@ -179,15 +218,16 @@ class Lasercommerce_Tier_Tree {
     public function getAvailableTiers($user = Null){
         trigger_error("Deprecated function called: getAvailableTiers, use getVisibleTiers instead", E_USER_NOTICE);;
     }
+
+    public function parseUserTierString($string){
+        if($string and is_string($string)){
+            return explode('|', $string);
+        } else {
+            return array();
+        }
+    }
     
-    /**
-     * Gets a list of the price tiers available to a user
-     *
-     * @param array $user a user or userID
-     * @return array $available_tiers the list of price tiers available to the user
-     */
-    public function getVisibleTiers($user = Null){
-        $_procedure = $this->_class."GET_AVAILABLE_TIERS: ";
+    public function getUserTiers($user = Null){
         global $Lasercommerce_Tiers_Override;
         if(isset($Lasercommerce_Tiers_Override) and is_array($Lasercommerce_Tiers_Override)){
             if(LASERCOMMERCE_PRICE_DEBUG) {
@@ -198,40 +238,57 @@ class Lasercommerce_Tier_Tree {
             }
             $tiers = $Lasercommerce_Tiers_Override;
         } else {
-            if(!$user){
-                $user = wp_get_current_user();
-            } elseif(is_numeric($user)){
-                $user = get_user_by('id', $user);
+            if(is_numeric($user)){
+                // $user = get_user_by('id', $user);
+                $user_id = $user;
             } else {
-                // assert( $user instanceof WP_User);
+                if(!$user){
+                    $user = wp_get_current_user();
+                } 
+                $user_id = $user->ID;
             }
-            // if(LASERCOMMERCE_DEBUG) error_log("-> user: ".$current_user->ID);
-            if(isset($user->roles)){
-                $roles = $user->roles;
-            } else {
-                if(LASERCOMMERCE_DEBUG) error_log($_procedure."called with bad user");
-                $roles = array();
-            }
-        }
-        // if(LASERCOMMERCE_DEBUG and PRICE_DEBUG) error_log("--> roles: ".serialize($roles));
 
-        $tree = $this->getTierTree();
-        if(empty($roles)) return array();
-        $omniscient = $this->getOmniscientRoles();
-        $tierIDs = $this->getTierIDs();
-        foreach ($roles as $role) {
-            if (in_array($role, $omniscient) ){
-                $roles = $tierIDs;
+            $tier_key = $this->plugin->getOption($this->plugin->tier_key_key);
+            $user_tier_string = get_user_meta($user_id, $tier_key, true);
+            $tierIDs = $this->parseUserTierString($user_tier_string);
+            $tiers = $this->getTiers($tierIDs);
+        }        
+        return $tiers;
+    }
+
+    /**
+     * Gets a list of the price tiers available to a user
+     *
+     * @param array $user a user or userID
+     * @return array $available_tiers the list of price tiers available to the user
+     */
+    public function getVisibleTiers($user = Null){
+        $_procedure = $this->_class."GET_AVAILABLE_TIERS: ";
+
+        $tiers = $this->getUserTiers($user);
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."tiers: ".serialize($tiers));
+        if(empty($tiers)) {
+            return array();
+        }
+
+        $omniscientTiers = $this->getOmniscientTiers();
+        $omniscientTierIDs = $this->getIDs($omniscientTiers);
+        $treeTiers = $this->getTreeTiers();
+        foreach ($tiers as $tier) {
+            if(in_array($tier->id, $omniscientTierIDs)){
+                $tiers = $treeTiers;
                 break;
             }
         }
+
+        $tree = $this->getTierTree();
         $visibleTiers = array();
         foreach( $tree as $node ){
-            foreach($this->filterTiersRecursive($node, $roles) as $role){
-                $visibleTiers[] = $role;
-            }
+            array_merge($visibleTiers, $this->filterTiersRecursive($node, $tiers));
         }
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."visibleTiers: ".serialize($visibleTiers));
+
+        //is this necessary any more??
         return array_reverse($visibleTiers);
     }
 
@@ -241,7 +298,7 @@ class Lasercommerce_Tier_Tree {
 
 
     public function getMajorTiers($tiers = null){
-        if(!$tiers) $tiers = $this->getTiers();
+        if(!$tiers) $tiers = $this->getTreeTiers();
         $majorTiers = array();
         if(is_array($tiers)) foreach ($tiers as $tier) {
             if(isset($tiers['major']) and $tiers['major']){

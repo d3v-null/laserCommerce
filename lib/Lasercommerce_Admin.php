@@ -62,6 +62,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         return $this->plugin->tier_tree_key;
     }
 
+    public function get_default_tier_key(){
+        return $this->plugin->default_tier_key;
+    }
+
     /**
      * Initializes the nestable jquery functions responsible for the drag and drop 
      * functionality in the tier tree interface
@@ -119,9 +123,15 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             );
             $settings[] = array(
                 'name'  => 'Tier Key',
-                'description' => __('They usermeta key that determines a users tier', LASERCOMMERCE_DOMAIN),
+                'description' => __('The usermeta key that determines a users tier', LASERCOMMERCE_DOMAIN),
                 'type'  => 'text',
                 'id'    => $this->prefix_option($this->get_tier_key_key())
+            );
+            $settings[] = array(
+                'name'  => 'Default Tier',
+                'description' => __('The default tier assigned to a user', LASERCOMMERCE_DOMAIN),
+                'type'  => 'text',
+                'id'    => $this->prefix_option($this->get_default_tier_key())
             );
             $settings[] = array(
                 'name'  => 'Tier Tree',
@@ -357,7 +367,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         // $tree = $Lasercommerce_Tier_Tree->getTierTree($option_value);
         // $tree = $Lasercommerce_Tier_Tree->getTierTree();
         // $availableTiers = array_keys($names);
-        // $usedTiers = $Lasercommerce_Tier_Tree->getTiers();
+        // $usedTiers = $Lasercommerce_Tier_Tree->getTreeTiers();
         // if(!$usedTiers){
         //     $unusedTiers = $availableTiers;
         // } else {
