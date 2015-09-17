@@ -6,7 +6,7 @@ include_once('Lasercommerce_Tier.php');
  * helper class for dealing with price tier tree
  */
 class Lasercommerce_Tier_Tree {
-    public $_class = "LC_TIER_TREE_";
+    public $_class = "LC_TT_";
 
     public static $rootID = 'default';
 
@@ -228,7 +228,7 @@ class Lasercommerce_Tier_Tree {
     public function getOmniscientTiers($tiers = array()){
         $_procedure = $this->_class."GET_OMNISCIENT_TIERS: ";
 
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."tiers: ".serialize($tiers) );
+        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."tiers: ".serialize($tiers) );
 
         if(!$tiers) $tiers = $this->getTreeTiers();
         
@@ -325,15 +325,15 @@ class Lasercommerce_Tier_Tree {
                 $user_id = $user->ID;
             }
 
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."user_id: ".serialize($user_id));
+            // if(LASERCOMMERCE_DEBUG) error_log($_procedure."user_id: ".serialize($user_id));
             $tier_key = $this->plugin->getOption($this->plugin->tier_key_key);
             $user_tier_string = get_user_meta($user_id, $tier_key, true);
             $default_tier = $this->plugin->getOption($this->plugin->default_tier_key);
             if(!$user_tier_string){
-                if(LASERCOMMERCE_DEBUG) error_log($_procedure."using default");
+                // if(LASERCOMMERCE_DEBUG) error_log($_procedure."using default");
                 $user_tier_string = $default_tier;
             }
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."user_tier_string: ".serialize($user_tier_string));
+            // if(LASERCOMMERCE_DEBUG) error_log($_procedure."user_tier_string: ".serialize($user_tier_string));
             $tierIDs = $this->parseUserTierString($user_tier_string);
             $tiers = $this->getTiers($tierIDs);
         }        
@@ -364,7 +364,7 @@ class Lasercommerce_Tier_Tree {
         }
 
         $tier_flat = implode("|", $this->getTierIDs($tiers));
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."tier_flat: ".serialize($tier_flat));
+        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."tier_flat: ".serialize($tier_flat));
         if(isset($this->cached_visible_tiers[$tier_flat])){
             $visibleTiers = $this->cached_visible_tiers[$tier_flat];
         } else {
@@ -376,7 +376,7 @@ class Lasercommerce_Tier_Tree {
             $this->cached_visible_tiers[$tier_flat] = $visibleTiers; 
         }
 
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."visibleTiers: ".serialize($visibleTiers));
+        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."visibleTiers: ".serialize($visibleTiers));
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
