@@ -280,9 +280,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         }   
 
         if(LASERCOMMERCE_PRICING_DEBUG and $value) {
-            $string = "";
+            // $string = "";
             foreach ($value as $key => $pricing) {
-                $string .= ("$key: ".(string)($pricing));
+                $string = ("$key: ".(string)($pricing));
+                error_log($_procedure.$string);
             }
             // error_log($_procedure."returned ".$string);
         }
@@ -503,7 +504,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".(string)$_product->get_sku());
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".(string)$_product->get_sku());
 
         if($_product) {
             if($_product->is_type('variable')){
@@ -521,7 +522,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 if($pricings) $purchasable = true;
             }
         } 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchasable);
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchasable);
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 

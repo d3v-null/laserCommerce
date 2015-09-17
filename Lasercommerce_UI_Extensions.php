@@ -288,12 +288,12 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 continue;
             }
             $old_override = $Lasercommerce_Tiers_Override;
-            $Lasercommerce_Tiers_Override = array($tier_id);
+            $Lasercommerce_Tiers_Override = array($tier);
             $tier_price = $product->get_price_html();
             if($tier_price) {
                 $tier_name = $tier->name;
                 // $tier_name = $this->tree->getTierName($tier);
-                $visiblePrices[$tier] = array(
+                $visiblePrices[$tier_id] = array(
                     'name' => $tier_name,
                     'price' => $tier_price
                 );
@@ -386,8 +386,14 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
     public function maybeAddExtraPricingColumns(){
         $_procedure = $this->_class."ADD_PRICING_COLUMNS: ";
+
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."");
+
         $majorTiers = $this->tree->getMajorTiers();
         $majorTierIDs = $this->tree->getTierIDs($majorTiers);
+
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."majorTiers: ".serialize($majorTiers));
+
         add_filter( 
             'manage_edit-product_columns', 
             function($columns) use ($majorTiers){
@@ -398,13 +404,14 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 
                 $new_cols = array();
                 if(is_array($majorTiers)) foreach ($majorTiers as $tier) { 
-                    $tier_id = $this->tree->getTierID($tier);
+                    $tier_id = $tier->id;
+                    // $tier_id = $this->tree->getTierID($tier);
                     if(is_null($tier_id)){
                         if(LASERCOMMERCE_DEBUG) error_log($_procedure."no tier_id set");
                         continue;
                     }
                     $tier_name = $this->tree->getTierName($tier);
-                    $new_cols[$this->prefix_option($tier_id)] = $tier_name;
+                    $new_cols[$this->prefix($tier_id)] = $tier_name;
                 }
                 $price_pos = array_search('price', array_keys($columns)) + 1;
                 return array_slice($columns, 0, $price_pos) + $new_cols + array_slice($columns, $price_pos);
@@ -416,6 +423,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             'manage_product_posts_custom_column', 
             function( $column ) use ($majorTierIDs){
                 $_procedure = "CALLBACK_MANAGE_PRODUCT_POSTS_COLS: ";
+                
+                if(LASERCOMMERCE_DEBUG) error_log($_procedure."");
 
                 global $post;
 
@@ -427,10 +436,14 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 if( strstr($column, $prefix)){
                     $remainder = substr($column, strlen($prefix));
                     if(in_array($remainder, $majorTierIDs)){
-                        global $Lasercommerce_Tiers_Override;
-                        $Lasercommerce_Tiers_Override = array($remainder);
-                        echo $the_product->get_price_html();
-                        unset($GLOBALS['Lasercommerce_Tiers_Override']);
+                        $tier = $this->tree->getTier($remainder);
+                        if($tier){
+                            global $Lasercommerce_Tiers_Override;
+                            $old_override = $Lasercommerce_Tiers_Override;
+                            $Lasercommerce_Tiers_Override = array($tier);
+                            echo $the_product->get_price_html();
+                            $Lasercommerce_Tiers_Override = $old_override;
+                        }
                     } else {
                         echo '<span class="na">&ndash;</span>';
                     }

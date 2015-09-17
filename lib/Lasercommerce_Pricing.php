@@ -33,8 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Lasercommerce_Pricing {
 
 	private $id;
-	private $role;
-	private $optionNamePrefix;
+	private $tier;
+	// private $optionNamePrefix;
+	private $plugin;
 
 	public static function sort_by_regular_price($a, $b){
 		// if(WP_DEBUG and PRICE_DEBUG) {
@@ -63,17 +64,18 @@ class Lasercommerce_Pricing {
 		return $val;
 	}
 
-	public function __construct($id, $role=''){
+	public function __construct($id, $tier=''){
 		global $Lasercommerce_Plugin;
+		$this->plugin = $Lasercommerce_Plugin;
 		$this->id = $id;
-		$this->role = $role;
-		$this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix();
+		$this->tier = $tier;
+		// $this->optionNamePrefix = $Lasercommerce_Plugin->getOptionNamePrefix();
 	}
 
 	private function get_meta_key($key){
-		//default role
-		if($this->role){
-			return $this->optionNamePrefix . $this->role . '_' . $key;
+		//default tier
+		if($this->tier){
+			return $this->plugin->prefix(strtolower($this->tier) . '_' . $key);
 		} else {
 			return '_'.$key;
 		}

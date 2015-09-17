@@ -138,7 +138,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 'type'  => 'tier_tree',
                 'description'   => __('Drag classes to here from "Available User Roles"', LASERCOMMERCE_DOMAIN),
                 'id'    => $this->prefix_option($this->get_tier_tree_key()),
-                'default' => '[{"major":"","name":"Normal Wholesale","id":"wn","children":[{"major":"","name":"Preferred Wholesale","id":"wp"}]}]'
+                'default' => '[{"major":true,"name":"Retail","id":"RN","children":[{"major":true,"name":"Wholesale","id":"WN","children":[{"major":true,"name":"Distributor","id":"DN"}]}]}]'
             );
             $settings[] = array(
                 'type' => 'sectionend',

@@ -1,0 +1,25 @@
+[{
+    "id": "RN",
+    "name": "Retail",
+    "major": true,
+    "children": [{
+        "id": "XRN",
+        "name": "Exp. Retail"
+    }, {
+        "id": "WN",
+        "name": "Wholesale",
+        "major": true,
+        "children": [{
+            "id": "XWN",
+            "name": "Exp. Wholesale"
+        }, {
+            "id": "DN",
+            "name": "Distributor",
+            "major": true,
+            "children": [{
+                "id": "XDN",
+                "name": "Exp. Distributor"
+            }]
+        }]
+    }]
+}]
