@@ -250,14 +250,12 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."tiers: ".serialize($tiers));
 
         foreach($tiers as $tier){
-            $tier_id = $tier->id;
-            // $tier_id = $this->tree->getTierID($tier);
+            $tier_id = $this->tree->getTierID($tier);
             if(is_null($tier_id)){
                 if(LASERCOMMERCE_DEBUG) error_log($_procedure."no tier_id set");
                 continue;
             }
-            $tier_name = $tier->name;
-            // $tier_name = $this->tree->getTierName($tier);
+            $tier_name = $this->tree->getTierName($tier);
             if(LASERCOMMERCE_DEBUG) error_log($_procedure."tier_name: ".serialize($tier_name));
 
             $this->addTierFields($tier_id, $tier_name);
@@ -270,9 +268,9 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."tabs: ".serialize($tabs));
 
-        global $Lasercommerce_Tiers_Override;
+        global $Lasercommerce_Tiers_Override, $product;
 
-        $postID = $this->getProductPostID( );
+        $postID = $this->getProductPostID( $product );
         if(!($postID)){
             if(LASERCOMMERCE_DEBUG) error_log($_procedure."no postID");
             return $tabs;
@@ -281,8 +279,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         $visibleTiers = $this->tree->getVisibleTiers();
         $visiblePrices = array();
         if( is_array($visibleTiers)) foreach ($visibleTiers as $tier) {
-            $tier_id = $tier->id;
-            // $tier_id = $this->tree->getTierID($tier);
+            $tier_id = $this->tree->getTierID($tier);
             if(is_null($tier_id)){
                 if(LASERCOMMERCE_DEBUG) error_log($_procedure."no tier_id set");
                 continue;
@@ -291,8 +288,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             $Lasercommerce_Tiers_Override = array($tier);
             $tier_price = $product->get_price_html();
             if($tier_price) {
-                $tier_name = $tier->name;
-                // $tier_name = $this->tree->getTierName($tier);
+                $tier_name = $this->tree->getTierName($tier);
                 $visiblePrices[$tier_id] = array(
                     'name' => $tier_name,
                     'price' => $tier_price
@@ -324,7 +320,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     <?php foreach($visiblePrices as $tier_id => $data) { ?>
     <tr>
         <th class="lc_tier_<?php echo $tier_id; ?>">
-            <?php echo wp_kese($data['name']); ?>
+            <?php echo wp_ksesr($data['name']); ?>
         </th>
         <td>
             <?php echo wp_kses($data['price']); ?>
@@ -547,31 +543,45 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         
         $visiblePrices = $this->maybeGetVisiblePricing($product);
         $majorTiers = $this->tree->getMajorTiers();
-        // $majorTierIDs = $this->tree->getTierIDs($majorTiers);
-        $majorPrices = array();
+        $majorVisibleTiers = array();
         foreach ($majorTiers as $tier) {
-            if (isset($visiblePrices[$tier->id])){
-                $majorPrices[$tier->id] = $visiblePrices[$tier->id];
+            if (isset($visiblePrices[$this->tree->getTierID($tier)])){
+                $majorVisibleTiers[] = $tier;
             }
         }
 
-        if(LASERCOMMERCE_DEBUG){
+        if(LASERCOMMERCE_HTML_DEBUG){
             error_log($_procedure."visiblePrices: ".serialize($visiblePrices));
             error_log($_procedure."majorTiers: ".serialize($majorTiers));
             error_log($_procedure."majorPrices: ".serialize($majorPrices));
         }
 
-        foreach($majorPrices as $tierID => $price) {
-            if($price_html = $product->get_price_html($price)) { ?>
-                <span class="price">
-                    <?php echo $price_html; ?>
-                    <div class="tierID">
-                        <?php echo $tierID; ?>
+        if(!empty($majorVisibleTiers)) {
+            ?><div class="price price_tier_table"><?php
+            
+            foreach($majorVisibleTiers as $tier) {
+                $tier_id = $this->tree->getTierID($tier);
+                $tier->begin_tier_override();
+                if($price_html = $product->get_price_html()) { ?>
+                    <div class="price price_tier_row">
+                        <div class="price_tier_cell">
+                            <strong><?php echo $tier_id; ?></strong>
+                        </div>
+                        <span class="price price_tier_cell price_tier_<?php echo $tier_id; ?>">
+                            <?php echo $price_html; ?>
+                        </span>
                     </div>
-                </span>
-            <?php }
+                <?php }
+            }
+
+            ?></div><?php
         }
     }    
+
+    public function make_price_loop_mods(){
+        remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price');
+        add_action('woocommerce_after_shop_loop_item_title', array(&$this, 'lasercommerce_loop_prices'), 10, 0);
+    }
 
     public function addActionsAndFilters() {
         if(LASERCOMMERCE_DEBUG) error_log("LASERCOMMERCE_UIE: Called addActionsAndFilters");
@@ -585,10 +595,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
             add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddDynamicPricingTabs'));
 
-            //price display
-            remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price');
-            add_action('woocommerce_after_shop_loop_item_title', array(&$this, 'lasercommerce_loop_prices'), 10, 0);
-            
+            add_action('woocommerce_loaded', array(&$this, 'make_price_loop_mods'));
         }
 
         // $this->maybeAddBulkEditOptions();

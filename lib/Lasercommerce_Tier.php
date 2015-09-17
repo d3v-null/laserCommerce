@@ -38,4 +38,15 @@ class Lasercommerce_Tier
     public function __toString(){
         return $this->id;
     }
+
+    public function begin_tier_override(){
+        global $Lasercommerce_Tiers_Override;
+        $this->old_override = $Lasercommerce_Tiers_Override;
+        $Lasercommerce_Tiers_Override = array($this);
+    }
+
+    public function end_tier_override(){
+        global $Lasercommerce_Tiers_Override;
+        $Lasercommerce_Tiers_Override = $this->old_override;
+    }
 }
