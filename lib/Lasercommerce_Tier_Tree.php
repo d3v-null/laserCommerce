@@ -47,21 +47,6 @@ class Lasercommerce_Tier_Tree {
     }    
 
     /**
-     * (Undeveloped Functionality) Gets the list of roles that are deemed omniscient - These roles can see all prices
-     * 
-     * @return array omniscienct_roles an array containing all of the omoniscient roles
-     */
-    public function getOmniscientRoles(){
-        //TODO: This
-        trigger_error("Deprecated function called: getOmniscientRoles, use getOmniscientTiers instead", E_USER_NOTICE);;
-    }
-
-    public function getOmniscientTiers(){
-        //TODO: This
-        return array(new Lasercommerce_Tier('ADMIN'));
-    }
-    
-    /**
      * Gets the tier tree in the form of an array of arrays
      *
      * @return array tier_tree The tree of price tiers
@@ -158,6 +143,7 @@ class Lasercommerce_Tier_Tree {
                 $tiers = array_merge($tiers, $this->flattenTierTree($node));
             }
         }
+        $this->treeTiers = $tiers;
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
@@ -187,6 +173,11 @@ class Lasercommerce_Tier_Tree {
     public function getTierMajor($tier){
         if(is_string($tier)) $tier = $this->getTier($tier);
         return $tier->major;        
+    }
+
+    public function getTierOmniscient($tier){
+        if(is_string($tier)) $tier = $this->getTier($tier);
+        return $tier->omniscient;        
     }
 
     public function getTierIDs($tiers){
@@ -226,6 +217,32 @@ class Lasercommerce_Tier_Tree {
     }
 
     /**
+     * Gets the list of roles that are deemed omniscient - These roles can see all prices
+     * 
+     * @return array omniscienct_roles an array containing all of the omoniscient roles
+     */
+    public function getOmniscientRoles(){
+        trigger_error("Deprecated function called: getOmniscientRoles, use getOmniscientTiers instead", E_USER_NOTICE);;
+    }
+
+    public function getOmniscientTiers($tiers = array()){
+        $_procedure = $this->_class."GET_OMNISCIENT_TIERS: ";
+
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."tiers: ".serialize($tiers) );
+
+        if(!$tiers) $tiers = $this->getTreeTiers();
+        
+        $omniTiers = array();
+        if(is_array($tiers)) foreach ($tiers as $tier) {
+            if($this->getTierOmniscient($tier)){
+                $omniTiers[] = $tier;
+            }
+        }
+        return $omniTiers;
+    }
+    
+
+    /**
      * Used by getVisibleTiers to recursively determine the price tiers visible 
      * for a user that can view a given list of tiers
      *
@@ -248,7 +265,7 @@ class Lasercommerce_Tier_Tree {
         $visibleTiers = array();
         if( isset($node['children'] ) ) { //has children
             foreach( $node['children'] as $child ){
-                array_merge($visibleTiers, $this->filterTiersRecursive($child, $tiers));
+                $visibleTiers = array_merge($visibleTiers, $this->filterTiersRecursive($child, $tiers));
             }
         }
         unset($node['children']);
@@ -342,15 +359,8 @@ class Lasercommerce_Tier_Tree {
             return array();
         }
 
-        $omniscientTiers = $this->getOmniscientTiers();
-        $omniscientTierIDs = $this->getTierIDs($omniscientTiers);
-        $treeTiers = $this->getTreeTiers();
-        foreach ($tiers as $tier) {
-            if(is_string($tier)) $tier = $this->getTier($tier);
-            if(in_array($this->getTierID($tier), $omniscientTierIDs)){
-                $tiers = $treeTiers;
-                break;
-            }
+        if($this->getOmniscientTiers($tiers)){
+            $tiers = $this->getTreeTiers();
         }
 
         $tier_flat = implode("|", $this->getTierIDs($tiers));
@@ -363,6 +373,7 @@ class Lasercommerce_Tier_Tree {
             foreach( $tree as $node ){
                 $visibleTiers = array_merge($visibleTiers, $this->filterTiersRecursive($node, $tiers));
             }
+            $this->cached_visible_tiers[$tier_flat] = $visibleTiers; 
         }
 
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."visibleTiers: ".serialize($visibleTiers));

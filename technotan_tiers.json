@@ -1,24 +1,28 @@
 [{
-    "id": "RN",
-    "name": "Retail",
+    "omniscient": true,
+    "name": "Administrator",
+    "id": "ADMIN"
+}, {
     "major": true,
+    "name": "Retail",
+    "id": "RN",
     "children": [{
-        "id": "XRN",
-        "name": "Exp. Retail"
+        "name": "Exp. Retail",
+        "id": "XRN"
     }, {
-        "id": "WN",
-        "name": "Wholesale",
         "major": true,
+        "name": "Wholesale",
+        "id": "WN",
         "children": [{
-            "id": "XWN",
-            "name": "Exp. Wholesale"
+            "name": "Exp. Wholesale",
+            "id": "XWN"
         }, {
-            "id": "DN",
-            "name": "Distributor",
             "major": true,
+            "name": "Distributor",
+            "id": "DN",
             "children": [{
-                "id": "XDN",
-                "name": "Exp. Distributor"
+                "name": "Exp. Distributor",
+                "id": "XDN"
             }]
         }]
     }]

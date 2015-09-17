@@ -237,18 +237,22 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         function buildItem(item) {
 
             var node_name_id = item.id + '_name';
-            var node_major_id = item.id + '_major';
             var node_name_value = (item.name ? item.name : '');
-            var node_major_value = (item.major ? item.major : '');
             var node_name_label = <?php echo "'".__('Name', LASERCOMMERCE_DOMAIN)."'"; ?>;
+            var node_major_id = item.id + '_major';
+            var node_major_value = (item.major ? item.major : '');
             var node_major_label = <?php echo "'".__('Major', LASERCOMMERCE_DOMAIN)."'"; ?>;
+            var node_omniscient_id = item.id + '_omniscient';
+            var node_omniscient_value = (item.omniscient ? item.omniscient : '');
+            var node_omniscient_label = <?php echo "'".__('Omni', LASERCOMMERCE_DOMAIN)."'"; ?>;
 
             var html = '';
             html += '<li ';
             html += '    class="dd-item" ';
             html += '    data-id="' + item.id + '" ';
             html += '    data-name="' + node_name_value + '"';
-            html += '    data-major="' + node_major_value + '"';
+            if(node_major_value) html += '    data-major="' + node_major_value + '"';
+            if(node_omniscient_value) html += '    data-omniscient="' + node_omniscient_value + '"';
             html += '>';
             html += '    <div class="dd-handle">';
             html += '        <div class="lc_node_section lc_node_id">';
@@ -257,6 +261,16 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             html += '    </div>';
             html += '    <div class="dd-content">';
             html += '        <div class="lc_node_section lc_node_major">';
+            html += '            <label for="'+ node_omniscient_id + '">' + node_omniscient_label + '</label>';
+            html += '            <input ';
+            html += '                id="'+ node_omniscient_id + '" ';
+            html += '                class="lc_node lc_node_omniscient" ';
+            html += '                data-updates="omniscient" ';
+            html += '                type="checkbox" ';
+            if(node_omniscient_value) html += 'checked';
+            html += '            />';
+            html += '        </div>';
+            html += '        <div class="lc_node_section lc_node_major">';
             html += '            <label for="'+ node_major_id + '">' + node_major_label + '</label>';
             html += '            <input ';
             html += '                id="'+ node_major_id + '" ';
@@ -264,7 +278,6 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             html += '                data-updates="major" ';
             html += '                type="checkbox" ';
             if(node_major_value) html += 'checked';
-            // html += '                value="'+ node_major_value + '" ';
             html += '            />';
             html += '        </div>';
             html += '        <div class="lc_node_section lc_node_name">';

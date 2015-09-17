@@ -23,15 +23,19 @@ class Lasercommerce_Tier
         if(isset($node['id'])){
             $instance = new self($node['id']);
             if(isset($node['name'])){
-                $instance->name = 'name';
+                $instance->name = $node['name'];
             }
             if(isset($node['major'])){
-                $instance->major = 'major';
+                $instance->major = $node['major'];
             }
             if(isset($node['omniscient'])){
-                $instance->omniscient = 'omniscient';
+                $instance->omniscient = $node['omniscient'];
             }
             return $instance;
         }
     } 
+
+    public function __toString(){
+        return $this->id;
+    }
 }

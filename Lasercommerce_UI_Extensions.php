@@ -421,7 +421,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
         add_action(
             'manage_product_posts_custom_column', 
-            function( $column ) use ($majorTierIDs){
+            function( $column ) {
                 $_procedure = "CALLBACK_MANAGE_PRODUCT_POSTS_COLS: ";
                 
                 if(LASERCOMMERCE_DEBUG) error_log($_procedure."");
@@ -435,15 +435,13 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 $prefix = $this->getOptionNamePrefix();
                 if( strstr($column, $prefix)){
                     $remainder = substr($column, strlen($prefix));
-                    if(in_array($remainder, $majorTierIDs)){
-                        $tier = $this->tree->getTier($remainder);
-                        if($tier){
-                            global $Lasercommerce_Tiers_Override;
-                            $old_override = $Lasercommerce_Tiers_Override;
-                            $Lasercommerce_Tiers_Override = array($tier);
-                            echo $the_product->get_price_html();
-                            $Lasercommerce_Tiers_Override = $old_override;
-                        }
+                    $tier = $this->tree->getTier($remainder);
+                    if($this->tree->getTierMajor($tier)){
+                        global $Lasercommerce_Tiers_Override;
+                        $old_override = $Lasercommerce_Tiers_Override;
+                        $Lasercommerce_Tiers_Override = array($tier);
+                        echo $the_product->get_price_html();
+                        $Lasercommerce_Tiers_Override = $old_override;
                     } else {
                         echo '<span class="na">&ndash;</span>';
                     }
