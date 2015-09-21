@@ -609,6 +609,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         foreach ( $_product->get_children( true ) as $variation_id ) {
             if ( $variation = $_product->get_child( $variation_id ) ) {
                 $pricing = $this->maybeGetLowestPricing($variation);
+                if(!$pricing) continue;
                 $price         = $pricing->maybe_get_current_price();
                 $regular_price = $pricing->regular_price;
                 $sale_price    = $variation->sale_price;

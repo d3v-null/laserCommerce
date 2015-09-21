@@ -367,11 +367,11 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 'callback' => function() use ($DPRC_Table, $DPRP_Table) {
                     if( $DPRC_Table != "" ){
                         echo "<h2>" . __('Category Pricing Rules') . "</h2>";
-                        echo wp_kses($DPRC_Table);
+                        echo ($DPRC_Table);
                     }
                     if( $DPRC_Table != ""){
                         echo "<h2>" . __('Product Pricing Rules') . "</h2>";
-                        echo wp_kses($DPRP_Table);
+                        echo ($DPRP_Table);
                     }
                 }
             );
