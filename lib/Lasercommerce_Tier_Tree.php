@@ -340,6 +340,10 @@ class Lasercommerce_Tier_Tree {
         return $tiers;
     }
 
+    public function serializeTiers($tiers = array()){
+        return implode("|", $this->getTierIDs($tiers));
+    }
+
     /**
      * Gets a list of the price tiers available to a user
      *
@@ -363,7 +367,7 @@ class Lasercommerce_Tier_Tree {
             $tiers = $this->getTreeTiers();
         }
 
-        $tier_flat = implode("|", $this->getTierIDs($tiers));
+        $tier_flat = $this->serializeTiers($tiers);
         // if(LASERCOMMERCE_DEBUG) error_log($_procedure."tier_flat: ".serialize($tier_flat));
         if(isset($this->cached_visible_tiers[$tier_flat])){
             $visibleTiers = $this->cached_visible_tiers[$tier_flat];
@@ -383,6 +387,10 @@ class Lasercommerce_Tier_Tree {
 
         //is this necessary any more??
         return array_reverse($visibleTiers);
+    }
+
+    public function serializeVisibleTiers(){
+        return $this->serializeTiers($this->getVisibleTiers());
     }
 
     public function getAncestors($roles){

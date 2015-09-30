@@ -586,6 +586,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         //TODO: synchronize max_variation_id
     }    
 
+    public function add_tier_flat_to_woocommerce_get_variation_prices_hash( $hash ) {
+        $_procedure = $this->_class."ADDTIERFLATTOWCGETVARPRICESHASH: ";
+
+        $hash[] = $this->tree->serializeVisibleTiers();
+
+        return $hash;
+    }
+
     public function maybeVariationPrices( $prices_array, $_product, $display){
         $postID = $this->getProductPostID($_product);
         $_procedure = $this->_class."VARIATIONPRICES($postID): ";
@@ -797,9 +805,11 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetEmptyPriceHtml'), 0, 2 );
         add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);     
 
+        add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_user_id_to_woocommerce_get_variation_prices_hash') );
+
         add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3);
         add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
-        add_filter( 'woocommerce_variation_is_visible', array( $this, 'maybeVariationIsVisible' ), 0, 4 );
+        add_filter( 'woocommerce_variation_is_visible', array( &$this, 'maybeVariationIsVisible' ), 0, 4 );
 
         add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
