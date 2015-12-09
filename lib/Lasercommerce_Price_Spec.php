@@ -169,4 +169,12 @@ class Lasercommerce_Price_Spec {
 		// if(WP_DEBUG) error_log("maybe_get_default_pricing returned ".serialize($params));
 		return new Lasercommerce_Pricing($params);
 	}
+
+	public function get_roles(){
+		if(isset($this->pricing)){
+			return array_keys($this->pricing);
+		} else {
+			return array();
+		}
+	}
 }

@@ -416,7 +416,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         $postID = $this->getProductPostID( $_product );   
 
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p: $price I: $postID S:".(string)($_product->get_sku()));
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p: $price I: $postID S:".(string)($_product->get_sku()));
         //only override if it is a WC price
         $override = ($price == '' or $this->isWCPrice($price, $_product) or $this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product));
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."override: ".serialize($override));
@@ -591,6 +591,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         $hash[] = $this->tree->serializeVisibleTiers();
 
+        if(LASERCOMMERCE_DEBUG) {
+            error_log($_procedure.serialize($hash));
+        }
+
         return $hash;
     }
 
@@ -668,16 +672,16 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $postID = $this->getProductPostID($_product);
         $_procedure = $this->_class."GETCHILDREN($postID): ";
 
-        // if(LASERCOMMERCE_DEBUG) {
-        //     $string = implode("|", 
-        //         array(
-        //             ("children: ".serialize($children)),
-        //             ("_product: ".serialize($_product->get_sku())),
-        //             ("visible_only: ".serialize($visible_only)),
-        //         )
-        //     );
-        //     error_log($_procedure.$string);
-        // }
+        if(LASERCOMMERCE_DEBUG) {
+            // $string = implode("|", 
+            //     array(
+            //         ("children: ".serialize($children)),
+            //         ("_product: ".serialize($_product->get_sku())),
+            //         ("visible_only: ".serialize($visible_only)),
+            //     )
+            // );
+            // error_log($_procedure.$string);
+        }
 
         //correct bad behaviour of when $visible_only = true;
         if($visible_only){
@@ -685,24 +689,29 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             foreach ( $_product->get_children(false) as $key => $child_id) {
                 $variation = $_product->get_child( $child_id );
                 if ( $variation and $variation->variation_is_visible() ) {
-                    $children = array_merge($children, array($child_id));
+                    if( ! in_array($child_id, $children)){
+                        if(LASERCOMMERCE_DEBUG) {
+                            error_log($_procedure."found extra child: ".$child_id);
+                        }
+                        $children[] = $child_id;
+                    }
                 }
             }
             
         }
+
 
         //unhook self and get children without visibility requirement
         // remove_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
         //hook self back in
         // add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
 
-
         return $children;
     }
 
     
     public function maybeVariationIsVisible($visible, $variation_id, $post_id, $variation){
-        $_procedure = $this->_class."GETCHILDREN($variation_id): ";
+        $_procedure = $this->_class."MAYBEISVARIATIONVISIBLE($variation_id): ";
 
         if(LASERCOMMERCE_DEBUG) {
             $string = implode("|", 
@@ -805,7 +814,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetEmptyPriceHtml'), 0, 2 );
         add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);     
 
-        add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_user_id_to_woocommerce_get_variation_prices_hash') );
+        add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_tier_flat_to_woocommerce_get_variation_prices_hash') );
 
         add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3);
         add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
