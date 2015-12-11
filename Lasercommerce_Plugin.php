@@ -249,9 +249,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function isWCRegularPrice($price='', $_product=''){ return $this->isWCStarPrice('regular', $price, $_product); }
     public function isWCSalePrice($price='', $_product=''){ return $this->isWCStarPrice('sale', $price, $_product); }    
 
-    public function maybeGetVisiblePricing($_product=''){
+    public function maybeGetPricing($_product='', $tiers=array()){
         $postID = $this->getProductPostID($_product);
-        $_procedure = $this->_class."GETVISIBLEPRICING($postID): ";
+        $_procedure = $this->_class."GETPRICING($postID): ";
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -261,18 +261,15 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if($_product) {
             $postID = $this->getProductPostID( $_product );
 
-            $visibleTiers = $this->tree->getVisibleTiers();
-            array_push($visibleTiers, new Lasercommerce_Tier('') ); 
+            array_push($tiers, new Lasercommerce_Tier('') ); 
 
             $pricings = array();
-            if(is_array($visibleTiers)) foreach ($visibleTiers as $tier) {
+            if(is_array($tiers)) foreach ($tiers as $tier) {
                 $pricing = new Lasercommerce_Pricing($postID, $tier->id);
                 if($pricing->regular_price){
                     $pricings[$tier->id] = $pricing;
                 }
             }
-
-            uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
             
             $value = $pricings;
         } else { 
@@ -294,6 +291,47 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         return $value;
 
+    }
+
+    public function maybeGetVisiblePricing($_product=''){
+        $postID = $this->getProductPostID($_product);
+        $_procedure = $this->_class."GETVISIBLEPRICING($postID): ";
+
+        global $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace .= $_procedure; 
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+
+        $visibleTiers = $this->tree->getVisibleTiers();
+        $pricings = $this->maybeGetPricing($_product, $visibleTiers );
+        uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
+        $value = $pricings;
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
+
+        return $value;
+
+    }
+
+    public function maybeGetOmniscientPricing($_product=''){
+        $postID = $this->getProductPostID($_product);
+        $_procedure = $this->_class."GETOMNISCIENTPRICING($postID): ";
+
+        global $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace .= $_procedure; 
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+
+        $allTiers = $this->tree->getTreeTiers();
+        $pricings = $this->maybeGetPricing($_product, $allTiers );
+        uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
+        $value = $pricings;
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
+
+        return $value;
     }
 
     public function maybeGetStarPricing( $star='', $_product=''){
@@ -502,6 +540,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $subtotal;
     }
 
+    /**
+     *  Returns if the simple or variable product can be purchased by the current user
+     */
     public function maybeIsPurchasable($purchasable, $_product){
         $postID = $this->getProductPostID($_product);
         $_procedure = $this->_class."ISPURCHASABLE($postID): ";
@@ -526,7 +567,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             } else {
                 $pricings = $this->maybeGetVisiblePricing($_product);
                 $post_status = get_post_status($_product);
-                if($pricings and $post_status != 'publish' ) $purchasable = true;
+                // if($pricings and $post_status != 'publish' ) $purchasable = true;
+                if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."post_status: $post_status");
+                if($pricings and $post_status == 'publish' ) $purchasable = true;
             }
         } 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchasable);
@@ -535,6 +578,60 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
 
         return $purchasable;
+    }
+
+    /**
+     *  Returns an array of tierIDs that can purchase the given simple or variable product
+     */
+
+    public function maybeGetPurchaseTierIDs( $purchase_tierIDs, $_product){
+        $postID = $this->getProductPostID($_product);
+        $_procedure = $this->_class."GETPURCHASETIERS($postID): ";
+        if(!is_array($purchase_tierIDs)){
+            error_log($_procedure."Called with non-array parameter");
+            $purchase_tierIDs = array();
+        }
+
+        global $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace .= $_procedure; 
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+
+        if($_product) {
+            if($_product->is_type('variable')){
+                $children = $_product->get_children();
+                if($children){
+                    foreach ($children as $child_id) {
+                        $child = $_product->get_child($child_id);
+                        $purchase_tierIDs = $this->maybeGetPurchaseTiers($purchase_tierIDs, $child);
+                        // $child_purchase_tierIDs = $this->maybeGetPurchaseTiers($purchase_tierIDs, $child);
+                        // foreach ($child_purchase_tierIDs as $tier) {
+                        //     if(!in_array($tier, $purchase_tierIDs)){
+                        //         array_push($purchase_tierIDs, $tier);
+                        //     }
+                        // }    
+                    }
+                }
+            } else {
+                $pricings = $this->maybeGetOmniscientPricing($_product);
+                $post_status = get_post_status($_product);
+                if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."post_status: $post_status");
+
+                if($pricings and $post_status == 'publish'){
+                    $this_purchase_tierIDs = array_keys($pricings);
+                    foreach ($this_purchase_tierIDs as $tierID) {
+                        if(!in_array($tierID, $purchase_tierIDs)){
+                            $purchase_tierIDs[] = $tierID;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchase_tierIDs);
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
+        return $purchase_tierIDs;
     }
 
     public function maybeVariableProductSync( $product_id, $children ){

@@ -302,6 +302,9 @@ class Lasercommerce_Tier_Tree {
         }
     }
     
+    /**
+     * Returns an array of tier objects that the user has directly been assigned
+     */
     public function getUserTiers($user = Null){
         $_procedure = $this->_class."GET_USER_TIERS: ";
 
