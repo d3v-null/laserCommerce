@@ -237,7 +237,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 $value = true;
             }
         }
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned ".serialize($value));
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned ".serialize($value));
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
@@ -300,14 +300,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         $visibleTiers = $this->tree->getVisibleTiers();
         $pricings = $this->maybeGetPricing($_product, $visibleTiers );
         uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
         $value = $pricings;
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
 
         return $value;
@@ -341,7 +341,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         $postID = $this->getProductPostID( $_product );  
 
@@ -358,9 +358,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $value = null;
         }
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned ".(string)($value));
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned ".(string)($value));
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old;         
 
         return $value;        
@@ -456,34 +456,65 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p: $price I: $postID S:".(string)($_product->get_sku()));
         //only override if it is a WC price
-        $override = ($price == '' or $this->isWCPrice($price, $_product) or $this->isWCRegularPrice($price, $_product) or $this->isWCSalePrice($price, $_product));
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."override: ".serialize($override));
 
-        if($_product->is_type( 'variable' )){
-            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+        if($price == ''){
+            $override = 'current';
+        } elseif($this->isWCPrice($price, $_product)) {
+            $override = 'current';
+        } elseif($this->isWCRegularPrice($price, $_product)){
+            $override = 'regular';
+        } elseif($this->isWCSalePrice($price, $_product)){
+            $override = 'sale';
         } else {
-            $lowestPricing = $this->maybeGetLowestPricing($_product);
+            $override = false;
         }
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing: ".(string)$lowestPricing);
 
-        if($lowestPricing and $override) {
-            switch ($star) {
-                case '': 
-                case 'cart':
-                    $price = $lowestPricing->maybe_get_current_price();
-                    // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
-                    break;
-                case 'regular': 
-                    $price = $lowestPricing->regular_price;
-                    // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
-                    break;
-                case 'sale': 
-                    $price = $lowestPricing->sale_price;
-                    // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");            
-                    break;                    
-                // default:
-                //     # code...
-                //     break;
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."override: ".serialize($override));
+        
+        if($override) {
+
+            if($star == 'regular') {
+                if($override != 'regular'){
+                    error_log($_procedure."star is regular but not override");
+                    $override = 'regular';
+                }
+            }
+            if($star == 'sale') {
+                if($override != 'sale'){
+                    error_log($_procedure."star is sale but not override");
+                    $override = 'sale';
+                }    
+            }
+
+            if($_product->is_type( 'variable' )){
+                $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+            } else {
+                $lowestPricing = $this->maybeGetLowestPricing($_product);
+            }
+            // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing: ".(string)$lowestPricing);
+
+            if($lowestPricing) {
+                switch ($override) {
+                    // case '': 
+                    // case 'cart':
+                    // case 'incl_tax':
+                    // case 'excl_tax':
+                    case 'current':
+                        $price = $lowestPricing->maybe_get_current_price();
+                        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
+                        break;
+                    case 'regular': 
+                        $price = $lowestPricing->regular_price;
+                        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
+                        break;
+                    case 'sale': 
+                        $price = $lowestPricing->sale_price;
+                        // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");            
+                        break;                    
+                    // default:
+                    //     # code...
+                    //     break;
+                }
             }
         }
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure." returned $price");
@@ -498,8 +529,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetSalePrice($price = '', $_product = ''){ return $this->maybeGetStarPrice('sale', $price, $_product); }
     public function maybeGetPrice($price = '', $_product = ''){ return $this->maybeGetStarPrice('', $price, $_product); }
     public function maybeGetCartPrice($price = '', $_product = ''){ return $this->maybeGetStarPrice('cart', $price, $_product); }
-    public function maybeGetPriceInclTax($price ='', $qty, $_product){ return $this->maybeGetStarPrice('', $price, $_product); }
-    public function maybeGetPriceExclTax($price ='', $qty, $_product){ return $this->maybeGetStarPrice('', $price, $_product); }
+    public function maybeGetPriceInclTax($price ='', $qty, $_product){ return $this->maybeGetStarPrice('incl_tax', $price, $_product); }
+    public function maybeGetPriceExclTax($price ='', $qty, $_product){ return $this->maybeGetStarPrice('excl_tax', $price, $_product); }
 
     public function maybeGetCartItemPrice( $price, $values, $cart_item_key ){
         $_procedure = $this->_class."GETCARTITEMPRICE: ";
@@ -603,8 +634,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 if($children){
                     foreach ($children as $child_id) {
                         $child = $_product->get_child($child_id);
-                        $purchase_tierIDs = $this->maybeGetPurchaseTiers($purchase_tierIDs, $child);
-                        // $child_purchase_tierIDs = $this->maybeGetPurchaseTiers($purchase_tierIDs, $child);
+                        $purchase_tierIDs = $this->maybeGetPurchaseTierIDs($purchase_tierIDs, $child);
+                        // $child_purchase_tierIDs = $this->maybeGetPurchaseTierIDs($purchase_tierIDs, $child);
                         // foreach ($child_purchase_tierIDs as $tier) {
                         //     if(!in_array($tier, $purchase_tierIDs)){
                         //         array_push($purchase_tierIDs, $tier);
@@ -628,7 +659,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             }
         }
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".(string)$purchase_tierIDs);
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."returned: ".serialize($purchase_tierIDs));
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
         return $purchase_tierIDs;
@@ -843,11 +874,11 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $string = implode("|", 
                 array(
                     ("html: $price_html"),
-                    // ("price: ".$_product->price),
-                    // ("regular_price: ".$_product->regular_price),
-                    // ("sale_price: ".$_product->sale_price),
-                    // ("product: ".$_product->id),
-                    // ("user: ".$user->ID)
+                    ("price: ".$_product->price),
+                    ("regular_price: ".$_product->regular_price),
+                    ("sale_price: ".$_product->sale_price),
+                    ("product: ".$_product->id),
+                    ("user: ".$user->ID)
                 )
             );
             error_log($_procedure.$string);
@@ -884,8 +915,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // Admin filters:
         global $lasercommerce_pricing_trace;
         $_procedure = $this->_class."ADDACTIONS: ";
-        $lasercommerce_pricing_trace = $_procedure;
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");  
+        $lasercommerce_pricing_trace = "";
+        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");  
         
         //helper class for tier tree functions    
 

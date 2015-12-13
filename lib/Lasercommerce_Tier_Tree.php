@@ -132,7 +132,7 @@ class Lasercommerce_Tier_Tree {
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         if(isset($this->treeTiers)){
             $tiers = $this->treeTiers;
@@ -145,7 +145,7 @@ class Lasercommerce_Tier_Tree {
         }
         $this->treeTiers = $tiers;
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
 
         return $tiers;
@@ -359,7 +359,7 @@ class Lasercommerce_Tier_Tree {
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure; 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         $tiers = $this->getUserTiers($user);
         if(empty($tiers)) {
@@ -385,7 +385,7 @@ class Lasercommerce_Tier_Tree {
 
         // if(LASERCOMMERCE_DEBUG) error_log($_procedure."visibleTiers: ".serialize($visibleTiers));
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
         $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
 
         //is this necessary any more??
