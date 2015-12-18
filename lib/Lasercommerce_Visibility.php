@@ -1,7 +1,12 @@
 <?php
 
 /**
-* 
+* Much of the function signatures in this file are inspired by Groups Restrict Categories. http://www.itthinx.com/plugins/groups-restrict-categories/
+* I had to implement this in my own plugin because the limmitations of groups restrict categories didn't allow me to do what I needed to do,
+* However I adminred the mechanics of the plugin that I decided to base my plugin vaguely off its source code
+* Once I get things working properly, I will make it more unique.
+* If there is any issue at all with me doing this, please let me know,
+* Thanks
 */
 class Lasercommerce_Visibility
 {
