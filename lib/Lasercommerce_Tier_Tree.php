@@ -392,6 +392,11 @@ class Lasercommerce_Tier_Tree {
         return array_reverse($visibleTiers);
     }
 
+    public function getVisibleTierIDs($user = null){
+        $visibleTiers = $this->getVisibleTiers($user);
+        return $this->getTierIDs($visibleTiers);
+    }
+
     public function serializeVisibleTiers(){
         return $this->serializeTiers($this->getVisibleTiers());
     }

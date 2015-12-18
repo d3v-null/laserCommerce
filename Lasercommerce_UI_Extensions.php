@@ -588,14 +588,101 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         add_action('woocommerce_after_shop_loop_item_title', array(&$this, 'lasercommerce_loop_prices'), 9, 0);
     }
 
+
+    public function term_restrictions_add_field($taxonomy){
+        $_procedure = $this->_class . "TIER_RESTR_ADD_FIELD: ";
+
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        ?>
+<div class="form-field lc_term_restrictions">
+    <label for="lc_term_restrictions"><?php _e('Tier Restrictions', 'lasercommerce'); ?></label>
+    <input name="lc_term_restrictions" id="<?php echo Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY; ?>" type="text" size="40">
+</div>
+        <?php
+    }
+
+    public function term_restrictions_edit_field($term, $taxonomy){
+        $_procedure = $this->_class . "TIER_RESTR_EDIT_FIELD: ";
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        //TODO: sanitize this?
+        $term_restrictions = esc_attr(Lasercommerce_Visibility::get_term_read_tiers_str($term->term_id));
+        ?><tr class="form-field lc_term_restrictions">
+        <th scope="row"><label for="lc_term_restrictions"><?php _e('Tier Restrictions', 'lasercommerce'); ?><label></th>
+        <td><input id="<?php echo Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY; ?>" name="lc_term_restrictions" value="<?php echo $term_restrictions?>"/></td>
+    </tr><?php
+    }
+
+    public function term_restrictions_save_meta($term_id, $tt_id){
+        $_procedure = $this->_class . "TIER_RESTR_SAVE_META: ";
+        if(isset($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]) and '' != $_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]){
+            $term_restrictions = ($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]);
+            Lasercommerce_Visibility::set_term_read_tiers_str($term_id, $term_restrictions);
+            // add_term_meta($term_id, Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY, $term_restrictions, true );
+        }
+    }
+
+    public function term_restrictions_update_meta($term_id, $tt_id){
+        $_procedure = $this->_class . "TIER_RESTR_UPD8_META: ";
+
+        if(isset($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]) ){
+            $term_restrictions = ($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]);
+            Lasercommerce_Visibility::set_term_read_tiers_str($term_id, $term_restrictions);
+        }
+    }
+
+    public function term_restrictions_add_column($columns){
+        $_procedure = $this->_class . "TIER_RESTR_ADD_COL: ";
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+
+        $columns[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY] = __( 'Tier Restrictions', 'lasercommerce');
+        return $columns;
+    }
+
+    public function term_restrictions_column_content($content, $column_name, $term_id){
+        $_procedure = $this->_class . "TIER_RESTR_COL_CONT: ";
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        
+        if($column_name != Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY){
+            return $content;
+        }
+
+        $term_restrictions = Lasercommerce_Visibility::get_term_read_tiers_str($term_id);
+
+        if($term_restrictions){
+            $content .= esc_attr($term_restrictions);
+        }
+        return $content;
+    }
+
+    public function add_term_restriction_admin_actions(){
+        $_procedure = $this->_class . "ADD_LC_TIER_TAX_RESTR: ";
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        //TODO: make taxonomies read from settings
+
+        $taxonomies = $this->visibility->get_controlled_taxonomies();
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."taxonomies: ". serialize($taxonomies));
+
+        foreach ($taxonomies as $taxonomy) {
+            add_action( "{$taxonomy}_add_form_fields", array(&$this, 'term_restrictions_add_field'), 10, 1);
+            add_action( "{$taxonomy}_edit_form_fields", array(&$this, 'term_restrictions_edit_field'), 10, 2);
+            add_action( "created_{$taxonomy}", array(&$this, 'term_restrictions_save_meta'), 10, 2);
+            add_action( "edited_{$taxonomy}", array(&$this, 'term_restrictions_update_meta'), 10, 2);
+            add_filter( "manage_edit-{$taxonomy}_columns", array(&$this, 'term_restrictions_add_column'), 10, 1);
+            add_filter( "manage_{$taxonomy}_custom_column", array(&$this, 'term_restrictions_column_content'), 10, 3);
+        }
+    }
+
     public function addActionsAndFilters() {
-        if(LASERCOMMERCE_DEBUG) error_log("LASERCOMMERCE_UIE: Called addActionsAndFilters");
+        $_procedure = $this->_class . "addActionsAndFilters: ";
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
 
         if(is_admin()){
             $this->maybeAddSaveTierFields( $this->tree->getTreeTiers() );
             add_action( 'admin_enqueue_scripts', array( &$this, 'product_admin_scripts') );
             add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );              
             $this->maybeAddExtraPricingColumns();
+            add_action( 'init', array(&$this, 'add_term_restriction_admin_actions'));
+            // $this->add_term_restriction_admin_actions();
         } else {
             add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddPricingTab'));
             add_filter('woocommerce_product_tabs', array(&$this, 'maybeAddDynamicPricingTabs'));

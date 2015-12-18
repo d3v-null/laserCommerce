@@ -50,6 +50,7 @@ function Lasercommerce_init($file) {
     }
 
     $Lasercommerce_Plugin->initTree();
+    $Lasercommerce_Plugin->initVisibility();
     $Lasercommerce_Plugin->addActionsAndFilters();
 
 

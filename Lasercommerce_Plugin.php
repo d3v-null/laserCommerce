@@ -35,6 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 include_once(LASERCOMMECE_BASE.'/Lasercommerce_UI_Extensions.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Tier_Tree.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Pricing.php');
+include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Visibility.php');
 // include_once('Lasercommerce_UIE.php');
 
 /**
@@ -54,6 +55,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
         }     
         $this->tree = $Lasercommerce_Tier_Tree;
+    }
+
+    public function initVisibility(){
+        global $Lasercommerce_Visibility;
+        if( !isset($Lasercommerce_Visibility)) {
+            $Lasercommerce_Visibility = new Lasercommerce_Visibility( $this->getOptionNamePrefix());
+        }
+        $this->visibility = $Lasercommerce_Visibility;
     }
 
     /**
