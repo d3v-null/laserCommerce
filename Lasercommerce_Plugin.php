@@ -475,13 +475,13 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
             if($star == 'regular') {
                 if($override != 'regular'){
-                    error_log($_procedure."star is regular but not override");
+                    if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."star is regular but not override");
                     $override = 'regular';
                 }
             }
             if($star == 'sale') {
                 if($override != 'sale'){
-                    error_log($_procedure."star is sale but not override");
+                    if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."star is sale but not override");
                     $override = 'sale';
                 }    
             }
