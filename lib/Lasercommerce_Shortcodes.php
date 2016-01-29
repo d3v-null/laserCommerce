@@ -95,7 +95,7 @@ class Lasercommerce_Shortcodes extends Lasercommerce_Abstract_Child
             if($restricted_term_id_string){
                 $atts['ids'] = $restricted_term_id_string;
                 $restricted = WC_Shortcodes::product_categories( $atts );
-                $out .= $content . $restricted;
+                $out .= do_shortcode($content) . $restricted;
             }
         }
 

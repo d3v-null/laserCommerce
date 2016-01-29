@@ -87,6 +87,19 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     //     return $this->plugin->updateOption( $option_name, $default );
     // }   
 
+    public static function tier_ids_satisfy_requirement( $tier_ids, $required_tier_ids ){
+        if($tier_ids and $required_tier_ids){
+            foreach ($required_tier_ids as $required_tier_id) {
+                foreach ($tier_ids as $tier_id) {
+                    if (strtolower($tier_id) == strtolower($required_tier_id)){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Returns true if the user can access the term.
      * 
@@ -106,13 +119,8 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
                 if(isset($Lasercommerce_Tier_Tree)){
                     $user_tierIDs = $Lasercommerce_Tier_Tree->getVisibleTierIDs();
                 }
-                if($user_tierIDs){
-                    foreach ($term_tierIDs as $term_tierID) {
-                        if(in_array($term_tierID, $user_tierIDs)){
-                            $restricted = false;
-                            break;
-                        }
-                    }
+                if(self::tier_ids_satisfy_requirement($user_tierIDs, $term_tierIDs)){
+                    $restricted = False;
                 }
             }
         }
