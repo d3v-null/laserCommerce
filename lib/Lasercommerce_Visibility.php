@@ -467,7 +467,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     }
 
     /**
-     * Returns an array of read tiers for the term.
+     * Returns a string of read tiers for the term.
      * 
      * @param int $term_id
      * @return string with read tiers for the term, null if the term does not exist
