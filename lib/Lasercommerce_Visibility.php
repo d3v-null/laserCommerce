@@ -8,7 +8,10 @@
 * If there is any issue at all with me doing this, please let me know,
 * Thanks
 */
-class Lasercommerce_Visibility
+
+include_once('Lasercommerce_Abstract_Child.php');
+
+class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 {
     const _CLASS = "LC_VI_";
 
@@ -24,8 +27,7 @@ class Lasercommerce_Visibility
 
     function __construct()
     {
-        global $Lasercommerce_Plugin;
-        $this->plugin = $Lasercommerce_Plugin;
+        parent::__construct();
         $this->tree = $this->plugin->tree;
 
         add_action( 'init', array( __CLASS__, 'wp_init' ), 999);
@@ -61,29 +63,29 @@ class Lasercommerce_Visibility
         // add_filter( 'map_meta_cap', array( __CLASS__, 'map_meta_cap' ), 10, 4 );
     }
 
-    public function prefix_option($option){
-        return $this->plugin->prefix($option);
-    }
+    // public function prefix_option($option){
+    //     return $this->plugin->prefix($option);
+    // }
 
-    public function unprefix_option( $option_name ){
-        return $this->plugin->unPrefix( $option_name );
-    }    
+    // public function unprefix_option( $option_name ){
+    //     return $this->plugin->unPrefix( $option_name );
+    // }    
     
-    public function get_tier_key_key(){
-        return $this->plugin->tier_key_key;
-    }
+    // public function get_tier_key_key(){
+    //     return $this->plugin->tier_key_key;
+    // }
 
-    public function get_tier_tree_key(){
-        return $this->plugin->tier_tree_key;
-    }
+    // public function get_tier_tree_key(){
+    //     return $this->plugin->tier_tree_key;
+    // }
 
-    public function get_option( $option_name, $default ){
-        return $this->plugin->getOption( $option_name, $default );
-    }    
+    // public function get_option( $option_name, $default ){
+    //     return $this->plugin->getOption( $option_name, $default );
+    // }    
 
-    public function set_option( $option_name, $option_value ){
-        return $this->plugin->updateOption( $option_name, $default );
-    }   
+    // public function set_option( $option_name, $option_value ){
+    //     return $this->plugin->updateOption( $option_name, $default );
+    // }   
 
     /**
      * Returns true if the user can access the term.

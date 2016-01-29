@@ -36,6 +36,7 @@ include_once(LASERCOMMECE_BASE.'/Lasercommerce_UI_Extensions.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Tier_Tree.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Pricing.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Visibility.php');
+include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Shortcodes.php');
 // include_once('Lasercommerce_UIE.php');
 
 /**
@@ -63,6 +64,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $Lasercommerce_Visibility = new Lasercommerce_Visibility( $this->getOptionNamePrefix());
         }
         $this->visibility = $Lasercommerce_Visibility;
+    }
+
+    public function addShortcodes(){
+        global $Lasercommerce_Shortcodes;
+        if( !isset($Lasercommerce_Visibility)) {
+            $Lasercommerce_Shortcodes = new Lasercommerce_Shortcodes( $this->getOptionNamePrefix());
+        }
+        $this->shortcodes = $Lasercommerce_Shortcodes;
     }
 
     /**
