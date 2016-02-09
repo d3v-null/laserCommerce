@@ -928,6 +928,17 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetEmptyPriceHtml($price_html, $_product){
         return $this->maybeGetStarHtml($price_html, $_product, 'empty_price');
     }
+
+    /** Functions for generating Gravity Forms Parameters */
+    public function gform_user_tier_string_paramter( $value ){
+        $_procedure = $this->_class."GFORM_TIER_STRING_PARAM: ";
+        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."value: $value");}
+
+        $tierString = $this->tree->serializeVisibleTiers();
+        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."tierString: $tierString");}
+
+        return $tierString;
+    }
     
     public function addActionsAndFilters() {
         // Admin filters:
@@ -970,6 +981,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
 
         add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
+
+
+        /** Gravity Forms Extensions */
+        add_filter('gform_field_value_user_tier_string', array(&$this, 'gform_user_tier_string_paramter'), 0, 1);
 
 
         parent::addActionsAndFilters();

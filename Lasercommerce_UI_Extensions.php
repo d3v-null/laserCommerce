@@ -549,7 +549,9 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             if($price_html and !in_array($price_html, array_values($prices)) and $price_html != $current_price){
                 $tier_id = $this->tree->getTierID($tier);
                 $prices[$tier_id] = $price_html;
-                error_log($_procedure."PRICES [$tier_id] = $price_html");
+                if(LASERCOMMERCE_HTML_DEBUG){
+                    error_log($_procedure."PRICES [$tier_id] = $price_html");
+                }
             }
             $tier->end_tier_override();
         }
