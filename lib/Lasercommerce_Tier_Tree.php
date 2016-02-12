@@ -407,6 +407,44 @@ class Lasercommerce_Tier_Tree extends Lasercommerce_Abstract_Child{
         return $this->serializeTiers($this->getVisibleTiers());
     }
 
+    /**
+     *  Check if ID is in visible tiers
+     */
+    public function tierIDVisible($tierID, $user = null){
+        $needle = strtolower($tierID);
+        $visibleTiers = $this->getVisibleTiers($user);
+        foreach ($visibleTiers as $tier){
+            $haystack = strtolower($this->getTierID($tier));
+            if(strpos($haystack, $needle) !== false){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if tier is visible to user
+     */
+    public function tierVisible($tier, $user = null){
+        $tierID = $this->getTierID($tier);
+        return $this->tierIDVisible($tierID, $user);
+    }
+
+    /**
+     * Check if name is contained in any visible tiers
+     */
+    public function tierNameVisible($tierName, $user = null){
+        $needle = strtolower($tierName);
+        $visibleTiers = $this->getVisibleTiers($user);
+        foreach ($visibleTiers as $tier){
+            $haystack = strtolower($this->getTierName($tier));
+            if(strpos($haystack, $needle) !== false){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function getAncestors($roles){
         trigger_error("Deprecated function called: getAncestors. Not used.", E_USER_NOTICE);;
     }

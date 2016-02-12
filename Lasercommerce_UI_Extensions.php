@@ -428,7 +428,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 } 
 
                 $prefix = $this->getOptionNamePrefix();
-                if( strstr($column, $prefix)){
+
+                if( strpos($column, $prefix) === 0 ){
                     $remainder = substr($column, strlen($prefix));
                     $tier = $this->tree->getTier($remainder);
                     if($this->tree->getTierMajor($tier)){
@@ -544,8 +545,10 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         $current_price = $product->get_price_html();
         $prices = array();
         foreach ($majorVisibleTiers as $tier) {
-            $tier->begin_tier_override();
-            $price_html = $product->get_price_html();
+            // $tier->begin_tier_override();
+            // $price_html = $product->get_price_html();
+            // $tier->end_tier_override();
+            $price_html = $tier->get_product_price_html($product);
             if($price_html and !in_array($price_html, array_values($prices)) and $price_html != $current_price){
                 $tier_id = $this->tree->getTierID($tier);
                 $prices[$tier_id] = $price_html;
@@ -553,7 +556,6 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                     error_log($_procedure."PRICES [$tier_id] = $price_html");
                 }
             }
-            $tier->end_tier_override();
         }
         // unset($prices['']);
         // $prices[''] = $current_price;

@@ -240,18 +240,32 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $postID = $this->getProductPostID( $_product );
         $value = false;
         if($_product and isset($postID)){
-            switch ($star) {
-                case '':
-                    $WC_price = get_post_meta($postID, '_price', True);
-                    break;
-                case 'regular':
-                    $WC_price = get_post_meta($postID, '_regular_price', True);
-                    break;
-                case 'sale':
-                    $WC_price = get_post_meta($postID, '_sale_price', True);
+            if($_product->is_type('variable')){
+                //TODO: This
+                switch ($star) {
+                    case '':
+                        $WC_price = get_post_meta($postID, '_price', True);
+                        break;
+                    case 'regular':
+                        $WC_price = get_post_meta($postID, '_regular_price', True);
+                        break;
+                    case 'sale':
+                        $WC_price = get_post_meta($postID, '_sale_price', True);
+                }
+            } else {
+                switch ($star) {
+                    case '':
+                        $WC_price = get_post_meta($postID, '_price', True);
+                        break;
+                    case 'regular':
+                        $WC_price = get_post_meta($postID, '_regular_price', True);
+                        break;
+                    case 'sale':
+                        $WC_price = get_post_meta($postID, '_sale_price', True);
+                }
             }
-            // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price);
-            if( floatval($WC_price) == floatval($price)){
+            if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price);
+            if( intval(floatval($WC_price) * 100) == intval(floatval($price)* 100) ){
                 $value = true;
             }
         }
@@ -737,7 +751,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         $hash[] = $this->tree->serializeVisibleTiers();
 
-        if(LASERCOMMERCE_DEBUG) {
+
+        if(LASERCOMMERCE_HTML_DEBUG) {
             error_log($_procedure.serialize($hash));
         }
 
@@ -770,7 +785,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 if(!$pricing) continue;
                 $price         = $pricing->maybe_get_current_price();
                 $regular_price = $pricing->regular_price;
-                $sale_price    = $variation->sale_price;
+                $sale_price    = $pricing->sale_price;
 
                 // If sale price does not equal price, the product is not yet on sale
                 if ( ! $pricing->is_sale_active_now() ) {
@@ -800,18 +815,30 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             'sale_price'    => $sale_prices
         );
 
-        // if(LASERCOMMERCE_DEBUG) {
-        //     $string = implode("|", 
-        //         array(
-        //             ("price: ".serialize($prices_array['price'])),
-        //             ("regular_price: ".serialize($prices_array['regular_price'])),
-        //             ("sale_price: ".serialize($prices_array['sale_price'])),
-        //         )
-        //     );
-        //     error_log($_procedure."POST: ".$string);
-        // }        
+        if(LASERCOMMERCE_PRICING_DEBUG) {
+            $string = implode("|", 
+                array(
+                    ("price: ".serialize($prices_array['price'])),
+                    ("regular_price: ".serialize($prices_array['regular_price'])),
+                    ("sale_price: ".serialize($prices_array['sale_price'])),
+                )
+            );
+            error_log($_procedure."POST: ".$string);
+        }        
 
         return $prices_array;
+    }
+
+    public function maybeVariationPricesPrice( $variation_price, $variation, $parent){
+        return $variation_price;
+    }
+
+    public function maybeVariationPricesSalePrice( $variation_sale_price, $variation, $parent){
+        return $variation_sale_price;
+    }
+
+    public function maybeVariationPricesRegularPrice( $variation_regular_price, $variation, $parent){
+        return $variation_regular_price;
     }
 
     public function maybeGetChildren($children, $_product, $visible_only){
@@ -859,7 +886,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeVariationIsVisible($visible, $variation_id, $post_id, $variation){
         $_procedure = $this->_class."MAYBEISVARIATIONVISIBLE($variation_id): ";
 
-        if(LASERCOMMERCE_DEBUG) {
+        if(LASERCOMMERCE_PRICING_DEBUG) {
             $string = implode("|", 
                 array(
                     "visible: ".serialize($visible),
@@ -887,6 +914,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $_procedure = $this->_class."GETSTARHTML|$star($postID): ";
 
         $user = wp_get_current_user();
+        $tiers = $this->tree->serializeVisibleTiers();
 
         if(LASERCOMMERCE_HTML_DEBUG) {
             $string = implode("|", 
@@ -896,7 +924,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                     ("regular_price: ".$_product->regular_price),
                     ("sale_price: ".$_product->sale_price),
                     ("product: ".$_product->id),
-                    ("user: ".$user->ID)
+                    ("user: ".$user->ID),
+                    ("tiers: ".$tiers)
                 )
             );
             error_log($_procedure.$string);
@@ -929,16 +958,91 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $this->maybeGetStarHtml($price_html, $_product, 'empty_price');
     }
 
-    /** Functions for generating Gravity Forms Parameters */
-    public function gform_user_tier_string_paramter( $value ){
+    /** 
+     * Functions for generating Gravity Forms parameters and form tags
+     */
+
+    public function gform_user_tier_string_paramter( $value=null ){
         $_procedure = $this->_class."GFORM_TIER_STRING_PARAM: ";
-        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."value: $value");}
 
         $tierString = $this->tree->serializeVisibleTiers();
         if(LASERCOMMERCE_DEBUG) {error_log($_procedure."tierString: $tierString");}
 
         return $tierString;
     }
+
+    public function gform_user_is_wholesale($value=null){
+        $_procedure = $this->_class."GFORM_IS_WHOLESALE: ";
+
+        $isWholesale = $this->tree->tierNameVisible('Wholesale');
+        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isWholesale: $isWholesale");}
+
+        if($isWholesale){
+            return "YES";
+        } else {
+            return "NO";
+        }
+    }
+
+    public function gform_user_is_logged_in($value=null){
+        $_procedure = $this->_class."GFORM_IS_AUTH: ";
+
+        $isLoggedIn = is_user_logged_in();
+        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isLoggedIn: $isLoggedIn");}
+
+        if($isLoggedIn){
+            return "YES";
+        } else {
+            return "NO";
+        }
+    }
+
+    public function gf_setup_custom_merge_tag($tag, $value, $label = null){
+        if(!$label) $label = $tag;
+        add_filter(
+            'gform_custom_merge_tags', 
+            function($merge_tags, $form_id, $fields, $elemend_id) use ($tag, $label, $value) {
+                $merge_tags[] = array('label' => $label, 'tag' => "{"."$tag"."}");
+
+                return $merge_tags;
+            }, 
+            10, 
+            4
+        );
+        add_filter(
+            'gform_replace_merge_tags', 
+            function($text, $form, $lead, $url_encode, $esc_html, $nl2br, $format) use ($tag, $value){
+                $text = str_replace('{'.$tag.'}', $value, $text);
+
+                return $text;
+            }, 
+            10, 
+            7
+        );
+        add_filter(
+            'gform_field_content', 
+            function($field_content, $field, $value, $lead_id, $form_id) use ($tag, $value) {
+                if (strpos($field_content, '{'.$tag.'}') !== false) {
+                    $field_content = str_replace('{'.$tag.'}', $value, $field_content);
+                }
+
+                return $field_content;
+            }, 
+            10, 
+            5
+        );
+    }
+
+    public function gf_setup_lc_tags(){
+        $this->gf_setup_custom_merge_tag('user_is_wholesale', $this->gform_user_is_wholesale(), 'Is Wholesale');
+        $this->gf_setup_custom_merge_tag('user_tier_string', $this->gform_user_tier_string_paramter(), 'User Tier String');
+        $this->gf_setup_custom_merge_tag('user_is_logged_in', $this->gform_user_is_logged_in(), 'User Logged In');
+    }
+
+
+    /**
+     *  Actions and Filters!
+     */
     
     public function addActionsAndFilters() {
         // Admin filters:
@@ -974,6 +1078,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_tier_flat_to_woocommerce_get_variation_prices_hash') );
 
         add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3);
+        add_filter( 'woocommerce_variation_prices_price', array(&$this, 'maybeVariationPricesPrice'), 0, 3);
+        add_filter( 'woocommerce_variation_prices_regular_price', array(&$this, 'maybeVariationPricesRegularPrice'), 0, 3);
+        add_filter( 'woocommerce_variation_prices_sale_price', array(&$this, 'maybeVariationPricesSalePrice'), 0, 3);
+
         add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
         add_filter( 'woocommerce_variation_is_visible', array( &$this, 'maybeVariationIsVisible' ), 0, 4 );
 
@@ -986,6 +1094,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         /** Gravity Forms Extensions */
         add_filter('gform_field_value_user_tier_string', array(&$this, 'gform_user_tier_string_paramter'), 0, 1);
 
+        add_action('init', array(&$this, 'gf_setup_lc_tags'), 0, 0);
 
         parent::addActionsAndFilters();
 
