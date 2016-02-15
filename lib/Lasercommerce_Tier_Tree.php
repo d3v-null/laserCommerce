@@ -404,7 +404,10 @@ class Lasercommerce_Tier_Tree extends Lasercommerce_Abstract_Child{
     }
 
     public function serializeVisibleTiers(){
-        return $this->serializeTiers($this->getVisibleTiers());
+        $_procedure = $this->_class."SERIALIZE_VISIBLE_TIERS: ";
+        $tierString = $this->serializeTiers($this->getVisibleTiers());
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure.serialize($tierString));
+        return $tierString;
     }
 
     /**

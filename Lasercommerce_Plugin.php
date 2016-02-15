@@ -242,28 +242,18 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if($_product and isset($postID)){
             if($_product->is_type('variable')){
                 //TODO: This
-                switch ($star) {
-                    case '':
-                        $WC_price = get_post_meta($postID, '_price', True);
-                        break;
-                    case 'regular':
-                        $WC_price = get_post_meta($postID, '_regular_price', True);
-                        break;
-                    case 'sale':
-                        $WC_price = get_post_meta($postID, '_sale_price', True);
-                }
-            } else {
-                switch ($star) {
-                    case '':
-                        $WC_price = get_post_meta($postID, '_price', True);
-                        break;
-                    case 'regular':
-                        $WC_price = get_post_meta($postID, '_regular_price', True);
-                        break;
-                    case 'sale':
-                        $WC_price = get_post_meta($postID, '_sale_price', True);
-                }
             }
+            switch ($star) {
+                case '':
+                    $WC_price = get_post_meta($postID, '_price', True);
+                    break;
+                case 'regular':
+                    $WC_price = get_post_meta($postID, '_regular_price', True);
+                    break;
+                case 'sale':
+                    $WC_price = get_post_meta($postID, '_sale_price', True);
+            }
+            
             if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price);
             if( intval(floatval($WC_price) * 100) == intval(floatval($price)* 100) ){
                 $value = true;
@@ -753,7 +743,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
 
         if(LASERCOMMERCE_HTML_DEBUG) {
-            error_log($_procedure.serialize($hash));
+            error_log($_procedure.serialize(print_r($hash, true)));
+            // error_log($_procedure.serialize($hash['woocommerce_variation_prices_price']));
         }
 
         return $hash;
@@ -829,17 +820,17 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $prices_array;
     }
 
-    public function maybeVariationPricesPrice( $variation_price, $variation, $parent){
-        return $variation_price;
-    }
+    // public function maybeVariationPricesPrice( $variation_price, $variation, $parent){
+    //     return $variation_price;
+    // }
 
-    public function maybeVariationPricesSalePrice( $variation_sale_price, $variation, $parent){
-        return $variation_sale_price;
-    }
+    // public function maybeVariationPricesSalePrice( $variation_sale_price, $variation, $parent){
+    //     return $variation_sale_price;
+    // }
 
-    public function maybeVariationPricesRegularPrice( $variation_regular_price, $variation, $parent){
-        return $variation_regular_price;
-    }
+    // public function maybeVariationPricesRegularPrice( $variation_regular_price, $variation, $parent){
+    //     return $variation_regular_price;
+    // }
 
     public function maybeGetChildren($children, $_product, $visible_only){
         $postID = $this->getProductPostID($_product);
@@ -1078,9 +1069,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_tier_flat_to_woocommerce_get_variation_prices_hash') );
 
         add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3);
-        add_filter( 'woocommerce_variation_prices_price', array(&$this, 'maybeVariationPricesPrice'), 0, 3);
-        add_filter( 'woocommerce_variation_prices_regular_price', array(&$this, 'maybeVariationPricesRegularPrice'), 0, 3);
-        add_filter( 'woocommerce_variation_prices_sale_price', array(&$this, 'maybeVariationPricesSalePrice'), 0, 3);
+        // add_filter( 'woocommerce_variation_prices_price', array(&$this, 'maybeVariationPricesPrice'), 0, 3);
+        // add_filter( 'woocommerce_variation_prices_regular_price', array(&$this, 'maybeVariationPricesRegularPrice'), 0, 3);
+        // add_filter( 'woocommerce_variation_prices_sale_price', array(&$this, 'maybeVariationPricesSalePrice'), 0, 3);
 
         add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
         add_filter( 'woocommerce_variation_is_visible', array( &$this, 'maybeVariationIsVisible' ), 0, 4 );
