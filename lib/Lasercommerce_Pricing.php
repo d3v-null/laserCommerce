@@ -94,7 +94,9 @@ class Lasercommerce_Pricing {
 			$meta_key = $this->get_meta_key($key);
 			// if(WP_DEBUG) error_log("getting $meta_key from ".$this->id);
 			$value = get_post_meta($this->id, $meta_key, true); 
-			$value = $value ? $value : $defaults[$key];
+			if(!$value or strcmp($value, "None") == 0 ){
+				$value = $defaults[$key];
+			}
 		} else if(in_array($key, array('id'))) {
 			$value = $this->id;
 		} else {

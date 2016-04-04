@@ -253,9 +253,11 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 case 'sale':
                     $WC_price = get_post_meta($postID, '_sale_price', True);
             }
-            
-            if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price);
-            if( intval(floatval($WC_price) * 100) == intval(floatval($price)* 100) ){
+
+            if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price. " ? ".$price);
+            $WC_cents = intval(floatval($WC_price) * 100);
+            $cents = intval(floatval($price)* 100);
+            if($WC_cents and $WC_cents == $cents ){
                 $value = true;
             }
         }
@@ -1024,10 +1026,36 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         );
     }
 
+    public function gf_setup_dynamic_parameter($tag, $_value){
+        $_procedure = $this->_class."GFORM_SET_PARAM: ";
+        
+        if(LASERCOMMERCE_DEBUG) error_log($_procedure."setting $tag to $_value");
+
+        add_filter(
+            "gform_field_value_$tag",
+            function($value) use($_value){
+                return $_value;
+            },
+            10,
+            1
+        );
+    }
+
+    public function gf_setup_dynamic_meta_parameter($meta_key){
+        $user_id = get_current_user_id();
+        $meta_value = get_user_meta($user_id, $meta_key, true);
+        $this->gf_setup_dynamic_parameter("user_$meta_key", $meta_value);
+    }
+
     public function gf_setup_lc_tags(){
         $this->gf_setup_custom_merge_tag('user_is_wholesale', $this->gform_user_is_wholesale(), 'Is Wholesale');
         $this->gf_setup_custom_merge_tag('user_tier_string', $this->gform_user_tier_string_paramter(), 'User Tier String');
         $this->gf_setup_custom_merge_tag('user_is_logged_in', $this->gform_user_is_logged_in(), 'User Logged In');
+        // $this->gf_setup_dynamic_parameter('param_test', 'it works');
+        $this->gf_setup_dynamic_parameter('user_tier_string', $this->gform_user_tier_string_paramter());
+        foreach (array('pref_method', 'business_type', 'interest_level', 'how_hear_about') as $key) {
+            $this->gf_setup_dynamic_meta_parameter($key);
+        }
     }
 
 
