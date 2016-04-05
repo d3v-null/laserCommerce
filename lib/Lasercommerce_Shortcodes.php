@@ -23,6 +23,8 @@ class Lasercommerce_Shortcodes extends Lasercommerce_Abstract_Child
         return self::$instance;
     }
 
+    protected $tree;
+    protected $visibility;
 
     function __construct(){
         parent::__construct();

@@ -33,7 +33,7 @@ function Lasercommerce_init($file) {
 
     require_once(LASERCOMMECE_BASE.'/Lasercommerce_Plugin.php');
     global $Lasercommerce_Plugin;
-    $Lasercommerce_Plugin = new Lasercommerce_Plugin();
+    $Lasercommerce_Plugin = Lasercommerce_Plugin::instance();
 
     // Install the plugin
     // NOTE: this file gets run each time you *activate* the plugin.

@@ -44,7 +44,27 @@ include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Shortcodes.php');
  */
 class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
+    private static $instance;
+    
+    public static function init() {
+        if ( self::$instance == null ) {
+            self::$instance = new Lasercommerce_Plugin();
+        }
+    }
+
+    public static function instance() {
+        if ( self::$instance == null ) {
+            self::init();
+        }
+
+        return self::$instance;
+    }
+
     private $_class = "LC_PL_";
+
+    protected $tree;
+    protected $visibility;
+    protected $shortcodes;
 
     public function initTree(){
         // global $Lasercommerce_Tier_Tree;
@@ -852,14 +872,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         }
 
         // $hash[] = time();
-        if(LASERCOMMERCE_PRICING_DEBUG) {
-            error_log($_procedure.serialize(print_r($hash, true)));
+        // if(LASERCOMMERCE_PRICING_DEBUG) {
+            // error_log($_procedure.serialize(print_r($hash, true)));
             // error_log($_procedure.serialize($hash['woocommerce_variation_prices_price']));
-        }
-        if(LASERCOMMERCE_PRICING_DEBUG) {
-            error_log($_procedure."HASH POST: ".serialize(json_encode( $hash )) );
-            error_log($_procedure."HASH MD5 POST: ".md5( json_encode( $hash ) ) );
-        }
+        // }
+        // if(LASERCOMMERCE_PRICING_DEBUG) {
+        //     error_log($_procedure."HASH POST: ".serialize(json_encode( $hash )) );
+        //     error_log($_procedure."HASH MD5 POST: ".md5( json_encode( $hash ) ) );
+        // }
 
         return $hash;
     }

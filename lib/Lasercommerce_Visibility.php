@@ -25,6 +25,8 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     const CACHE_GROUP         = 'Lasercommerce_Visibility';
 
+    protected $tree;
+
     private static $instance;
     
     public static function init() {
@@ -79,30 +81,6 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
         // Controls permission to edit or delete posts.
         // add_filter( 'map_meta_cap', array( __CLASS__, 'map_meta_cap' ), 10, 4 );
     }
-
-    // public function prefix_option($option){
-    //     return $this->plugin->prefix($option);
-    // }
-
-    // public function unprefix_option( $option_name ){
-    //     return $this->plugin->unPrefix( $option_name );
-    // }    
-    
-    // public function get_tier_key_key(){
-    //     return $this->plugin->tier_key_key;
-    // }
-
-    // public function get_tier_tree_key(){
-    //     return $this->plugin->tier_tree_key;
-    // }
-
-    // public function get_option( $option_name, $default ){
-    //     return $this->plugin->getOption( $option_name, $default );
-    // }    
-
-    // public function set_option( $option_name, $option_value ){
-    //     return $this->plugin->updateOption( $option_name, $default );
-    // }   
 
     public static function tier_ids_satisfy_requirement( $tier_ids, $required_tier_ids ){
         if($tier_ids and $required_tier_ids){

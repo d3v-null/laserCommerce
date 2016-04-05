@@ -37,9 +37,9 @@ class Lasercommerce_OptionsManager {
     }
 
 
-    public $tier_tree_key = 'tier_tree';
-    public $tier_key_key = 'tier_key';
-    public $default_tier_key = 'default_tier';
+    const TIER_TREE_KEY = 'tier_tree';
+    const TIER_KEY_KEY = 'tier_key';
+    const DEFAULT_TIER_KEY = 'default_tier';
 
 
     /**
