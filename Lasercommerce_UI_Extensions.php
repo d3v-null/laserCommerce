@@ -539,6 +539,11 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     public function lasercommerce_loop_prices(){
         $_procedure = $this->_class."LOOPPRICES: ";
 
+        global $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+        $lasercommerce_pricing_trace .= $_procedure; 
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+
         global $product;
         
         $majorVisibleTiers = $this->tree->getMajorTiers($this->tree->getVisibleTiers());
@@ -585,6 +590,9 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
             ?></div><?php
         }
+
+        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END: ");
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
     }    
 
     public function make_price_loop_mods(){
