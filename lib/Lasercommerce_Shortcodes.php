@@ -7,10 +7,27 @@ class Lasercommerce_Shortcodes extends Lasercommerce_Abstract_Child
 {
     const _CLASS = "LC_SC_";
 
+    private static $instance;
+    
+    public static function init() {
+        if ( self::$instance == null ) {
+            self::$instance = new Lasercommerce_Shortcodes();
+        }
+    }
+
+    public static function instance() {
+        if ( self::$instance == null ) {
+            self::init();
+        }
+
+        return self::$instance;
+    }
+
+
     function __construct(){
         parent::__construct();
-        $this->tree = $this->plugin->tree;
-        $this->visibility = $this->plugin->visibility;
+        $this->tree = Lasercommerce_Tier_Tree::instance();
+        $this->visibility = Lasercommerce_Visibility::instance();
         add_action( 'init', array( &$this, 'wp_init' ), 999);
     }
 

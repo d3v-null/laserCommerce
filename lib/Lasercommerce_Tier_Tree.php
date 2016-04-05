@@ -23,29 +23,21 @@ class Lasercommerce_Tier_Tree extends Lasercommerce_Abstract_Child{
     //     $this->plugin = $Lasercommerce_Plugin;
     // }
 
-    // public function prefix_option($option){
-    //     return $this->plugin->prefix($option);
-    // }
-
-    // public function unprefix_option( $option_name ){
-    //     return $this->plugin->unPrefix( $option_name );
-    // }    
+    private static $instance;
     
-    // public function get_tier_key_key(){
-    //     return $this->plugin->tier_key_key;
-    // }
+    public static function init() {
+        if ( self::$instance == null ) {
+            self::$instance = new Lasercommerce_Tier_Tree();
+        }
+    }
 
-    // public function get_tier_tree_key(){
-    //     return $this->plugin->tier_tree_key;
-    // }
+    public static function instance() {
+        if ( self::$instance == null ) {
+            self::init();
+        }
 
-    // public function get_option( $option_name, $default ){
-    //     return $this->plugin->getOption( $option_name, $default );
-    // }    
-
-    // public function set_option( $option_name, $option_value ){
-    //     return $this->plugin->updateOption( $option_name, $default );
-    // }    
+        return self::$instance;
+    }
 
     /**
      * Gets the tier tree in the form of an array of arrays
@@ -335,9 +327,9 @@ class Lasercommerce_Tier_Tree extends Lasercommerce_Abstract_Child{
             }
 
             // if(LASERCOMMERCE_DEBUG) error_log($_procedure."user_id: ".serialize($user_id));
-            $tier_key = $this->plugin->getOption($this->plugin->tier_key_key);
+            $tier_key = $this->get_option($this->tier_key_key);
             $user_tier_string = get_user_meta($user_id, $tier_key, true);
-            $default_tier = $this->plugin->getOption($this->plugin->default_tier_key);
+            $default_tier = $this->get_option($this->default_tier_key);
             if(!$user_tier_string){
                 // if(LASERCOMMERCE_DEBUG) error_log($_procedure."using default");
                 $user_tier_string = $default_tier;

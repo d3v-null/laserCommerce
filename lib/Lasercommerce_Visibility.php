@@ -25,10 +25,27 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     const CACHE_GROUP         = 'Lasercommerce_Visibility';
 
+    private static $instance;
+    
+    public static function init() {
+        if ( self::$instance == null ) {
+            self::$instance = new Lasercommerce_Visibility();
+        }
+    }
+
+    public static function instance() {
+        if ( self::$instance == null ) {
+            self::init();
+        }
+
+        return self::$instance;
+    }
+
+
     function __construct()
     {
         parent::__construct();
-        $this->tree = $this->plugin->tree;
+        $this->tree = Lasercommerce_Tier_Tree::instance();
 
         add_action( 'init', array( __CLASS__, 'wp_init' ), 999);
 

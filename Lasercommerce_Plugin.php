@@ -46,32 +46,32 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     private $_class = "LC_PL_";
 
-    public $tier_tree_key = 'tier_tree';
-    public $tier_key_key = 'tier_key';
-    public $default_tier_key = 'default_tier';
-
     public function initTree(){
-        global $Lasercommerce_Tier_Tree;
-        if( !isset($Lasercommerce_Tier_Tree) ) {
-            $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
-        }     
-        $this->tree = $Lasercommerce_Tier_Tree;
+        // global $Lasercommerce_Tier_Tree;
+        // if( !isset($Lasercommerce_Tier_Tree) ) {
+        //     $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
+        // }     
+        // $this->tree = $Lasercommerce_Tier_Tree;
+
+        $this->tree = Lasercommerce_Tier_Tree::instance();
     }
 
     public function initVisibility(){
-        global $Lasercommerce_Visibility;
-        if( !isset($Lasercommerce_Visibility)) {
-            $Lasercommerce_Visibility = new Lasercommerce_Visibility( $this->getOptionNamePrefix());
-        }
-        $this->visibility = $Lasercommerce_Visibility;
+        // global $Lasercommerce_Visibility;
+        // if( !isset($Lasercommerce_Visibility)) {
+        //     $Lasercommerce_Visibility = new Lasercommerce_Visibility( $this->getOptionNamePrefix());
+        // }
+        // $this->visibility = $Lasercommerce_Visibility;
+        $this->visibility = Lasercommerce_Visibility::instance();
     }
 
     public function addShortcodes(){
-        global $Lasercommerce_Shortcodes;
-        if( !isset($Lasercommerce_Visibility)) {
-            $Lasercommerce_Shortcodes = new Lasercommerce_Shortcodes( $this->getOptionNamePrefix());
-        }
-        $this->shortcodes = $Lasercommerce_Shortcodes;
+        // global $Lasercommerce_Shortcodes;
+        // if( !isset($Lasercommerce_Visibility)) {
+        //     $Lasercommerce_Shortcodes = new Lasercommerce_Shortcodes( $this->getOptionNamePrefix());
+        // }
+        // $this->shortcodes = $Lasercommerce_Shortcodes;
+        $this->shortcodes = Lasercommerce_Shortcodes::instance();
     }
 
     /**
@@ -847,7 +847,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         foreach ( $filter_names as $filter_name ) {
             // error_log($_procedure.serialize(print_r($hash[$filter_name], true)));
-            unset( $hash[$filter_name]);
+            //TODO: comment this next line once classes are working 
+            // unset( $hash[$filter_name]);
         }
 
         // $hash[] = time();

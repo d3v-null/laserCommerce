@@ -37,6 +37,10 @@ class Lasercommerce_OptionsManager {
     }
 
 
+    public $tier_tree_key = 'tier_tree';
+    public $tier_key_key = 'tier_key';
+    public $default_tier_key = 'default_tier';
+
 
     /**
      * Define your options meta data here as an array, where each element in the array
