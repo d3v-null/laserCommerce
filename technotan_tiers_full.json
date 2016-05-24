@@ -1,0 +1,64 @@
+[
+  {
+    "omniscient": true,
+    "name": "Administrator",
+    "id": "ADMIN"
+  }, {
+    "major": true,
+    "name": "Retail",
+    "id": "RN",
+    "children": [
+      {
+        "name": "Exp. Retail",
+        "id": "XRN"
+      }, {
+        "name": "Retail Preferred",
+        "id": "RP",
+        "children": [
+          {
+            "name": "Exp. Retail Preferred",
+            "id": "XRP"
+          }
+        ]
+      }, {
+        "major": true,
+        "name": "Wholesale",
+        "id": "WN",
+        "children": [
+          {
+            "name": "Exp. Wholesale",
+            "id": "XWN"
+          }, {
+            "name": "Wholesale Preferred",
+            "id": "WP",
+            "children": [
+              {
+                "name": "Exp. Wholesale Preferred",
+                "id": "XWP"
+              }
+            ]
+          }, {
+            "major": true,
+            "name": "Distributor",
+            "id": "DN",
+            "children": [
+              {
+                "name": "Exp. Distributor",
+                "id": "XDN"
+              }, {
+                "name": "Distributor Preferred",
+                "id": "DP",
+                "children": [
+                  {
+                    "name": "Exp. Distributor Preferred",
+                    "id": "XDP"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

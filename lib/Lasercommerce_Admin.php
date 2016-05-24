@@ -8,14 +8,14 @@ class LaserCommerce_Admin extends WC_Settings_Page{
 
     /**
      * Constructs the settings page class, hooking into woocommerce settings api
-     * 
-     * @param $plugin The main instance of the lasercommerce plugin 
+     *
+     * @param $plugin The main instance of the lasercommerce plugin
      */
-    public function __construct( $plugin ) {
+    public function __construct( $plugin = null ) {
         $this->id            = 'lasercommerce';
         $this->label         = __('LaserCommerce', 'lasercommerce');
-        $this->plugin        = $plugin;
-        
+        $this->plugin        = Lasercommerce_Plugin::instance();
+
         parent::__construct();
         // add_filter( 'woocommerce_settings_tabs_array', array($this, 'add_settings_page' ), 20 );
         // add_action( 'woocommerce_settings_' . $this->id, array( $this, 'output_sections' ) );
@@ -23,7 +23,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         // add_action( 'woocommerce_settings_save_' . $this->id, array( $this, 'save' ) );
 
         // add_action( 'admin_enqueue_scripts', array(&$this, 'nestable_init'));
-        // add_action( 'woocommerce_settings_' . $this->id, array( $this, 'nestable_init' ) ); 
+        // add_action( 'woocommerce_settings_' . $this->id, array( $this, 'nestable_init' ) );
         $this->nestable_init();
         add_action( 'woocommerce_get_sections_' . $this->id, array( &$this, 'add_sections'));
         add_action( 'woocommerce_get_settings_' . $this->id, array( &$this, 'add_settings'), 10, 2);
@@ -35,7 +35,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         $tier_tree_option_name = $this->prefix_option($this->get_tier_tree_key());
         add_filter( 'woocommerce_admin_settings_sanitize_option_'.$tier_tree_option_name, array(&$this, 'sanitize_option_tier_tree'), 10, 3 );
         // add_action( 'woocommerce_update_option_tier_tree', array( $this, 'tier_tree_save' ) );
-    }   
+    }
 
     public function get_option( $option_name, $default ){
         return $this->plugin->getOption( $option_name, $default );
@@ -45,29 +45,31 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     public function set_option( $option_name, $option_value ){
         return $this->plugin->updateOption( $option_name, $default );
     }
-    
+
     public function prefix_option( $option_name ){
         return $this->plugin->prefix( $option_name );
-    }    
+    }
 
     public function unprefix_option( $option_name ){
         return $this->plugin->unPrefix( $option_name );
     }
 
     public function get_tier_key_key(){
-        return $this->plugin->tier_key_key;
+				return Lasercommerce_OptionsManager::TIER_KEY_KEY;
+        // return $this->plugin->tier_key_key;
     }
 
     public function get_tier_tree_key(){
-        return $this->plugin->tier_tree_key;
+				return Lasercommerce_OptionsManager::TIER_TREE_KEY;
+        // return $this->plugin->tier_tree_key;
     }
 
     public function get_default_tier_key(){
-        return $this->plugin->default_tier_key;
+        return Lasercommerce_OptionsManager::DEFAULT_TIER_KEY;
     }
 
     /**
-     * Initializes the nestable jquery functions responsible for the drag and drop 
+     * Initializes the nestable jquery functions responsible for the drag and drop
      * functionality in the tier tree interface
      */
     public function nestable_init(){
@@ -87,8 +89,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             // Add IE conditional tags for IE 7 and older
             $wp_styles->add_data( 'prefix-font-awesome-ie', 'conditional', 'lte IE 7' );
         }
-    } 
-    
+    }
+
     /**
      * Overrides the get_sections() method of the WC_Settings Api
      * used by the api to generate the sections of the pages
@@ -98,15 +100,15 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         if(LASERCOMMERCE_DEBUG) error_log($_procedure);
 
         $sections[''] = __('Advanced Pricing and Visibility', LASERCOMMERCE_DOMAIN);
-        
+
         return $sections;
     }
-    
+
     /**
      * Filter that adds the settings for this page
      *
-     * @param array $settings 
-     * @param string $current_section 
+     * @param array $settings
+     * @param string $current_section
      */
     public function add_settings( $settings, $current_section=null ) {
         $_procedure = $this->_class."ADD_SETTINGS: ";
@@ -116,7 +118,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         }
 
         if( !$current_section ) { //Advanced Pricing and Visibility
-            $settings[] = array( 
+            $settings[] = array(
                 'title' => __( 'LaserCommerce Advanced Pricing and Visibility Options', LASERCOMMERCE_DOMAIN ),
                 'id'    => 'options',
                 'type'  => 'title',
@@ -144,27 +146,27 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 'type' => 'sectionend',
                 'id' => 'options'
             );
-        } 
+        }
 
         return $settings;
         //TODO: sanitize price tiers
         //TODO: enter price tiers in table
-    }    
-    
+    }
+
     // /**
     //  * Used bt the WC_Settings_Api to output the fields in the settings array
     //  */
     // public function output() {
     //     global $current_section;
-        
+
     //     if( !$current_section){ //Advanced Pricing and Visibility
     //         $settings = $this->get_settings();
-        
+
     //         WC_Admin_Settings::output_fields($settings );
     //     }
     // }
 
-    public function output_nestable($id, $json){ 
+    public function output_nestable($id, $json){
         $nestable_id = $id.'_nestable';
         $trash_id = $id.'_trash';
         $factory_id = $id.'_factory';
@@ -174,7 +176,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             <ol class="dd-list">
                 <div id="dd-empty-placeholder"></div>
             </ol>
-            <?php 
+            <?php
                 // echo '<ol class="dd-list">';
                 // if($tree) {
                 //     foreach ($tree as $node) {
@@ -187,7 +189,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             ?>
         </div>
         <div class="nestable_factory" id="<?php echo esc_attr($factory_id); ?>">
-            
+
         </div>
         <p><?php _e('Trash', LASERCOMMERCE_DOMAIN); ?></p>
         <div class="dd dd-shaded-handle" id="<?php echo esc_attr($trash_id); ?>">
@@ -195,10 +197,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         </div>
 
         <textarea
-            class="tier_tree_field" 
+            class="tier_tree_field"
             type="text"
-            id="<?php echo esc_attr( $id ); ?>" 
-            name="<?php echo esc_attr( $id ); ?>" 
+            id="<?php echo esc_attr( $id ); ?>"
+            name="<?php echo esc_attr( $id ); ?>"
             <?php if(LASERCOMMERCE_DEBUG) {
                 echo 'style="width:100%; max-width:600px;" ';
                 echo 'rows=10 ';
@@ -207,7 +209,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             } ?>
         >
             <?php echo wp_kses_data($json) ?>
-        </textarea> 
+        </textarea>
         <script type="text/javascript">
 ;
 (function ($) {
@@ -231,7 +233,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 output.val(window.JSON.stringify(l.nestable('serialize')));
             } else {
                 output.val('JSON browser support required');
-            }   
+            }
         }
 
         function buildItem(item) {
@@ -296,7 +298,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
 
                 html += "<ol class='dd-list'>";
                 $.each(
-                    item.children, 
+                    item.children,
                     function (index, sub) {
                         html += buildItem(sub);
                     }
@@ -333,8 +335,8 @@ class LaserCommerce_Admin extends WC_Settings_Page{
         nestable_wrapper
         .find('.dd-item input.lc_node')
         .on(
-            'change', 
-            (function(nestable_wrapper){    
+            'change',
+            (function(nestable_wrapper){
                 return function(e){
                     var input = e.length ? e : $(e.target)
                     var val = (input.attr('type') === 'checkbox' ? input.is(':checked') : input.val() );
@@ -352,12 +354,12 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 };
             })(nestable_wrapper)
         )
-    });        
+    });
 
-})(jQuery); 
-        </script>        
+})(jQuery);
+        </script>
     <?php }
-       
+
     /**
      * Used by the WC_Settings to output the price tiers setting html
      *
@@ -412,7 +414,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
     <td class="forminp">
         <fieldset>
             <legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
-            <?php 
+            <?php
                 echo $description_html;
                 $this->output_nestable($data['id'], $option_value);
                 // $unused_tree = array();
@@ -421,7 +423,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
                 // }
                 // $this->output_nestable($unused_tree, $names, 'nestable-unused');
             ?>
- 
+
         </fieldset>
     </td>
 </tr>
@@ -443,7 +445,7 @@ class LaserCommerce_Admin extends WC_Settings_Page{
             $this->set_option( $field['id'], $_POST[$field['id']]);
         }
     }
-    
+
     /** (Unfinished) Outputs a donate box section in the admin interface
      */
     public function donationBoxSection(){
@@ -472,10 +474,10 @@ class LaserCommerce_Admin extends WC_Settings_Page{
       */
     // public function save() {
     //     global $current_section;
-        
+
     //     if( !$current_section ) {
     //         $settings = $this->get_settings();
-            
+
     //         WC_Admin_Settings::save_fields( $settings );
     //     }
     // }
