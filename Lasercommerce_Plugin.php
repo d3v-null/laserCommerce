@@ -1213,7 +1213,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $_procedure = $this->_class."GFORM_TIER_STRING_PARAM: ";
 
         $tierString = $this->tree->serializeVisibleTiers();
-        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."tierString: $tierString");}
+        // if(LASERCOMMERCE_DEBUG) {error_log($_procedure."tierString: $tierString");}
 
         return $tierString;
     }
@@ -1222,7 +1222,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $_procedure = $this->_class."GFORM_IS_WHOLESALE: ";
 
         $isWholesale = $this->tree->tierNameVisible('Wholesale');
-        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isWholesale: $isWholesale");}
+        // if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isWholesale: $isWholesale");}
 
         if($isWholesale){
             return "YES";
@@ -1235,7 +1235,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $_procedure = $this->_class."GFORM_IS_AUTH: ";
 
         $isLoggedIn = is_user_logged_in();
-        if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isLoggedIn: $isLoggedIn");}
+        // if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isLoggedIn: $isLoggedIn");}
 
         if($isLoggedIn){
             return "YES";
@@ -1296,18 +1296,21 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     public function gf_setup_dynamic_meta_parameter($meta_key){
+        // For a given key, configure Gravity forms to save the key to the users profile
         $user_id = get_current_user_id();
         $meta_value = get_user_meta($user_id, $meta_key, true);
         $this->gf_setup_dynamic_parameter("user_$meta_key", $meta_value);
     }
 
     public function gf_setup_lc_tags(){
+        // Sets up Gravity Forms to save certain fields to the user profile when submitting a form
         $this->gf_setup_custom_merge_tag('user_is_wholesale', $this->gform_user_is_wholesale(), 'Is Wholesale');
         $this->gf_setup_custom_merge_tag('user_tier_string', $this->gform_user_tier_string_paramter(), 'User Tier String');
         $this->gf_setup_custom_merge_tag('user_is_logged_in', $this->gform_user_is_logged_in(), 'User Logged In');
         // $this->gf_setup_dynamic_parameter('param_test', 'it works');
         $this->gf_setup_dynamic_parameter('user_tier_string', $this->gform_user_tier_string_paramter());
-        foreach (array('pref_method', 'business_type', 'interest_level', 'how_hear_about') as $key) {
+        // TODO: make this configurable in admin interface
+        foreach (array('pref_method', 'business_type', 'interest_level', 'how_hear_about', 'tans_per_wk') as $key) {
             $this->gf_setup_dynamic_meta_parameter($key);
         }
     }
