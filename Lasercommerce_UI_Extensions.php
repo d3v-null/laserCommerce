@@ -3,7 +3,7 @@
 include_once('Lasercommerce_LifeCycle.php');
 
 /**
-* 
+*
 */
 class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 {
@@ -11,20 +11,20 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
     /**
      * include the lasercommerce admin tab in woocommerce settings
-     * 
+     *
      * @param array $settings An array specifying the settings to display in the admin page
-     * @return array $settings 
+     * @return array $settings
      */
     public function includeAdminPage($settings){
         $pluginDir = plugin_dir_path( __FILE__ );
         include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Admin.php');
         $settings[] = new Lasercommerce_Admin($this);
         return $settings;
-    }    
+    }
 
     /**
      * Used by maybeAddSaveTierField to add price fields to the product admin interface for a given tier
-     * 
+     *
      * @param string $tier_slug The internal name for the price tier (eg. wholesale)
      * @param string $tier_name The human readable name for the price tier (eg. Wholesale)
      */
@@ -34,13 +34,13 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         //TODO: maybe sanitize tier_name a little
         //$tier_name = sanitize_key($tier_name);
         if( $tier_name == "" ) $tier_name = $tier_slug;
-        $prefix = $this->getOptionNamePrefix(); 
-        
+        $prefix = $this->getOptionNamePrefix();
+
         // The following code was inspred by the same code in WooCommerce in order to match the style:
         // https://github.com/woothemes/woocommerce/blob/master/includes/admin/meta-boxes/class-wc-meta-box-product-data.php
 
-        add_action( 
-            'woocommerce_product_options_general_product_data',  
+        add_action(
+            'woocommerce_product_options_general_product_data',
             function() use ($tier_slug, $tier_name, $prefix){
                 global $post, $thepostid;
                 if( !isset($thepostid) ){
@@ -54,23 +54,23 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 $sale_price     = (isset($pricing->sale_price)) ? esc_attr($pricing->sale_price) : '' ;
 
                 // Regular Price
-                woocommerce_wp_text_input( 
-                    array( 
-                        'id' => $prefix.$tier_slug."_regular_price", 
+                woocommerce_wp_text_input(
+                    array(
+                        'id' => $prefix.$tier_slug."_regular_price",
                         'value' => $regular_price,
-                        'label' => $tier_name . ' ' . __( "Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
-                        'data_type' => 'price' 
-                    ) 
-                );   
+                        'label' => $tier_name . ' ' . __( "Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')',
+                        'data_type' => 'price'
+                    )
+                );
                 // Special Price
-                woocommerce_wp_text_input( 
-                    array( 
-                        'id' => $prefix.$tier_slug."_sale_price", 
+                woocommerce_wp_text_input(
+                    array(
+                        'id' => $prefix.$tier_slug."_sale_price",
                         'value' => $sale_price,
-                        'label' => $tier_name . ' ' . __( "Sale Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')', 
+                        'label' => $tier_name . ' ' . __( "Sale Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')',
                         'description' => '<a href="#" class="sale_schedule">' . __( 'Schedule', 'lasercommerce' ) . '</a>',
-                        'data_type' => 'price' 
-                    ) 
+                        'data_type' => 'price'
+                    )
                 );
 
                 $sale_price_dates_from = ( $date = $pricing->sale_price_dates_from ) ? date_i18n( 'Y-m-d', floatval($date) ) : '';
@@ -91,12 +91,12 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
         /* for variations <?php do_action( 'woocommerce_product_after_variable_attributes', $loop, $variation_data, $variation ); ?> */
         add_action(
-            'woocommerce_product_after_variable_attributes', 
+            'woocommerce_product_after_variable_attributes',
             function($loop, $variation_data, $variation) use ($tier_slug, $tier_name, $prefix){
                 if(LASERCOMMERCE_DEBUG) error_log("called woocommerce_product_after_variable_attributes closure");
 
                 $variation_id = $variation->ID;
-                
+
                 $regular_label = $tier_name . ' ' . __( "Regular Price", 'lasercommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')';
                 $sale_label = $tier_name . ' ' . __( 'Sale Price:', 'woocommerce' ) . ' (' . get_woocommerce_currency_symbol() . ')';
                 $regular_name = 'variable_' . $tier_slug . '_regular_price[' . (string)($loop) . ']';
@@ -116,28 +116,28 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                         <label><?php echo $sale_label; ?> <a href="#" class="sale_schedule"><?php _e( 'Schedule', 'woocommerce' ); ?></a><a href="#" class="cancel_sale_schedule" style="display:none"><?php _e( 'Cancel schedule', 'woocommerce' ); ?></a></label>
                         <input type="text" size="5" name="<?php echo $sale_name; ?>" value="<?php echo $sale_price; ?>" class="wc_input_price" />
                     </p>
-                </div>  
-                <?php          
+                </div>
+                <?php
             },
             0,
             3
         );
         //TODO: other product types
     }
-    
+
     /**
      * Used by maybeAddSavePriceField to add a hook to save price fields for a given tier
-     * TODO: make this work with special prices 
-     * 
-     * @param string $tier_slug The slug of the tier the price fields apply to  
+     * TODO: make this work with special prices
+     *
+     * @param string $tier_slug The slug of the tier the price fields apply to
      * @param string $tier_name The human readable name for the price tier
-     */ 
+     */
     private function saveTierFields($tier_slug, $tier_name = ""){
         //sanitize tier_slug and $tier_name
         $tier_slug = sanitize_key($tier_slug);
         $tier_name = sanitize_key($tier_name);
         if( $tier_name == "" ) $tier_name = $tier_slug;
-        $prefix = $this->getOptionNamePrefix(); 
+        $prefix = $this->getOptionNamePrefix();
         $process_product_meta_callback = function($post_id) use ($tier_slug, $tier_name, $prefix){
             // if(LASERCOMMERCE_DEBUG) error_log("calling process_product_meta_simple callback");
 
@@ -151,7 +151,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             $regular_id     = $prefix.$tier_slug."_regular_price";
             $regular_price  = isset($_POST[$regular_id]) ? wc_format_decimal( $_POST[$regular_id] ) : '';
             $pricing->regular_price = $regular_price;
-            
+
             $sale_id     = $prefix.$tier_slug."_sale_price";
             $sale_price  = isset($_POST[$sale_id]) ? wc_format_decimal( $_POST[$sale_id] ) : '';
             $pricing->sale_price = $sale_price;
@@ -173,10 +173,10 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         add_action(  'woocommerce_process_product_meta_bundle', $process_product_meta_callback );
         add_action(  'woocommerce_process_product_meta_composite', $process_product_meta_callback );
 
-        //TODO: other product types 
+        //TODO: other product types
         /* for variable: do_action( 'woocommerce_save_product_variation', $variation_id, $i ); */
-        add_action( 
-            'woocommerce_save_product_variation', 
+        add_action(
+            'woocommerce_save_product_variation',
             function($variation_id, $i=0) use ($tier_slug, $tier_name, $prefix){
                 // if(LASERCOMMERCE_DEBUG) {
                 //     error_log("called woocommerce_save_product_variation closure");
@@ -188,7 +188,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 $pricing = new Lasercommerce_Pricing($variation_id, $tier_slug);
 
                 $variable_regular_price         = $_POST['variable_'.$tier_slug.'_regular_price'];
-                $variable_sale_price            = $_POST['variable_'.$tier_slug.'_sale_price'];   
+                $variable_sale_price            = $_POST['variable_'.$tier_slug.'_sale_price'];
                 // $variable_sale_price_dates_from = $_POST['variable_'.$tier_slug.'_sale_price_dates_from'];
                 // $variable_sale_price_dates_to   = $_POST['variable_'.$tier_slug.'_sale_price_dates_to'];
 
@@ -213,7 +213,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
                 // Save Dates
                 // update_post_meta( $variation_id, $prefix.$tier_slug.'_sale_price_dates_from', $date_from ? strtotime( $date_from ) : '' );
-                // update_post_meta( $variation_id, $prefix.$tier_slug.'_sale_price_dates_to', $date_to ? strtotime( $date_to ) : '' );            
+                // update_post_meta( $variation_id, $prefix.$tier_slug.'_sale_price_dates_to', $date_to ? strtotime( $date_to ) : '' );
 
                 // if ( $date_to && ! $date_from ) {
                 //     update_post_meta( $variation_id, '_sale_price_dates_from', strtotime( 'NOW', current_time( 'timestamp' ) ) );
@@ -241,7 +241,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             2
         );
     }
-    
+
     /**
      * Adds text fields and form metadata handlers to product data page for given tiers
      * @param array $tiers a list of tiers
@@ -261,7 +261,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
             $this->addTierFields($tier_id, $tier_name);
             $this->saveTierFields($tier_id, $tier_name);
-        } 
+        }
     }
 
     public function maybeAddPricingTab( $tabs ){
@@ -305,7 +305,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             $tabs['Pricing'] = array(
                 'title' => __('Pricing', 'Lasercommerce'),
                 'priority' => 50,
-                'callback' => function() use ($visiblePrices) { 
+                'callback' => function() use ($visiblePrices) {
                     ?>
 <table class='shop_table lasercommerce pricing_table'>
     <thead>
@@ -391,14 +391,14 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
         // if(LASERCOMMERCE_DEBUG) error_log($_procedure."majorTiers: ".serialize($majorTiers));
 
-        add_filter( 
-            'manage_edit-product_columns', 
+        add_filter(
+            'manage_edit-product_columns',
             function($columns) use ($majorTiers){
                 $_procedure = "CALLBACK_MANAGE_EDIT_PRODUCT_COLS: ";
-                // if(LASERCOMMERCE_DEBUG) error_log($_procedure."columns: ".serialize($columns)); 
-                
+                // if(LASERCOMMERCE_DEBUG) error_log($_procedure."columns: ".serialize($columns));
+
                 $new_cols = array();
-                if(is_array($majorTiers)) foreach ($majorTiers as $tier) { 
+                if(is_array($majorTiers)) foreach ($majorTiers as $tier) {
                     $tier_id = $tier->id;
                     // $tier_id = $this->tree->getTierID($tier);
                     if(is_null($tier_id)){
@@ -415,17 +415,17 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         );
 
         add_action(
-            'manage_product_posts_custom_column', 
+            'manage_product_posts_custom_column',
             function( $column ) {
                 $_procedure = "CALLBACK_MANAGE_PRODUCT_POSTS_COLS: ";
-                
+
                 // if(LASERCOMMERCE_DEBUG) error_log($_procedure."");
 
                 global $post;
 
                 if ( empty( $the_product ) || $the_product->id != $post->ID ) {
                     $the_product = wc_get_product( $post );
-                } 
+                }
 
                 $prefix = $this->getOptionNamePrefix();
 
@@ -511,7 +511,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         <input type="text" name="_<?php echo $sale_price_id;?>" class="text sale_price <?php echo $sale_price_id;?>" placeholder="<?php echo sprintf( __( 'Enter sale price (%s)', 'woocommerce' ), get_woocommerce_currency_symbol() ); ?>" value="" />
     </label>
 </div>
-                    <?php                    
+                    <?php
                 }
             }
         );
@@ -521,31 +521,31 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         $screen  = get_current_screen();
 
         if( in_array($screen->id, array('product'))){
-            wp_register_script( 
-                'jquery-date-picker-field-extra-js', 
-                plugins_url('/js/jquery.date-picker-field-extra.js', __FILE__), 
+            wp_register_script(
+                'jquery-date-picker-field-extra-js',
+                plugins_url('/js/jquery.date-picker-field-extra.js', __FILE__),
                 array('jquery', 'wc-admin-meta-boxes' ),
                 0.1
             );
             wp_enqueue_script( 'jquery-date-picker-field-extra-js' );
-        }        
+        }
     }
 
 
     public function addVariableProductBulkEditActions(){
         //todo: this
-    }        
+    }
 
     public function lasercommerce_loop_prices(){
         $_procedure = $this->_class."LOOPPRICES: ";
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
-        $lasercommerce_pricing_trace .= $_procedure; 
+        $lasercommerce_pricing_trace .= $_procedure;
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         global $product;
-        
+
         $majorVisibleTiers = $this->tree->getMajorTiers($this->tree->getVisibleTiers());
         $current_price = $product->get_price_html();
         $prices = array();
@@ -572,7 +572,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
         if(!empty($prices)) {
             ?><div class="price price_tier_table"><?php
-            
+
             foreach($prices as $tier_id => $price_html) {
                 ?>
                     <div class="price_tier_row price_tier_<?php echo $tier_id; ?>">
@@ -585,15 +585,15 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                             <?php echo $price_html; ?>
                         </span>
                     </div>
-                <?php 
+                <?php
             }
 
             ?></div><?php
         }
 
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END: ");
-        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old; 
-    }    
+        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old;
+    }
 
     public function make_price_loop_mods(){
         // remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price');
@@ -653,7 +653,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     public function term_restrictions_column_content($content, $column_name, $term_id){
         $_procedure = $this->_class . "TIER_RESTR_COL_CONT: ";
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
-        
+
         if($column_name != Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY){
             return $content;
         }
@@ -691,7 +691,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         if(is_admin()){
             $this->maybeAddSaveTierFields( $this->tree->getTreeTiers() );
             add_action( 'admin_enqueue_scripts', array( &$this, 'product_admin_scripts') );
-            add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );              
+            add_filter( 'woocommerce_get_settings_pages', array(&$this, 'includeAdminPage') );
             $this->maybeAddExtraPricingColumns();
             add_action( 'init', array(&$this, 'add_term_restriction_admin_actions'));
             // $this->add_term_restriction_admin_actions();
@@ -705,8 +705,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         // $this->maybeAddBulkEditOptions();
 
         //TODO: Make modifications to variable product bulk edit
-        // add_action( 
-        //     'woocommerce_variable_product_bulk_edit_actions', 
+        // add_action(
+        //     'woocommerce_variable_product_bulk_edit_actions',
         //     array(&$this, 'addVariableProductBulkEditActions')
         // );
     }
