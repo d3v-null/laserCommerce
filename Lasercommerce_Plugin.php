@@ -559,10 +559,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
 
         // $tierString = $this->tree->serializeVisibleTiers();
-
+        //
         // $hash = array(
-            // $postID,
-            // $tierString
+        //     $postID,
+        //     $tierString
         // );
 
         // $cache_key  = 'lc_lowestPricings' . substr( md5( json_encode( $hash ) ), 0, 22 ) ;
