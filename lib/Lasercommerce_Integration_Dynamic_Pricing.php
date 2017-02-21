@@ -95,6 +95,52 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         // }
     }
 
+    public function patched_dp_on_get_price($base_price, $_product, $force_calculation = false){
+        $_procedure = self::_CLASS . "PATCHED_DP_ON_GET_PRICE: ";
+
+        global $product;
+
+        $dynamic_pricing_instance = $this->get_integration_instance();
+
+        $composite_ajax = did_action('wp_ajax_woocommerce_show_composited_product') | did_action('wp_ajax_nopriv_woocommerce_show_composited_product') | did_action('wc_ajax_woocommerce_show_composited_product');
+
+	    $result_price = $base_price;
+        //Is Product check so this does not run on the cart page.  Cart items are discounted when loaded from session.
+        if ((is_object($product) && $product->id == $_product->id) || (function_exists('is_shop') && is_shop()) || is_product() || is_tax() || $force_calculation || $composite_ajax) {
+	        // $cache_id = $_product->get_id() . spl_object_hash( $_product );
+	        // if ( isset( $dynamic_pricing_instance->cached_adjustments[ $cache_id ] ) ) {
+		    //     return $dynamic_pricing_instance->cached_adjustments[ $cache_id ];
+	        // }
+
+        	$id = isset($_product->variation_id) ? $_product->variation_id : $_product->id;
+            $discount_price = false;
+            $working_price = isset($dynamic_pricing_instance->discounted_products[$id]) ? $dynamic_pricing_instance->discounted_products[$id] : $base_price;
+
+            $modules = apply_filters('wc_dynamic_pricing_load_modules', $dynamic_pricing_instance->modules);
+            foreach ($modules as $module) {
+                if ($module->module_type == 'simple') {
+                    //Make sure we are using the price that was just discounted.
+                    $working_price = $discount_price ? $discount_price : $base_price;
+                    $working_price = $module->get_product_working_price($working_price, $_product);
+                    if ($working_price !== false) {
+                        $discount_price = $module->get_discounted_price_for_shop($_product, $working_price);
+                    }
+                }
+            }
+
+	        if ( $discount_price !== false ) {
+		        $result_price = $discount_price;
+	        } else {
+		        $result_price = $base_price;
+	        }
+
+	        // $dynamic_pricing_instance->cached_adjustments[ $cache_id ] = $result_price;
+        }
+
+
+	    return $result_price;
+    }
+
     public function patched_dp_on_get_product_is_on_sale( $is_on_sale, $product ) {
         $_procedure = self::_CLASS . "PATCHED_DP_ON_GET_PRODUCT_IS_ON_SALE: ";
 
@@ -105,13 +151,28 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         if ( $product->is_type( 'variable' ) ) {
             $is_on_sale = false;
             $prices = $product->get_variation_prices();
-            if ( $prices['price'] !== $prices['regular_price'] ) {
+
+            $regular = array_map('strval', $prices['regular_price']);
+            $actual_prices = array_map('strval', $prices['price']);
+
+            $diff = array_diff_assoc($regular, $actual_prices);
+
+            if (!empty($diff)) {
                 $is_on_sale = true;
             }
+
         } else {
             $dynamic_pricing_instance = $this->get_integration_instance();
-            $dynamic_price = $dynamic_pricing_instance->on_get_price( $this->plugin->maybeGetPrice('', $product), $product, true );
+            $lc_price =  $this->plugin->maybeGetPrice('', $product);
+            // $dynamic_price = $this->patched_dp_on_get_price( $lc_price, $product, true );
+            $dynamic_price = $dynamic_pricing_instance->on_get_price( $lc_price, $product, true);
             $regular_price = $product->get_regular_price();
+
+            if(LASERCOMMERCE_DEBUG) {
+                error_log($_procedure."lc_price: ".serialize($lc_price));
+                error_log($_procedure."dynamic_price: ".serialize($dynamic_price));
+                error_log($_procedure."regular_price: ".serialize($regular_price));
+            }
 
             if ( empty( $regular_price ) || empty( $dynamic_price ) ) {
                 return $is_on_sale;
