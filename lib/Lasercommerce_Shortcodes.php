@@ -8,7 +8,7 @@ class Lasercommerce_Shortcodes extends Lasercommerce_Abstract_Child
     const _CLASS = "LC_SC_";
 
     private static $instance;
-    
+
     public static function init() {
         if ( self::$instance == null ) {
             self::$instance = new Lasercommerce_Shortcodes();
@@ -66,7 +66,7 @@ class Lasercommerce_Shortcodes extends Lasercommerce_Abstract_Child
             'hide_empty'=> $hide_empty,
             'include'   => $ids,
             'pad_counts'=> true,
-            'child_of'  => $atts['parent']  
+            'child_of'  => $atts['parent']
         );
 
         $product_categories = get_terms('product_cat', $term_args);
@@ -131,7 +131,7 @@ class Lasercommerce_Shortcodes extends Lasercommerce_Abstract_Child
     }
 
     public function wp_init() {
-        add_shortcode('lasercommerce_shortcode_test', array(&$this, 'proof_of_concept_shortcode'));
+        // add_shortcode('lasercommerce_shortcode_test', array(&$this, 'proof_of_concept_shortcode'));
         add_shortcode('tier_unrestricted_product_categories', array(&$this, 'tier_unrestricted_product_categories_shortcode'));
     }
 

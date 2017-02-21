@@ -49,15 +49,14 @@ function Lasercommerce_init($file) {
         $Lasercommerce_Plugin->upgrade();
     }
 
-    $Lasercommerce_Plugin->initTree();
-    $Lasercommerce_Plugin->initVisibility();
+    $Lasercommerce_Plugin->initChildren();
     $Lasercommerce_Plugin->addActionsAndFilters();
     $Lasercommerce_Plugin->addShortcodes();
 
     if (!$file) {
         $file = __FILE__;
     }
-    
+
     // Register the Plugin Activation Hook
     register_activation_hook($file, array(&$Lasercommerce_Plugin, 'activate'));
 

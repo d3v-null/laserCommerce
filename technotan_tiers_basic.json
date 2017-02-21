@@ -2,6 +2,11 @@
     "omniscient": true,
     "name": "Administrator",
     "id": "ADMIN"
+},
+{
+    "omniscient": true,
+    "name": "Administrator",
+    "id": "ADMI"
 }, {
     "major": true,
     "name": "Retail",

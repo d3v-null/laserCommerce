@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
 include_once(LASERCOMMECE_BASE.'/Lasercommerce_UI_Extensions.php');
@@ -37,6 +37,8 @@ include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Tier_Tree.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Pricing.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Visibility.php');
 include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Shortcodes.php');
+include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Integration_Memberships.php');
+include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Integration_Dynamic_Pricing.php');
 // include_once('Lasercommerce_UIE.php');
 
 /**
@@ -64,25 +66,13 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     protected $tree;
     protected $visibility;
+    protected $integration_dp;
     protected $shortcodes;
 
-    public function initTree(){
-        // global $Lasercommerce_Tier_Tree;
-        // if( !isset($Lasercommerce_Tier_Tree) ) {
-        //     $Lasercommerce_Tier_Tree = new Lasercommerce_Tier_Tree( $this->getOptionNamePrefix() );
-        // }
-        // $this->tree = $Lasercommerce_Tier_Tree;
-
+    public function initChildren(){
         $this->tree = Lasercommerce_Tier_Tree::instance();
-    }
-
-    public function initVisibility(){
-        // global $Lasercommerce_Visibility;
-        // if( !isset($Lasercommerce_Visibility)) {
-        //     $Lasercommerce_Visibility = new Lasercommerce_Visibility( $this->getOptionNamePrefix());
-        // }
-        // $this->visibility = $Lasercommerce_Visibility;
         $this->visibility = Lasercommerce_Visibility::instance();
+        $this->integration_dp = Lasercommerce_Integration_Dynamic_pricng::instance();
     }
 
     public function addShortcodes(){
@@ -709,7 +699,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeIsPurchasable($purchasable, $_product){
         $postID = $this->getProductPostID($_product);
         $_procedure = $this->_class."ISPURCHASABLE($postID): ";
-		$product_sku = (string)$this->getProductSKU($_product);
+    $product_sku = (string)$this->getProductSKU($_product);
 
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
@@ -724,23 +714,23 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 if($children){
                     foreach ($children as $child_id) {
                         $child = $_product->get_child($child_id);
-						if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".$product_sku ." GOING DEEPER!");
+    if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".$product_sku ." GOING DEEPER!");
 
                         if($this->maybeIsPurchasable($purchasable, $child)) {
-							$purchasable = true;
-	                        break;
-						}
+    $purchasable = true;
+                            break;
+    }
                     }
                 }
             } else {
-				if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".$product_sku ." GETTING POST STATUS");
-				$post_status = get_post_status($_product);
-				if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."post_status: $post_status");
-				if($post_status === 'publish'){
-					if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".$product_sku ." GETTING VISIBLE PRICING");
-					$pricings = $this->maybeGetVisiblePricing($_product);
-					if($pricings) $purchasable = true;
-				}
+    if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".$product_sku ." GETTING POST STATUS");
+    $post_status = get_post_status($_product);
+    if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."post_status: $post_status");
+    if($post_status === 'publish'){
+    if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."p:".(string)$purchasable." S:".$product_sku ." GETTING VISIBLE PRICING");
+    $pricings = $this->maybeGetVisiblePricing($_product);
+    if($pricings) $purchasable = true;
+    }
             }
         }
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."returned: ".(string)$purchasable);
@@ -1115,17 +1105,33 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $this->maybeGetStarHtml($price_html, $_product, 'empty_price');
     }
 
-    public function traceAction($actionName){
+    public function traceAction($hookName){
 
-        $_procedure = "ACT_".strtoupper($actionName).": ";
+        $_procedure = "ACT_".strtoupper($hookName).": ";
 
-        add_action($actionName, function() use ($_procedure) {
+        add_action($hookName, function() use ($_procedure, $hookName) {
             global $lasercommerce_pricing_trace;
+            global $wp_action;
             // $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
             $lasercommerce_pricing_trace .= $_procedure;
             if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+
+            if( isset($wp_action[$hookName]) ){
+                foreach( $wp_action[$hookName] as $priority => $hooks){
+                    foreach ($hooks as $hook_k => $hook_v) {
+                        $hook_echo=(is_array($hook_v['function'])?get_class($hook_v['function'][0]).':'.$hook_v['function'][1]:$hook_v['function']);
+                        if(is_object($hook_echo) && ($hook_echo instanceof Closure)){
+                            $hook_echo="closure";
+                        }
+                        error_log($lasercommerce_pricing_trace."HOOKED (".serialize($priority)."): ".serialize($hook_k)."".serialize($hook_echo));
+                    }
+                }
+            } else {
+                error_log($lasercommerce_pricing_trace."NO HOOKS");
+            }
+
         }, 0, 0);
-        add_action($actionName, function() use ($_procedure) {
+        add_action($hookName, function() use ($_procedure) {
             global $lasercommerce_pricing_trace;
 
             if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
@@ -1135,12 +1141,17 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     }
 
-    public function traceFilter($filterName){
+    public function traceFilter($hookName){
+        if( empty( $hookName ) ) return;
+        $_procedure = "FLT_".strtoupper($hookName).": ";
 
-        $_procedure = "FLT_".strtoupper($filterName).": ";
+        // get list of things hooked to this filter
 
-        add_filter($filterName, function($param) use ($_procedure) {
+
+        add_filter($hookName, function($param) use ($_procedure, $hookName) {
+
             global $lasercommerce_pricing_trace;
+            global $wp_filter;
             // $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
             $lasercommerce_pricing_trace .= $_procedure;
             if(LASERCOMMERCE_PRICING_DEBUG) {
@@ -1150,9 +1161,24 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                     error_log($lasercommerce_pricing_trace."BEGIN: ");
                 }
             }
+
+            if( isset($wp_filter[$hookName]) ){
+                foreach( $wp_filter[$hookName] as $priority => $hooks){
+                    foreach ($hooks as $hook_k => $hook_v) {
+                        $hook_echo=(is_array($hook_v['function'])?get_class($hook_v['function'][0]).':'.$hook_v['function'][1]:$hook_v['function']);
+                        if(is_object($hook_echo) && ($hook_echo instanceof Closure)){
+                            $hook_echo="closure";
+                        }
+                        error_log($lasercommerce_pricing_trace."HOOKED (".serialize($priority)."): ".serialize($hook_k)."".serialize($hook_echo));
+                    }
+                }
+            } else {
+                error_log($lasercommerce_pricing_trace."NO HOOKS");
+            }
+
             return $param;
         }, 0, 1);
-        add_filter($filterName, function($param) use ($_procedure) {
+        add_filter($hookName, function($param) use ($_procedure) {
             global $lasercommerce_pricing_trace;
 
             if(LASERCOMMERCE_PRICING_DEBUG) {
@@ -1167,42 +1193,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             return $param;
         }, 99999, 1);
 
-    }
-
-    public function patched_dp_on_get_product_is_on_sale( $is_on_sale, $product ) {
-        if ( $is_on_sale ) {
-            return $is_on_sale;
-        }
-
-        if ( $product->is_type( 'variable' ) ) {
-            $is_on_sale = false;
-            $prices = $product->get_variation_prices();
-            if ( $prices['price'] !== $prices['regular_price'] ) {
-                $is_on_sale = true;
-            }
-        } else {
-            $dynamic_pricing_instance = WC_Dynamic_Pricing::instance();
-            $dynamic_price = $dynamic_pricing_instance->on_get_price( $this->maybeGetPrice('', $product), $product, true );
-            $regular_price = $product->get_regular_price();
-
-            if ( empty( $regular_price ) || empty( $dynamic_price ) ) {
-                return $is_on_sale;
-            } else {
-                $is_on_sale = $regular_price != $dynamic_price;
-            }
-        }
-
-        return $is_on_sale;
-    }
-
-    public function patchDynamicPricing(){
-        if(class_exists('WC_Dynamic_Pricing')){
-            // add_filter('woocommerce_product_is_on_sale', array(&$this, 'maybeProductIsOnSaleStart'), 0, 2);
-            // add_filter('woocommerce_product_is_on_sale', array(&$this, 'maybeProductIsOnSaleEnd'), 999, 2);
-            $dynamic_pricing_instance = WC_Dynamic_Pricing::instance();
-            remove_filter( 'woocommerce_product_is_on_sale', array(&$dynamic_pricing_instance , 'on_get_product_is_on_sale'), 10, 2 );
-            add_filter('woocommerce_product_is_on_sale', array(&$this, 'patched_dp_on_get_product_is_on_sale'), 10, 2);
-        }
     }
 
     /**
@@ -1316,16 +1306,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
 
-    /**
-     *  Actions and Filters!
-     */
-
-    public function addActionsAndFilters() {
-        // Admin filters:
-        global $lasercommerce_pricing_trace;
-        $_procedure = $this->_class."ADDACTIONS: ";
-        $lasercommerce_pricing_trace = "";
-
+    public function constructTraces() {
         $this->traceAction('init');
         $this->traceFilter('woocommerce_get_price');
         $this->traceFilter('woocommerce_get_regular_price');
@@ -1353,6 +1334,34 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->traceFilter('woocommerce_variable_sale_price_html');
         $this->traceFilter('woocommerce_get_price_html');
         // if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");
+
+        /**
+         * Dynamic pricng specific
+         */
+        $this->traceFilter('woocommerce_product_is_on_sale');
+        $this->traceFilter('woocommerce_variation_prices_price');
+        // $this->traceFilter('woocommerce_get_variation_price');
+        // $this->traceFilter('woocommerce_get_price');
+        $this->traceFilter('woocommerce_composite_get_price');
+        $this->traceFilter('woocommerce_composite_get_base_price');
+        // $this->traceFilter('woocommerce_coupon_is_valid');
+        // $this->traceFilter('woocommerce_coupon_is_valid_for_product');
+
+    }
+
+    /**
+     *  Actions and Filters!
+     */
+
+    public function addActionsAndFilters() {
+        // Admin filters:
+        global $lasercommerce_pricing_trace;
+        $_procedure = $this->_class."ADDACTIONS: ";
+        $lasercommerce_pricing_trace = "";
+
+        if(LASERCOMMERCE_DEBUG) {
+            $this->constructTraces();
+        }
 
         //helper class for tier tree functions
 
@@ -1393,11 +1402,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         add_action('woocommerce_variable_product_sync', array(&$this, 'maybeVariableProductSync'), 0, 2);
 
-        /* Patch dynamic pricing */
+        /** Dynamic Pricng */
 
-        add_action('init', array(&$this, 'patchDynamicPricing'), 0, 0);
-
-
+        add_action( 'init', array(&$this->integration_dp, 'addActionsAndFilters'), 0, 0 );
 
         /** Gravity Forms Extensions */
         add_filter('gform_field_value_user_tier_string', array(&$this, 'gform_user_tier_string_paramter'), 0, 1);
