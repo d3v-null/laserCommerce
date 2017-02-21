@@ -273,8 +273,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         trigger_error("Deprecated function called: getMajorTiers", E_USER_NOTICE);
     }
 
-    public function isWCStarPrice($star='', $price='', $_product=''){
-        $_procedure = $this->_class."ISWCSTARPRICE|$star: ";
+    public function whichWCPrice($price, $_product=''){
+        $_procedure = $this->_class."ISWHICHWCPRICE: ";
         global $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
         $lasercommerce_pricing_trace .= $_procedure;
@@ -286,27 +286,23 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             if($_product->is_type('variable')){
                 //TODO: This
             }
-            switch ($star) {
-                case '':
-                    $WC_price = get_post_meta($postID, '_price', True);
-                    break;
-                case 'regular':
-                    $WC_price = get_post_meta($postID, '_regular_price', True);
-                    break;
-                case 'sale':
-                    $WC_price = get_post_meta($postID, '_sale_price', True);
-            }
 
-            // if($WC_price and $WC_price != "None"){
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price. " ? ".$price);
-                $WC_cents = intval(floatval($WC_price) * 100);
-                $cents = intval(floatval($price)* 100);
-                if($WC_cents and $WC_cents == $cents ){
-                    $value = true;
+            $wc_meta = get_post_meta($postID);
+            $meta_keys = array(
+                '_price'=>'current',
+                '_regular_price'=>'regular',
+                '_sale_price'=>'sale'
+            );
+            foreach($meta_keys as $meta_key => $return_value){
+                if(isset($wc_meta[$meta_key])){
+                    $WC_price = $wc_meta[$meta_key][0]; #assume meta not singular
+                    $WC_cents = intval(floatval($WC_price) * 100);
+                    $cents = intval(floatval($price)* 100);
+                    if($WC_cents and $WC_cents == $cents ){
+                        $value = $return_value;
+                    }
                 }
-            // } else {
-            //     $value = false;
-            // }
+            }
         }
         if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."returned ".serialize($value));
 
@@ -316,9 +312,52 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $value;
     }
 
-    public function isWCPrice($price='', $_product=''){ return $this->isWCStarPrice('', $price, $_product); }
-    public function isWCRegularPrice($price='', $_product=''){ return $this->isWCStarPrice('regular', $price, $_product); }
-    public function isWCSalePrice($price='', $_product=''){ return $this->isWCStarPrice('sale', $price, $_product); }
+    // public function isWCStarPrice($star='', $price='', $_product=''){
+    //     $_procedure = $this->_class."ISWCSTARPRICE|$star: ";
+    //     global $lasercommerce_pricing_trace;
+    //     $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
+    //     $lasercommerce_pricing_trace .= $_procedure;
+    //     if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+    //
+    //     $postID = $this->getProductPostID( $_product );
+    //     $value = false;
+    //     if($_product and isset($postID)){
+    //         if($_product->is_type('variable')){
+    //             //TODO: This
+    //         }
+    //         switch ($star) {
+    //             case '':
+    //                 $WC_price = get_post_meta($postID, '_price', True);
+    //                 break;
+    //             case 'regular':
+    //                 $WC_price = get_post_meta($postID, '_regular_price', True);
+    //                 break;
+    //             case 'sale':
+    //                 $WC_price = get_post_meta($postID, '_sale_price', True);
+    //         }
+    //
+    //         // if($WC_price and $WC_price != "None"){
+    //             // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."price (".$postID.") : ".$WC_price. " ? ".$price);
+    //             $WC_cents = intval(floatval($WC_price) * 100);
+    //             $cents = intval(floatval($price)* 100);
+    //             if($WC_cents and $WC_cents == $cents ){
+    //                 $value = true;
+    //             }
+    //         // } else {
+    //         //     $value = false;
+    //         // }
+    //     }
+    //     if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."returned ".serialize($value));
+    //
+    //     if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END");
+    //     $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old;
+    //
+    //     return $value;
+    // }
+    //
+    // public function isWCPrice($price='', $_product=''){ return $this->isWCStarPrice('', $price, $_product); }
+    // public function isWCRegularPrice($price='', $_product=''){ return $this->isWCStarPrice('regular', $price, $_product); }
+    // public function isWCSalePrice($price='', $_product=''){ return $this->isWCStarPrice('sale', $price, $_product); }
 
     public function maybeGetPricing($_product='', $tiers=array()){
         $postID = $this->getProductPostID($_product);
@@ -597,35 +636,26 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         }
         if($price == ''){
             $override = 'current';
-        } elseif($this->isWCPrice($price, $_product)) {
-            $override = 'current';
-        } elseif($this->isWCRegularPrice($price, $_product)){
-            $override = 'regular';
-        } elseif($this->isWCSalePrice($price, $_product)){
-            $override = 'sale';
         } else {
-            $override = false;
+            $whichWCPrice = $this->whichWCPrice($price, $_product);
+            if( 'current' == $whichWCPrice ){
+                $override = 'current';
+            } elseif ( 'regular' == $whichWCPrice ){
+                $override = 'regular';
+            } elseif ('sale' == $whichWCPrice) {
+                $override = 'sale';
+            } else {
+                $override = false;
+            }
         }
-
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."override: ".serialize($override));
 
         if($override) {
 
             if($star == 'regular') {
                 $override = 'regular';
-
-                // if($override != 'regular'){
-                //     if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."star is regular but not override");
-                //     $override = 'regular';
-                // }
             }
             if($star == 'sale') {
                 $override = 'sale';
-
-                // if($override != 'sale'){
-                //     if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."star is sale but not override");
-                //     $override = 'sale';
-                // }
             }
 
             $price = $this->actuallyGetStarPrice($override, $price, $_product);
