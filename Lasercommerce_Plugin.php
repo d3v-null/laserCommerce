@@ -239,17 +239,20 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         $postID = Null;
 
-        if($_product and method_exists($_product, 'is_type') and $_product->is_type( 'variation' ) ){
-            if ( isset( $_product->variation_id ) ) {
-                $postID = $_product->variation_id;
-            } else {
-                if(LASERCOMMERCE_DEBUG) error_log($_procedure."variation not set");
-            }
-        } else {
-            if(isset( $_product->id )){
-                $postID = $_product->id;
-            }
+        // Fix for WC 3.0. Product properties should not be accessed directly.
+        if($_product && method_exists($_product, 'get_id')){
+            $postID = $_product->get_id();
         }
+
+        // if($_product and method_exists($_product, 'is_type') and $_product->is_type( 'variation' ) ){
+        //     if ( isset( $_product->variation_id ) ) {
+        //         $postID = $_product->variation_id;
+        //     } else {
+        //         if(LASERCOMMERCE_DEBUG) error_log($_procedure."variation not set");
+        //     }
+        // } else {
+        //     $postID = $_product->get_id();
+        // }
         return $postID;
     }
 
@@ -1080,10 +1083,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $postID = $this->getProductPostID($_product);
         $_procedure = $this->_class."GETSTARHTML|$star($postID): ";
 
-        $user = wp_get_current_user();
-        $tiers = $this->tree->serializeVisibleTiers();
-
         if(LASERCOMMERCE_HTML_DEBUG) {
+            $user = wp_get_current_user();
+            $tiers = $this->tree->serializeVisibleTiers();
             $string = implode("|",
                 array(
                     ("html: $price_html"),
@@ -1338,9 +1340,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     public function constructTraces() {
         $this->traceAction('init');
-        $this->traceFilter('woocommerce_get_price');
-        $this->traceFilter('woocommerce_get_regular_price');
-        $this->traceFilter('woocommerce_get_sale_price');
+        $this->traceFilter('woocommerce_product_get_price');
+        $this->traceFilter('woocommerce_product_get_regular_price');
+        $this->traceFilter('woocommerce_product_get_sale_price');
         $this->traceFilter('woocommerce_get_variation_price');
         $this->traceFilter('woocommerce_get_variation_regular_price');
         $this->traceFilter('woocommerce_get_variation_sale_price');
@@ -1360,9 +1362,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // $this->traceFilter('woocommerce_variation_prices_regular_price');
         // $this->traceFilter('woocommerce_variation_prices_sale_price');
 
-        $this->traceFilter('woocommerce_variable_price_html');
         $this->traceFilter('woocommerce_variable_sale_price_html');
-        $this->traceFilter('woocommerce_get_price_html');
         // if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");
 
         /**
@@ -1397,9 +1397,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
 
         //Price / Display filters:
-        add_filter( 'woocommerce_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
-        add_filter( 'woocommerce_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );
-        add_filter( 'woocommerce_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );
+        add_filter( 'woocommerce_product_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
+        add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );
+        add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );
         add_filter( 'woocommerce_get_variation_price', array($this, 'maybeGetVariationPrice'), 0, 4 );
         add_filter( 'woocommerce_get_variation_regular_price', array($this, 'maybeGetVariationRegularPrice'), 0, 4 );
         add_filter( 'woocommerce_get_variation_sale_price', array($this, 'maybeGetVariationSalePrice'), 0, 4 );
