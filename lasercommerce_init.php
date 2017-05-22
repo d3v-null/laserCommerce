@@ -31,7 +31,7 @@
 function Lasercommerce_init($file) {
     if(LASERCOMMERCE_DEBUG) error_log( "LASERCOMMERCE_INIT: start");
 
-    require_once(LASERCOMMECE_BASE.'/Lasercommerce_Plugin.php');
+    require_once(LASERCOMMERCE_BASE.'/Lasercommerce_Plugin.php');
     global $Lasercommerce_Plugin;
     $Lasercommerce_Plugin = Lasercommerce_Plugin::instance();
 

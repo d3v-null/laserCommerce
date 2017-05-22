@@ -77,19 +77,20 @@ define('LASERCOMMERCE_DOMAIN', 'lasercommerce');
 
 if( !defined('LASERCOMMERCE_DEBUG')){
     define( 'LASERCOMMERCE_DEBUG', False);
-} 
+}
 if( !defined('LASERCOMMERCE_PRICING_DEBUG')){
     define( 'LASERCOMMERCE_PRICING_DEBUG', False);
-} 
+}
 if( !defined('LASERCOMMERCE_HTML_DEBUG')){
     define( 'LASERCOMMERCE_HTML_DEBUG', False);
-} 
+}
 
 if(LASERCOMMERCE_DEBUG) error_log("Lasercommerce Debugging enabled");
 if(LASERCOMMERCE_PRICING_DEBUG) error_log("Lasercommerce Price Debugging enabled");
 if(LASERCOMMERCE_HTML_DEBUG) error_log("Lasercommerce HTML Debugging enabled");
 
-define("LASERCOMMECE_BASE", dirname(__FILE__));
+define("LASERCOMMERCE_BASE", dirname(__FILE__));
+
 
 /**
  * Check the PHP version and give a useful error message if the user's version is less than the required version
@@ -115,7 +116,7 @@ function Lasercommerce_PhpVersionCheck() {
 }
 
 function Lasercommerce_noticeWoocommerceNotInstalled() {
-    echo 
+    echo
         '<div class="updated fade">' .
         __('Error: plugin "LaserCommerce" requires WooCommerce to be installed',  'LaserCommerce') .
         '</div>';
@@ -128,6 +129,8 @@ function Lasercommerce_WoocommerceCheck() {
     }
     return true;
 }
+
+define("WOOCOMMERCE_BASE", WP_CONTENT_DIR . "/plugins/woocommerce");
 
 /**
  * Initialize internationalization (i18n) for this plugin.

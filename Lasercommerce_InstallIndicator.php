@@ -28,9 +28,9 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-include_once('Lasercommerce_OptionsManager.php');
+include_once('Lasercommerce_Debugger.php');
 
-class Lasercommerce_InstallIndicator extends Lasercommerce_OptionsManager {
+class Lasercommerce_InstallIndicator extends Lasercommerce_Debugger {
 
     const optionInstalled = '_installed';
     const optionVersion = '_version';

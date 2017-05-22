@@ -17,7 +17,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
      */
     public function includeAdminPage($settings){
         $pluginDir = plugin_dir_path( __FILE__ );
-        include_once(LASERCOMMECE_BASE.'/lib/Lasercommerce_Admin.php');
+        include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Admin.php');
         $settings[] = new Lasercommerce_Admin($this);
         return $settings;
     }
@@ -247,17 +247,20 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
      * @param array $tiers a list of tiers
      */
     public function maybeAddSaveTierFields($tiers){
-        $_procedure = $this->_class."ADD_SAVE_TIER_FIELDS: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."tiers: ".serialize($tiers));
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."ADD_SAVE_TIER_FIELDS",
+            'args'=>"\$tiers=".serialize($tiers)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         foreach($tiers as $tier){
             $tier_id = $this->tree->getTierID($tier);
             if(is_null($tier_id)){
-                if(LASERCOMMERCE_DEBUG) error_log($_procedure."no tier_id set");
+                if(LASERCOMMERCE_DEBUG) $this->procedureDebug("no tier_id set", $context);
                 continue;
             }
             $tier_name = $this->tree->getTierName($tier);
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."tier_name: ".serialize($tier_name));
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("tier_name: ".serialize($tier_name), $context);
 
             $this->addTierFields($tier_id, $tier_name);
             $this->saveTierFields($tier_id, $tier_name);
@@ -265,15 +268,16 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function maybeAddPricingTab( $tabs ){
-        $_procedure = $this->_class."ADD_PRICING_TAB: ";
-
-        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."tabs: ".serialize($tabs));
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."ADD_PRICING_TAB",
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         global $Lasercommerce_Tiers_Override, $product;
 
         $postID = $this->getProductPostID( $product );
         if(!($postID)){
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."no postID");
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("no postID", $context);
             return $tabs;
         }
 
@@ -282,7 +286,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         if( is_array($visibleTiers)) foreach ($visibleTiers as $tier) {
             $tier_id = $this->tree->getTierID($tier);
             if(is_null($tier_id)){
-                if(LASERCOMMERCE_DEBUG) error_log($_procedure."no tier_id set");
+                if(LASERCOMMERCE_DEBUG) $this->procedureDebug("no tier_id set", $context);
                 continue;
             }
             $old_override = $Lasercommerce_Tiers_Override;
@@ -333,22 +337,22 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 }
             );
         } else {
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."visibleTiers is empty");
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("visibleTiers is empty", $context);
             return $tabs;
         }
 
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."returning tabs");
         return $tabs;
     }
 
     public function maybeAddDynamicPricingTabs( $tabs ){
-        $_procedure = $this->_class."ADD_DYNAMIC_PRICING_TAB: ";
-
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure);
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."ADD_DYNAMIC_PRICING_TAB",
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         $postID = $this->getProductPostID( );
         if(!($postID)){
-            if(LASERCOMMERCE_DEBUG) error_log("-> no postID");
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("no postID", $context);
             return $tabs;
         }
 
@@ -356,8 +360,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         $DPRP_Table = get_post_meta($postID, 'DPRP_Table', True);
 
         if(LASERCOMMERCE_HTML_DEBUG) {
-            error_log($_procedure."DPRC_Table: ".serialize($DPRC_Table));
-            error_log($_procedure."DPRP_Table: ".serialize($DPRP_Table));
+            $this->procedureDebug("DPRC_Table: ".serialize($DPRC_Table), $context);
+            $this->procedureDebug("DPRP_Table: ".serialize($DPRP_Table), $context);
         }
 
         if( $DPRC_Table != "" or $DPRP_Table != "" ){
@@ -382,27 +386,28 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function maybeAddExtraPricingColumns(){
-        $_procedure = $this->_class."ADD_PRICING_COLUMNS: ";
-
-        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."ADD_PRICING_COLUMNS",
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         $majorTiers = $this->tree->getMajorTiers();
-        $majorTierIDs = $this->tree->getTierIDs($majorTiers);
+        // $majorTierIDs = $this->tree->getTierIDs($majorTiers);
 
-        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."majorTiers: ".serialize($majorTiers));
+        // if(LASERCOMMERCE_DEBUG) $this->procedureDebug("majorTiers: ".serialize($majorTiers), $context);
 
         add_filter(
             'manage_edit-product_columns',
-            function($columns) use ($majorTiers){
+            function($columns) use ($majorTiers, $context){
                 $_procedure = "CALLBACK_MANAGE_EDIT_PRODUCT_COLS: ";
-                // if(LASERCOMMERCE_DEBUG) error_log($_procedure."columns: ".serialize($columns));
+                // if(LASERCOMMERCE_DEBUG) $this->procedureDebug("columns: ".serialize($columns), $context);
 
                 $new_cols = array();
                 if(is_array($majorTiers)) foreach ($majorTiers as $tier) {
                     $tier_id = $tier->id;
                     // $tier_id = $this->tree->getTierID($tier);
                     if(is_null($tier_id)){
-                        if(LASERCOMMERCE_DEBUG) error_log($_procedure."no tier_id set");
+                        if(LASERCOMMERCE_DEBUG) $this->procedureDebug("no tier_id set", $context);
                         continue;
                     }
                     $tier_name = $this->tree->getTierName($tier);
@@ -416,10 +421,10 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
         add_action(
             'manage_product_posts_custom_column',
-            function( $column ) {
+            function( $column ) use ($context) {
                 $_procedure = "CALLBACK_MANAGE_PRODUCT_POSTS_COLS: ";
 
-                // if(LASERCOMMERCE_DEBUG) error_log($_procedure."");
+                // if(LASERCOMMERCE_DEBUG) $this->procedureDebug("", $context);
 
                 global $post;
 
@@ -537,12 +542,10 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function lasercommerce_loop_prices(){
-        $_procedure = $this->_class."LOOPPRICES: ";
-
-        global $lasercommerce_pricing_trace;
-        $lasercommerce_pricing_trace_old = $lasercommerce_pricing_trace;
-        $lasercommerce_pricing_trace .= $_procedure;
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."BEGIN");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."LOOPPRICES",
+        ));
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
         global $product;
 
@@ -558,7 +561,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 $tier_id = $this->tree->getTierID($tier);
                 $prices[$tier_id] = $price_html;
                 if(LASERCOMMERCE_HTML_DEBUG){
-                    error_log($_procedure."PRICES [$tier_id] = $price_html");
+                    $this->procedureDebug("PRICES [$tier_id] = $price_html", $context);
                 }
             }
         }
@@ -566,8 +569,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
         // $prices[''] = $current_price;
 
         if(LASERCOMMERCE_HTML_DEBUG){
-            error_log($_procedure."majorVisibleTiers: ".serialize($majorVisibleTiers));
-            error_log($_procedure."prices: ".serialize($prices));
+            $this->procedureDebug("majorVisibleTiers: ".serialize($majorVisibleTiers), $context);
+            $this->procedureDebug("prices: ".serialize($prices), $context);
         }
 
         if(!empty($prices)) {
@@ -591,8 +594,7 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             ?></div><?php
         }
 
-        if(LASERCOMMERCE_PRICING_DEBUG) error_log($lasercommerce_pricing_trace."END: ");
-        $lasercommerce_pricing_trace = $lasercommerce_pricing_trace_old;
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
     }
 
     public function make_price_loop_mods(){
@@ -602,9 +604,12 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
 
 
     public function term_restrictions_add_field($taxonomy){
-        $_procedure = $this->_class . "TIER_RESTR_ADD_FIELD: ";
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."TIER_RESTR_ADD_FIELD",
+            'args'=>"\$taxonomy=".serialize($taxonomy)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
         ?>
 <div class="form-field lc_term_restrictions">
     <label for="lc_term_restrictions"><?php _e('Tier Restrictions', 'lasercommerce'); ?></label>
@@ -614,8 +619,12 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function term_restrictions_edit_field($term, $taxonomy){
-        $_procedure = $this->_class . "TIER_RESTR_EDIT_FIELD: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."TIER_RESTR_EDIT_FIELD",
+            'args'=>"\$term=".serialize($term).", \$taxonomy=".serialize($taxonomy)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
+
         //TODO: sanitize this?
         $term_restrictions = esc_attr(Lasercommerce_Visibility::get_term_read_tiers_str($term->term_id));
         ?><tr class="form-field lc_term_restrictions">
@@ -643,16 +652,22 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function term_restrictions_add_column($columns){
-        $_procedure = $this->_class . "TIER_RESTR_ADD_COL: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class . "TIER_RESTR_ADD_COL",
+            'args'=>"\$columns=".serialize($columns)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         $columns[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY] = __( 'Tier Restrictions', 'lasercommerce');
         return $columns;
     }
 
     public function term_restrictions_column_content($content, $column_name, $term_id){
-        $_procedure = $this->_class . "TIER_RESTR_COL_CONT: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class . "TIER_RESTR_COL_CONT",
+            'args'=>"\$content=".serialize($content).", \$column_name=".serialize($column_name).", \$term_id=".serialize($term_id)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         if($column_name != Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY){
             return $content;
@@ -667,14 +682,17 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function add_term_restriction_admin_actions(){
-        $_procedure = $this->_class . "ADD_LC_TIER_TAX_RESTR: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class . "ADD_LC_TIER_TAX_RESTR",
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
+
         //TODO: make taxonomies read from settings
 
         $taxonomies = $this->visibility->get_controlled_taxonomies();
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."taxonomies: ". serialize($taxonomies));
+        // if(LASERCOMMERCE_DEBUG) $this->procedureDebug("taxonomies: ". serialize($taxonomies), $context);
 
-        foreach ($taxonomies as $taxonomy) {
+        if(! empty($taxonomies)) foreach ($taxonomies as $taxonomy) {
             add_action( "{$taxonomy}_add_form_fields", array(&$this, 'term_restrictions_add_field'), 10, 1);
             add_action( "{$taxonomy}_edit_form_fields", array(&$this, 'term_restrictions_edit_field'), 10, 2);
             add_action( "created_{$taxonomy}", array(&$this, 'term_restrictions_save_meta'), 10, 2);
@@ -685,8 +703,10 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function addActionsAndFilters() {
-        $_procedure = $this->_class . "addActionsAndFilters: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class . "addActionsAndFilters",
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         if(is_admin()){
             $this->maybeAddSaveTierFields( $this->tree->getTreeTiers() );

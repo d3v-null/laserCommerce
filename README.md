@@ -44,7 +44,7 @@ Prerequisites
 -------------
 
 Wordpress
-Woocommerce
+Woocommerce v 3.0+
 
 Integrations
 ------------
