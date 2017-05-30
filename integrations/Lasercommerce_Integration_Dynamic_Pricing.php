@@ -80,6 +80,8 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."WP_INIT",
         ));
+        if(LASERCOMMERCE_DP_DEBUG) $this->procedureStart('', $context);
+
         // if( $this->detect_target() ){
         //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);
         // } else {
@@ -378,6 +380,7 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."ADD_ACTIONS_FILTERS",
         ));
+        $this->procedureStart('', $context);
 
         // if( $this->detect_target() ){
         //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);

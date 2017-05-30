@@ -37,8 +37,9 @@ include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Tier_Tree.php');
 include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Pricing.php');
 include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Visibility.php');
 include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Shortcodes.php');
-include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Integration_Memberships.php');
-include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Integration_Dynamic_Pricing.php');
+include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Memberships.php');
+include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Dynamic_Pricing.php');
+include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Gravityforms.php');
 include_once(LASERCOMMERCE_BASE.'/includes/data-stores/class-lc-product-variable-data-store-cpt.php');
 // include_once(WOOCOMMERCE_BASE.'/includes/class-wc-product-variable.php')
 
@@ -69,12 +70,14 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     protected $tree;
     protected $visibility;
     protected $integration_dp;
+    protected $integration_gf;
     protected $shortcodes;
 
     public function initChildren(){
         $this->tree = Lasercommerce_Tier_Tree::instance();
         $this->visibility = Lasercommerce_Visibility::instance();
         $this->integration_dp = Lasercommerce_Integration_Dynamic_pricng::instance();
+        $this->integration_gf = Lasercommerce_Integration_Gravityforms::instance();
     }
 
     public function addShortcodes(){
@@ -1167,112 +1170,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     * TODO: Move to own integration class
     */
 
-    public function gform_user_tier_string_paramter( $value=null ){
-        $_procedure = $this->_class."GFORM_TIER_STRING_PARAM: ";
-
-        $tierString = $this->tree->serializeVisibleTiers();
-        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."tierString: $tierString");}
-
-        return $tierString;
-    }
-
-    public function gform_user_is_wholesale($value=null){
-        $_procedure = $this->_class."GFORM_IS_WHOLESALE: ";
-
-        $isWholesale = $this->tree->tierNameVisible('Wholesale');
-        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."isWholesale: $isWholesale");}
-
-        if($isWholesale){
-            return "YES";
-        } else {
-            return "NO";
-        }
-    }
-
-    public function gform_user_is_logged_in($value=null){
-        $_procedure = $this->_class."GFORM_IS_AUTH: ";
-
-        $isLoggedIn = is_user_logged_in();
-        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."isLoggedIn: $isLoggedIn");}
-
-        if($isLoggedIn){
-            return "YES";
-        } else {
-            return "NO";
-        }
-    }
-
-    public function gf_setup_custom_merge_tag($tag, $value, $label = null){
-        if(!$label) $label = $tag;
-        add_filter(
-            'gform_custom_merge_tags',
-            function($merge_tags, $form_id, $fields, $elemend_id) use ($tag, $label, $value) {
-                $merge_tags[] = array('label' => $label, 'tag' => "{"."$tag"."}");
-
-                return $merge_tags;
-            },
-            10,
-            4
-        );
-        add_filter(
-            'gform_replace_merge_tags',
-            function($text, $form, $lead, $url_encode, $esc_html, $nl2br, $format) use ($tag, $value){
-                $text = str_replace('{'.$tag.'}', $value, $text);
-
-                return $text;
-            },
-            10,
-            7
-        );
-        add_filter(
-            'gform_field_content',
-            function($field_content, $field, $value, $lead_id, $form_id) use ($tag, $value) {
-                if (strpos($field_content, '{'.$tag.'}') !== false) {
-                    $field_content = str_replace('{'.$tag.'}', $value, $field_content);
-                }
-
-                return $field_content;
-            },
-            10,
-            5
-        );
-    }
-
-    public function gf_setup_dynamic_parameter($tag, $_value){
-        $_procedure = $this->_class."GFORM_SET_PARAM: ";
-
-        if(LASERCOMMERCE_GF_DEBUG) error_log($_procedure."setting $tag to $_value");
-
-        add_filter(
-            "gform_field_value_$tag",
-            function($value) use($_value){
-                return $_value;
-            },
-            10,
-            1
-        );
-    }
-
-    public function gf_setup_dynamic_meta_parameter($metaKey){
-        // For a given key, configure Gravity forms to save the key to the users profile
-        $user_id = get_current_user_id();
-        $meta_value = get_user_meta($user_id, $metaKey, true);
-        $this->gf_setup_dynamic_parameter("user_$metaKey", $meta_value);
-    }
-
-    public function gf_setup_lc_tags(){
-        // Sets up Gravity Forms to save certain fields to the user profile when submitting a form
-        $this->gf_setup_custom_merge_tag('user_is_wholesale', $this->gform_user_is_wholesale(), 'Is Wholesale');
-        $this->gf_setup_custom_merge_tag('user_tier_string', $this->gform_user_tier_string_paramter(), 'User Tier String');
-        $this->gf_setup_custom_merge_tag('user_is_logged_in', $this->gform_user_is_logged_in(), 'User Logged In');
-        // $this->gf_setup_dynamic_parameter('param_test', 'it works');
-        $this->gf_setup_dynamic_parameter('user_tier_string', $this->gform_user_tier_string_paramter());
-        // TODO: make this configurable in admin interface
-        foreach (array('pref_method', 'business_type', 'interest_level', 'how_hear_about', 'tans_per_wk') as $key) {
-            $this->gf_setup_dynamic_meta_parameter($key);
-        }
-    }
-
     public function overrideVariableDataStore($store) {
         $store = "LC_Product_Variable_Data_Store_CPT";
         return $store;
@@ -1409,11 +1306,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         /** Dynamic Pricng */
 
         add_action( 'init', array(&$this->integration_dp, 'addActionsAndFilters'), 0, 0 );
-
-        /** Gravity Forms Extensions */
-        add_filter('gform_field_value_user_tier_string', array(&$this, 'gform_user_tier_string_paramter'), 0, 1);
-
-        add_action('init', array(&$this, 'gf_setup_lc_tags'), 0, 0);
+        add_action( 'init', array(&$this->integration_gf, 'addActionsAndFilters'), 0, 0 );
 
         parent::addActionsAndFilters();
     }
