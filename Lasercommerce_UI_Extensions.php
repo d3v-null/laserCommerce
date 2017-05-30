@@ -289,17 +289,16 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 if(LASERCOMMERCE_DEBUG) $this->procedureDebug("no tier_id set", $context);
                 continue;
             }
-            $old_override = $Lasercommerce_Tiers_Override;
-            $Lasercommerce_Tiers_Override = array($tier);
-            $tier_price = $product->get_price_html();
-            if($tier_price) {
+            $tier->begin_tier_override();
+            $price_html = $this->actuallyGetPriceHtml('', $product);
+            if($price_html) {
                 $tier_name = $this->tree->getTierName($tier);
                 $visiblePrices[$tier_id] = array(
                     'name' => $tier_name,
-                    'price' => $tier_price
+                    'price' => $price_html
                 );
             }
-            $Lasercommerce_Tiers_Override = $old_override;
+            $tier->end_tier_override();
         }
 
         if(is_array($visiblePrices) and sizeof($visiblePrices) > 1){
@@ -438,11 +437,9 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                     $remainder = substr($column, strlen($prefix));
                     $tier = $this->tree->getTier($remainder);
                     if($this->tree->getTierMajor($tier)){
-                        global $Lasercommerce_Tiers_Override;
-                        $old_override = $Lasercommerce_Tiers_Override;
-                        $Lasercommerce_Tiers_Override = array($tier);
-                        echo $the_product->get_price_html();
-                        $Lasercommerce_Tiers_Override = $old_override;
+                        $tier->begin_tier_override();
+                        echo $this->actuallyGetPriceHtml('', $the_product);
+                        $tier->end_tier_override();
                     } else {
                         echo '<span class="na">&ndash;</span>';
                     }
@@ -556,7 +553,11 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
             // $tier->begin_tier_override();
             // $price_html = $product->get_price_html();
             // $tier->end_tier_override();
-            $price_html = $tier->get_product_price_html($product);
+            // $price_html = $tier->get_product_price_html($product);
+            $tier->begin_tier_override();
+            $price_html = $this->actuallyGetPriceHtml('', $product);
+            $tier->end_tier_override();
+
             if($price_html and !in_array($price_html, array_values($prices)) and $price_html != $current_price){
                 $tier_id = $this->tree->getTierID($tier);
                 $prices[$tier_id] = $price_html;

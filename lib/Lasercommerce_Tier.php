@@ -1,7 +1,7 @@
 <?php
 
 /**
-* 
+*
 */
 class Lasercommerce_Tier
 {
@@ -10,7 +10,7 @@ class Lasercommerce_Tier
     public $name;
     public $major;
     public $omniscient;
-    
+
     public function __construct( $id, $name='', $major=0, $omniscient=0)
     {
         $this->id = strtoupper($id);
@@ -33,7 +33,7 @@ class Lasercommerce_Tier
             }
             return $instance;
         }
-    } 
+    }
 
     public function __toString(){
         return $this->id;
@@ -56,14 +56,15 @@ class Lasercommerce_Tier
         if(LASERCOMMERCE_DEBUG) error_log($_procedure."NEW = ".serialize($Lasercommerce_Tiers_Override));
     }
 
-    public function get_product_price_html($_product = null){
-        if( $_product == null){
-            global $product;
-            $_product = $product;
-        }
-        $this->begin_tier_override();
-        $price_html = $_product->get_price_html();
-        $this->end_tier_override();
-        return $price_html;
-    }
+    // public function get_product_price_html($_product = null, ){
+    //     if( $_product == null){
+    //         global $product;
+    //         $_product = $product;
+    //     }
+    //     $this->begin_tier_override();
+    //     // $price_html = $_product->get_price_html();
+    //     $price = $_product->get_price();
+    //     $this->end_tier_override();
+    //     return $price_html;
+    // }
 }

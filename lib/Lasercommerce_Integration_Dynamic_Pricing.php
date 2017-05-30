@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Child {
-    const _CLASS = "LC_IDP_";
+    private $_class = "LC_DP_";
 
     private static $instance;
 
@@ -77,46 +77,90 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
     }
 
     public function wp_init() {
-        $_procedure = self::_CLASS . "WP_INIT: ";
-        if( $this->detect_target() ){
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION TARGET DETECTED");
-        } else {
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION TARGET NOT DETECTED");
-        }
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."WP_INIT",
+        ));
+        // if( $this->detect_target() ){
+        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);
+        // } else {
+        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET NOT DETECTED", $context);
+        // }
         // $integration_instance = $this->get_integration_instance();
         // if( $integration_instance !== null ){
-        //     if(LASERCOMMERCE_DEBUG) {
+        //     if(LASERCOMMERCE_DP_DEBUG) {
         //         error_log($_procedure."INTEGRATION INSTANCE OBTAINED");
         //         error_log($_procedure."INTEGRATION INSTANCE PLUGIN: ".serialize($integration_instance->plugin_url()));
         //     }
         //
         // } else {
-        //     if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION INSTANCE NOT OBTAINED");
+        //     if(LASERCOMMERCE_DP_DEBUG) error_log($_procedure."INTEGRATION INSTANCE NOT OBTAINED");
         // }
     }
 
+    public function patched_dp_add_price_filters(){
+        $dp_instance = $this->get_integration_instance();
+
+        //Filters the regular variation price
+        add_filter( 'woocommerce_product_variation_get_price', array( $dp_instance, 'on_get_product_variation_price' ), 10, 2 );
+        // add_filter( 'woocommerce_product_variation_get_price', array( $this, 'patched_dp_on_get_product_variation_price' ), 10, 2 );
+
+        //Filters the regular product get price.
+        add_filter( 'woocommerce_product_get_price', array( $dp_instance, 'on_get_price' ), 10, 2 );
+        // add_filter( 'woocommerce_product_get_price', array( $this, 'patched_dp_on_get_price' ), 10, 2 );
+    }
+
+    public function patched_dp_remove_price_filters(){
+        $dp_instance = $this->get_integration_instance();
+
+        //Filters the regular variation price
+        remove_filter( 'woocommerce_product_variation_get_price', array( $dp_instance, 'on_get_product_variation_price' ), 10, 2 );
+        remove_filter( 'woocommerce_product_variation_get_price', array( $this, 'patched_dp_on_get_product_variation_price' ), 10, 2 );
+
+        //Filters the regular product get price.
+        remove_filter( 'woocommerce_product_get_price', array( $dp_instance, 'on_get_price' ), 10, 2 );
+        remove_filter( 'woocommerce_product_get_price', array( $this, 'patched_dp_on_get_price' ), 10, 2 );
+    }
+
     public function patched_dp_on_get_price($base_price, $_product, $force_calculation = false){
-        $_procedure = self::_CLASS . "PATCHED_DP_ON_GET_PRICE: ";
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."PATCHED_DP_ON_GET_PRICE",
+        ));
+        if(LASERCOMMERCE_DP_DEBUG) $this->procedureStart('', $context);
+
 
         global $product;
 
-        $dynamic_pricing_instance = $this->get_integration_instance();
+        $dp_instance = $this->get_integration_instance();
 
         $composite_ajax = did_action('wp_ajax_woocommerce_show_composited_product') | did_action('wp_ajax_nopriv_woocommerce_show_composited_product') | did_action('wc_ajax_woocommerce_show_composited_product');
 
 	    $result_price = $base_price;
+
+        //Cart items are discounted when loaded from session, check to see if the call to get_price is from a cart item,
+        //if so, return the price on the cart item as it currently is.
+        $cart_item = WC_Dynamic_Pricing_Context::instance()->get_cart_item_for_product( $_product );
+        if ( ! $force_calculation && $cart_item ) {
+            // TODO: Do we need to patch remove_price_filters and add_price_filters?
+            $this->patched_dp_remove_price_filters();
+            $cart_price = $cart_item['data']->get_price();
+            $this->patched_dp_add_price_filters();
+            // $cart_price = $this->actuallyGetPrice('', $cart_item['data']);
+            $context['return'] = serialize($cart_price);
+            if(LASERCOMMERCE_DP_DEBUG) $this->procedureEnd("return cart price", $context);
+            return $cart_price;
+        }
+
         //Is Product check so this does not run on the cart page.  Cart items are discounted when loaded from session.
-        if ((is_object($product) && $product->id == $_product->id) || (function_exists('is_shop') && is_shop()) || is_product() || is_tax() || $force_calculation || $composite_ajax) {
+        if ((is_object($product) && $product->get_id() == $_product->get_id()) || (function_exists('is_shop') && is_shop()) || is_product() || is_tax() || $force_calculation || $composite_ajax) {
 	        // $cache_id = $_product->get_id() . spl_object_hash( $_product );
-	        // if ( isset( $dynamic_pricing_instance->cached_adjustments[ $cache_id ] ) ) {
-		    //     return $dynamic_pricing_instance->cached_adjustments[ $cache_id ];
-	        // }
+            // if ( isset( $dp_instance->cached_adjustments[ $cache_id ] ) && ! empty( $dp_instance->cached_adjustments[ $cache_id ] ) ) {
+			// 	return $dp_instance->cached_adjustments[ $cache_id ];
+			// }
 
-        	$id = isset($_product->variation_id) ? $_product->variation_id : $_product->id;
             $discount_price = false;
-            $working_price = isset($dynamic_pricing_instance->discounted_products[$id]) ? $dynamic_pricing_instance->discounted_products[$id] : $base_price;
+            $working_price  = $base_price;
 
-            $modules = apply_filters('wc_dynamic_pricing_load_modules', $dynamic_pricing_instance->modules);
+            $modules = apply_filters('wc_dynamic_pricing_load_modules', $dp_instance->modules);
             foreach ($modules as $module) {
                 if ($module->module_type == 'simple') {
                     //Make sure we are using the price that was just discounted.
@@ -134,23 +178,30 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
 		        $result_price = $base_price;
 	        }
 
-	        // $dynamic_pricing_instance->cached_adjustments[ $cache_id ] = $result_price;
+	        // $dp_instance->cached_adjustments[ $cache_id ] = $result_price;
         }
 
-
+        $context['return'] = serialize($result_price);
+        if(LASERCOMMERCE_DP_DEBUG) $this->procedureEnd("", $context);
 	    return $result_price;
     }
 
-    public function patched_dp_on_get_product_is_on_sale( $is_on_sale, $product ) {
-        $_procedure = self::_CLASS . "PATCHED_DP_ON_GET_PRODUCT_IS_ON_SALE: ";
+    public function patched_dp_on_get_product_variation_price( $base_price, $_product ) {
+        return $this->patched_dp_on_get_price( $base_price, $_product, false );
+    }
+
+    public function patched_dp_on_get_product_is_on_sale( $is_on_sale, $_product ) {
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."PATCHED_DP_ON_GET_PRODUCT_IS_ON_SALE",
+        ));
 
         if ( $is_on_sale ) {
             return $is_on_sale;
         }
 
-        if ( $product->is_type( 'variable' ) ) {
+        if ( $_product->is_type( 'variable' ) ) {
             $is_on_sale = false;
-            $prices = $product->get_variation_prices();
+            $prices = $_product->get_variation_prices();
 
             $regular = array_map('strval', $prices['regular_price']);
             $actual_prices = array_map('strval', $prices['price']);
@@ -162,16 +213,19 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
             }
 
         } else {
-            $dynamic_pricing_instance = $this->get_integration_instance();
-            $lc_price =  $this->plugin->maybeGetPrice('', $product);
-            // $dynamic_price = $this->patched_dp_on_get_price( $lc_price, $product, true );
-            $dynamic_price = $dynamic_pricing_instance->on_get_price( $lc_price, $product, true);
-            $regular_price = $product->get_regular_price();
+            $dp_instance = $this->get_integration_instance();
+            $lc_price =  $this->plugin->maybeGetPrice('', $_product);
+            // $dynamic_price = $this->patched_dp_on_get_price( $lc_price, $_product, true );
+            $dynamic_price = $dp_instance->on_get_price( $lc_price, $_product, true);
+            $regular_price = $_product->get_regular_price();
 
-            if(LASERCOMMERCE_DEBUG) {
-                error_log($_procedure."lc_price: ".serialize($lc_price));
-                error_log($_procedure."dynamic_price: ".serialize($dynamic_price));
-                error_log($_procedure."regular_price: ".serialize($regular_price));
+            if(LASERCOMMERCE_DP_DEBUG) {
+                $this->procedureDebug(
+                    "lc_price: ".serialize($lc_price)
+                        ."; dynamic_price: ".serialize($dynamic_price)
+                        ."; regular_price: ".serialize($regular_price),
+                    $context
+                );
             }
 
             if ( empty( $regular_price ) || empty( $dynamic_price ) ) {
@@ -185,40 +239,61 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
     }
 
     public function patchDynamicPricing(){
-        $_procedure = self::_CLASS . "PATCH: ";
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."PATCH_DP",
+        ));
 
         if( $this->detect_target() ){
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."PATCHING");
-
-            // add_filter('woocommerce_product_is_on_sale', array(&$this, 'maybeProductIsOnSaleStart'), 0, 2);
-            // add_filter('woocommerce_product_is_on_sale', array(&$this, 'maybeProductIsOnSaleEnd'), 999, 2);
-            $dynamic_pricing_instance = $this->get_integration_instance();
-            remove_filter( 'woocommerce_product_is_on_sale', array(&$dynamic_pricing_instance , 'on_get_product_is_on_sale'), 10, 2 );
-            add_filter('woocommerce_product_is_on_sale', array(&$this, 'patched_dp_on_get_product_is_on_sale'), 10, 2);
+            if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("PATCHING", $context);
+            $dp_instance = $this->get_integration_instance();
+            $this->patchFilter(
+                'woocommerce_product_is_on_sale',
+                array(&$dp_instance , 'on_get_product_is_on_sale'),
+                array(&$this, 'patched_dp_on_get_product_is_on_sale'),
+                10,
+                2
+            );
+            // remove_filter( 'woocommerce_product_is_on_sale', array(&$dp_instance , 'on_get_product_is_on_sale'), 10, 2 );
+            // add_filter('woocommerce_product_is_on_sale', array(&$this, 'patched_dp_on_get_product_is_on_sale'), 10, 2);
+            $this->patchFilter(
+                'woocommerce_product_get_price',
+                array(&$dp_instance , 'on_get_price'),
+                array(&$this, 'patched_dp_on_get_price'),
+                10,
+                2
+            );
+            $this->patchFilter(
+                'woocommerce_product_variation_get_price',
+                array(&$dp_instance , 'on_get_product_variation_price'),
+                array(&$this, 'patched_dp_on_get_product_variation_price'),
+                10,
+                2
+            );
         } else {
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."NOT PATCHING");
+            if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("NOT PATCHING", $context);
         }
     }
 
     public function addActionsAndFilters() {
         // must be called after wp_init to detect other plugins
 
-        $_procedure = self::_CLASS . "ADD_ACTIONS_FILTERS: ";
-        if( $this->detect_target() ){
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION TARGET DETECTED");
-        } else {
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION TARGET NOT DETECTED");
-        }
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."ADD_ACTIONS_FILTERS",
+        ));
+
+        // if( $this->detect_target() ){
+        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);
+        // } else {
+        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION NOT TARGET DETECTED", $context);
+        // }
 
         // $integration_instance = $this->get_integration_instance();
         // if( $integration_instance !== null ){
-        //     if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION INSTANCE OBTAINED");
+        //     if(LASERCOMMERCE_DP_DEBUG) error_log($_procedure."INTEGRATION INSTANCE OBTAINED");
         // } else {
-        //     if(LASERCOMMERCE_DEBUG) error_log($_procedure."INTEGRATION INSTANCE NOT OBTAINED");
+        //     if(LASERCOMMERCE_DP_DEBUG) error_log($_procedure."INTEGRATION INSTANCE NOT OBTAINED");
         // }
 
         $this->patchDynamicPricing();
     }
-
-    //TODO: move Dynamic Pricing integration stuff here
 }

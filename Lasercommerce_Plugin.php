@@ -166,9 +166,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $sku;
     }
 
-    public function getMajorTiers(){
-        trigger_error("Deprecated function called: getMajorTiers", E_USER_NOTICE);
-    }
+    // public function getMajorTiers(){
+    //     trigger_error("Deprecated function called: getMajorTiers", E_USER_NOTICE);
+    // }
 
     /**
     * Determines whether a given price matches the woocommerce meta for
@@ -362,9 +362,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         ));
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
-        // TODO: this
-
-
         $metaKey = ($min_or_max == 'max' ? '_max_price_variation_id' : '_min_price_variation_id');
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug('meta key: '.$metaKey, $context);
         $target_ids = get_post_meta($postID, $metaKey, false);
@@ -423,19 +420,22 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $price;
     }
 
-    public function maybeGetVariationPrice( $price = '', $_product, $min_or_max, $include_taxes ) { return $this->maybeGetVariationStarPrice( '', $price = '', $_product, $min_or_max, $include_taxes ); }
-    public function maybeGetVariationRegularPrice($price = '', $_product, $min_or_max, $include_taxes) { return $this->maybeGetVariationStarPrice( 'regular', $price = '', $_product, $min_or_max, $include_taxes ); }
-    public function maybeGetVariationSalePrice($price = '', $_product, $min_or_max, $include_taxes) { return $this->maybeGetVariationStarPrice( 'sale', $price = '', $_product, $min_or_max, $include_taxes ); }
+    // public function maybeGetVariationPrice( $price = '', $_product, $min_or_max, $include_taxes ) { return $this->maybeGetVariationStarPrice( '', $price = '', $_product, $min_or_max, $include_taxes ); }
+    // public function maybeGetVariationRegularPrice($price = '', $_product, $min_or_max, $include_taxes) { return $this->maybeGetVariationStarPrice( 'regular', $price = '', $_product, $min_or_max, $include_taxes ); }
+    // public function maybeGetVariationSalePrice($price = '', $_product, $min_or_max, $include_taxes) { return $this->maybeGetVariationStarPrice( 'sale', $price = '', $_product, $min_or_max, $include_taxes ); }
 
     public function actuallyGetStarPrice($star = '', $price = '', $_product = ''){
         $postID = $this->getProductPostID($_product);
+        $sku = $this->getProductSKU($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."!GETSTARPRICE|$star",
-            'args'=>"\$_product=".serialize($postID).", \$price=".serialize($price)
+            'args'=>"\$_product=".serialize($postID).$sku.", \$price=".serialize($price)
         ));
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
-        // $tierString = $this->tree->serializeVisibleTiers();
+        $tierString = $this->tree->serializeVisibleTiers();
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("tierString: ".serialize($tierString), $context);
+
         //
         // $hash = array(
         //     $postID,
@@ -461,7 +461,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing is cached");
         // }
 
-        // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing: ".(string)$lowestPricing);
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("lowestPricing: ".(string)$lowestPricing, $context);
 
         if($lowestPricing) {
             switch ($star) {
@@ -471,20 +471,22 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 // case 'excl_tax':
                 case 'current':
                 $price = $lowestPricing->maybe_get_current_price();
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing price to $star".serialize($price), $context);
                 break;
                 case 'regular':
                 $price = $lowestPricing->regular_price;
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing price to $star".serialize($price), $context);
                 break;
                 case 'sale':
                 $price = $lowestPricing->sale_price;
-                // if(LASERCOMMERCE_PRICING_DEBUG) error_log("-> changing price to $price");
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing price to $star".serialize($price), $context);
                 break;
                 // default:
                 //     # code...
                 //     break;
             }
+        } else {
+            $price = '';
         }
 
         $context['return'] = serialize($price);
@@ -495,6 +497,117 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function actuallyGetPrice($price = '', $_product) { return $this->actuallyGetStarPrice('current', $price, $_product); }
     public function actuallyGetRegularPrice($price = '', $_product) { return $this->actuallyGetStarPrice('regular', $price, $_product); }
     public function actuallyGetSalePrice($price = '', $_product) { return $this->actuallyGetStarPrice('sale', $price, $_product); }
+
+    public function actuallyGetStarDate($star='', $date='', $_product){
+        $postID = $this->getProductPostID($_product);
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."!GETSTARDATE|$star",
+            'args'=>"\$_product=".serialize($postID).", \$date=".serialize($date)
+        ));
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
+
+        if($_product->is_type( 'variable' )){
+            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+        } else {
+            $lowestPricing = $this->maybeGetLowestPricing($_product);
+        }
+
+        if($lowestPricing) {
+            switch($star){
+                case 'from':
+                $date = $lowestPricing->sale_price_dates_from;
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to $star".serialize($date), $context);
+                break;
+                case 'to':
+                $date = $lowestPricing->sale_price_dates_from;
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to $star".serialize($date), $context);
+                break;
+            }
+        }
+
+        $date = DateTime::createFromFormat("%U", $date);
+        $context['return'] = serialize($date);
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
+        return $date;
+    }
+
+    public function actuallyGetDateOnSaleFrom($date = '', $_product) { return $this->actuallyGetStarDate('from', $date, $_product ); }
+    public function actuallyGetDateOnSaleTo($date = '', $_product) { return $this->actuallyGetStarDate('to', $date, $_product ); }
+
+    public function actuallyGetOnSale($on_sale, $_product) {
+        if ( '' !== (string) $this->actuallyGetSalePrice('', $_product) && $this->actuallyGetRegularPrice('', $_product) > $this->actuallyGetSalePrice('', $_product) ) {
+            $on_sale = true;
+
+            if ( $this->actuallyGetDateOnSaleFrom('', $_product) && $this->actuallyGetDateOnSaleFrom('', $_product)->getTimestamp() > current_time( 'timestamp', true ) ) {
+                $on_sale = false;
+            }
+
+            if ($this->actuallyGetDateOnSaleTo('', $_product) && $this->actuallyGetDateOnSaleFrom('', $_product)->getTimestamp() < current_time( 'timestamp', true ) ) {
+                $on_sale = false;
+            }
+        } else {
+            $on_sale = false;
+        }
+        return $on_sale;
+    }
+
+    public function actuallyGetPriceHtml($html = '', $_product) {
+        $postID = $this->getProductPostID($_product);
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."!GETPRICEHTML",
+            'args'=>"\$_product=".serialize($postID).", \$html=".serialize($html)
+        ));
+        if(LASERCOMMERCE_HTML_DEBUG) $this->procedureStart('', $context);
+
+        if($_product->is_type( 'variable' )){
+            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+        } else {
+            $lowestPricing = $this->maybeGetLowestPricing($_product);
+        }
+
+        if( '' === $this->actuallyGetPrice('', $_product) ) {
+            $html = apply_filters( 'woocommerce_empty_price_html', '', $_product );
+        } else if($_product->is_type( 'variable' )){
+            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+            $highestPricing = $this->maybeGetVariationPricing( $_product, 'max');
+            if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug(
+                sprintf("lowestPricing: %s, highestPricing: %s", $lowestPricing, $highestPricing),
+                $context
+            );
+
+            $min_price = $lowestPricing->maybe_get_current_price();
+            $max_price = $highestPricing->maybe_get_current_price();
+            $min_reg_price = $lowestPricing->regular_price;
+            $max_reg_price = $highestPricing->regular_price;
+
+            if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug(
+                sprintf("min: %s, max: %s, min_reg: %s, max_reg: %s", $min_price, $max_price, $min_reg_price, $max_reg_price),
+                $context
+            );
+
+            if ( $min_price !== $max_price ) {
+                $html = apply_filters( 'woocommerce_variable_price_html', wc_format_price_range( $min_price, $max_price ) . $_product->get_price_suffix(), $_product );
+            } elseif ( $_product->is_on_sale() && $min_reg_price === $max_reg_price ) {
+                $html = apply_filters( 'woocommerce_variable_price_html', wc_format_sale_price( wc_price( $max_reg_price ), wc_price( $min_price ) ) . $_product->get_price_suffix(), $_product );
+            } else {
+                $html = apply_filters( 'woocommerce_variable_price_html', wc_price( $min_price ) . $_product->get_price_suffix(), $_product );
+            }
+        } else {
+            if( $this->actuallyGetOnSale(false, $_product) ){
+                $html = wc_format_sale_price( $this->actuallyGetRegularPrice('', $_product) , $this->actuallyGetSalePrice('', $_product) ) . $_product->get_price_suffix();
+            } else {
+                $html = wc_price( $this->actuallyGetPrice('', $_product) ) . $_product->get_price_suffix();
+            }
+        }
+
+
+
+
+        $context['return'] = serialize($html);
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
+        return $html;
+
+    }
 
     /**
     * Generalization of maybeGet*Price
@@ -564,40 +677,55 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetPriceInclTax($price ='', $qty, $_product){ return $this->maybeOverrideBlankPrice($price, $_product); }
     public function maybeGetPriceExclTax($price ='', $qty, $_product){ return $this->maybeOverrideBlankPrice($price, $_product); }
 
-    // public function maybeGetCartItemPrice( $price, $values, $cart_item_key ){
-    //     $context = array(
-    //         'do_trace'=>true,
-    //         'caller'=>$this->_class."GETCARTITEMPRICE",
-    //         'args'=>"\$price=".serialize($price).", \$values=".serialize($values)
-    //     );
-    //     if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
-    // if (LASERCOMMERCE_PRICING_DEBUG) {
-    //     error_log($_procedure);
-    //     error_log(" | price: ".serialize($price));
-    //     error_log(" | values: ".serialize($values));
-    //     error_log(" | cart_item_key: ".serialize($cart_item_key));
-    // }
-    //
-    //     $quantity = isset($values['quantity'])?$values['quantity']:'';
-    //     $product_id = isset($values['product_id'])?$values['product_id']:'';
-    //     $variation_id = isset($values['variation_id'])?$values['variation_id']:'';
-    //
-    //     $context['return'] = wc_format_decimal($price);
-    //     if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
-    //     return $price;
-    // }
+    public function maybeGetCartItemPrice( $price, $values, $cart_item_key ){
+        $context = array(
+            'do_trace'=>true,
+            'caller'=>$this->_class."GETCARTITEMPRICE",
+            'args'=>"\$price=".serialize($price).", \$values=".serialize($values)
+        );
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
-    // public function maybeGetCartItemSubtotal( $subtotal, $values, $cart_item_key ) {
-    //     $_procedure = $this->_class."GETCARTITEMSUBTOTAL: ";
-    //
-    //     // if (LASERCOMMERCE_PRICING_DEBUG) {
-    //     //     error_log($_procedure);
-    //     //     error_log(" | subtotal: ".serialize($subtotal));
-    //     //     error_log(" | values: ".serialize($values));
-    //     //     error_log(" | cart_item_key: ".serialize($cart_item_key));
-    //     // }
-    //     return $subtotal;
-    // }
+        $quantity = isset($values['quantity'])?$values['quantity']:'';
+        $product_id = isset($values['product_id'])?$values['product_id']:'';
+        $variation_id = isset($values['variation_id'])?$values['variation_id']:'';
+
+        if(LASERCOMMERCE_PRICING_DEBUG) {
+            $message = "quantity: ".serialize($quantity);
+            $message .= " | product_id: ".serialize($product_id);
+            $message .= " | variation_id: ".serialize($variation_id);
+            $message .= " | cart_item_key: ".serialize($cart_item_key);
+            $this->procedureDebug($message, $context);
+        }
+
+        $context['return'] = wc_format_decimal($price);
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
+        return $price;
+    }
+
+    public function maybeGetCartItemSubtotal( $subtotal, $values, $cart_item_key ) {
+        $context = array(
+            'do_trace'=>true,
+            'caller'=>$this->_class."GETCARTITEMSUBTOTAL",
+            'args'=>"\$subtotal=".serialize($subtotal).", \$values=".serialize($values)
+        );
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
+
+        $quantity = isset($values['quantity'])?$values['quantity']:'';
+        $product_id = isset($values['product_id'])?$values['product_id']:'';
+        $variation_id = isset($values['variation_id'])?$values['variation_id']:'';
+
+        if(LASERCOMMERCE_PRICING_DEBUG) {
+            $message = "quantity: ".serialize($quantity);
+            $message .= " | product_id: ".serialize($product_id);
+            $message .= " | variation_id: ".serialize($variation_id);
+            $message .= " | cart_item_key: ".serialize($cart_item_key);
+            $this->procedureDebug($message, $context);
+        }
+
+        $context['return'] = wc_format_decimal($subtotal);
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
+        return $subtotal;
+    }
 
     /**
     *  Returns if the simple or variable product can be purchased by the current user
@@ -706,8 +834,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             'args'=>"\$_product=".serialize($postID)
         ));
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
-        // TODO: is this WC3.0 compatible
-        // TODO: WHAT IF max_price_id is not the same as max_regular_price_id???
 
         // OMNISCIENT OVERRIDE BEGIN
         // $omniscient_tiers = $this->tree->getOmniscientTiers();
@@ -758,17 +884,12 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             // if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("dying", $context);
             // wp_die();
 
-            // TODO: THIS WILL PROBABLY CAUSE ISSUES
             // update_post_meta($postID, '_price', '');
             // update_post_meta($postID, '_price', $min_pricing->maybe_get_current_price());
         }
 
         // $Lasercommerce_Tiers_Override = $old_override;
         // OMNISCIENT OVERRIDE END
-
-        // TODO: Maybe set _price
-
-        //TODO: synchronize max_variation_id
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
     }
 
@@ -1002,7 +1123,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetStarHtml($price_html, $_product, $star){
         $postID = $this->getProductPostID($_product);
         $context = array_merge($this->defaultContext, array(
-            'caller'=>$this->_class."MAYBEISVARIATIONVISIBLE|$star",
+            'caller'=>$this->_class."MAYBEGETSTARHTML|$star",
             'args'=>"\$price_html=".serialize($price_html).", \$_product=".serialize($postID)
         ));
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
@@ -1041,118 +1162,16 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function maybeGetVariationSalePriceHtml($price_html, $_product){ return $this->maybeGetStarHtml($price_html, $_product, 'variation_sale_price'); }
     public function maybeGetEmptyPriceHtml($price_html, $_product) { return $this->maybeGetStarHtml($price_html, $_product, 'empty_price'); }
 
-    public function traceAction($hookName){
-        if( empty( $hookName ) ) return;
-
-        $context = array_merge($this->defaultContext, array(
-            'caller'=>"ACT_".strtoupper($hookName),
-        ));
-
-        add_action(
-            $hookName,
-            function() use ($context, $hookName) {
-                global $wp_action;
-
-                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart("FIRST ACTION", $context);
-
-                if( isset($wp_action[$hookName]) ){
-                    foreach( $wp_action[$hookName] as $priority => $hooks){
-                        foreach ($hooks as $hook_k => $hook_v) {
-                            if ($priority < 0 || $priority >= 99999) continue;
-                            $hook_echo=(is_array($hook_v['function'])?get_class($hook_v['function'][0]).':'.$hook_v['function'][1]:$hook_v['function']);
-                            if(is_object($hook_echo) && ($hook_echo instanceof Closure)){
-                                $hook_echo="closure";
-                            }
-                            $this->procedureDebug("HOOKED (".serialize($priority)."): ".serialize($hook_k)."".serialize($hook_echo), $context);
-                        }
-                    }
-                } else {
-                    // $this->procedureDebug("NO HOOKS", $context);
-                }
-            },
-            -1,
-            0
-        );
-        add_action(
-            $hookName,
-            function() use ($context) {
-                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("FINAL ACTION", $context);
-            },
-            99999,
-            0
-        );
-    }
-
-    public function traceFilter($hookName){
-        if( empty( $hookName ) ) return;
-
-        $context = array_merge($this->defaultContext, array(
-            'caller'=>"FLT_".strtoupper($hookName),
-        ));
-
-        // get list of things hooked to this filter
-
-        add_filter(
-            $hookName,
-            function($param) use ($context, $hookName) {
-                global $wp_filter;
-
-                if(LASERCOMMERCE_PRICING_DEBUG) {
-                    try {
-                        $context['args'] = "\$param=".serialize($param);
-                    } catch( Exception $e ){
-                        $context['args'] = "\$param=<unserializable>";
-                    }
-                    $this->procedureStart("", $context);
-                }
-
-                if( isset($wp_filter[$hookName]) ){
-                    foreach( $wp_filter[$hookName] as $priority => $hooks){
-                        foreach ($hooks as $hook_k => $hook_v) {
-                            if ($priority < 0 || $priority >= 99999) continue;
-                            $hook_echo=(is_array($hook_v['function'])?get_class($hook_v['function'][0]).':'.$hook_v['function'][1]:$hook_v['function']);
-                            if(is_object($hook_echo) && ($hook_echo instanceof Closure)){
-                                $hook_echo="closure";
-                            }
-                            $this->procedureDebug("HOOKED (".serialize($priority)."): ".serialize($hook_k)."".serialize($hook_echo), $context);
-                        }
-                    }
-                } else {
-                    // $this->procedureDebug("NO HOOKS", $context);
-                }
-
-                return $param;
-            },
-            -1,
-            1
-        );
-        add_filter(
-            $hookName,
-            function($param) use ($context) {
-
-                if(LASERCOMMERCE_PRICING_DEBUG) {
-                    try {
-                        $this->procedureDebug("FINAL FILTER: ".serialize($param), $context);
-                    } catch( Exception $e ){
-                        $this->procedureDebug("FINAL FILTER: <unserializable>", $context);
-                    }
-                }
-                return $param;
-            },
-            99999,
-            1
-        );
-    }
-
     /**
     * Functions for generating Gravity Forms parameters and form tags
+    * TODO: Move to own integration class
     */
 
     public function gform_user_tier_string_paramter( $value=null ){
         $_procedure = $this->_class."GFORM_TIER_STRING_PARAM: ";
 
         $tierString = $this->tree->serializeVisibleTiers();
-        // if(LASERCOMMERCE_DEBUG) {error_log($_procedure."tierString: $tierString");}
+        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."tierString: $tierString");}
 
         return $tierString;
     }
@@ -1161,7 +1180,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $_procedure = $this->_class."GFORM_IS_WHOLESALE: ";
 
         $isWholesale = $this->tree->tierNameVisible('Wholesale');
-        // if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isWholesale: $isWholesale");}
+        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."isWholesale: $isWholesale");}
 
         if($isWholesale){
             return "YES";
@@ -1174,7 +1193,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $_procedure = $this->_class."GFORM_IS_AUTH: ";
 
         $isLoggedIn = is_user_logged_in();
-        // if(LASERCOMMERCE_DEBUG) {error_log($_procedure."isLoggedIn: $isLoggedIn");}
+        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."isLoggedIn: $isLoggedIn");}
 
         if($isLoggedIn){
             return "YES";
@@ -1222,7 +1241,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function gf_setup_dynamic_parameter($tag, $_value){
         $_procedure = $this->_class."GFORM_SET_PARAM: ";
 
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."setting $tag to $_value");
+        if(LASERCOMMERCE_GF_DEBUG) error_log($_procedure."setting $tag to $_value");
 
         add_filter(
             "gform_field_value_$tag",
@@ -1259,6 +1278,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $store;
     }
 
+    /**
+    *  Actions and Filters!
+    */
 
     public function constructTraces() {
         $this->traceAction('init');
@@ -1303,10 +1325,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     }
 
-    /**
-    *  Actions and Filters!
-    */
-
     public function addActionsAndFilters() {
         // Admin filters:
 
@@ -1319,56 +1337,65 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $this->constructTraces();
         }
 
+        add_action('init', function(){
+            remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20 );
+        });
+
+
         //helper class for tier tree functions
 
 
         // WC 3.0 Properties
-        // add_filter( 'woocommerce_product_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );   /* NEED */
-        // add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );  /* NEED */
-        // add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );  /* NEED */
-        // add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );  /* NEED */
-        // add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );  /* NEED */
-        // add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );   /* NEED */
-        add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );   /* NEED */
+        add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_variation_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );  /* NEED */
+        add_filter( 'woocommerce_product_variation_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );  /* NEED */
+        // add_filter( 'woocommerce_product_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
+        // add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );
+        // add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );
+        // add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
+        // add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );
+        // add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );
 
         // May not need these:
-        add_filter( 'woocommerce_get_variation_price', array($this, 'maybeGetVariationPrice'), 0, 4 );
-        add_filter( 'woocommerce_get_variation_regular_price', array($this, 'maybeGetVariationRegularPrice'), 0, 4 );
-        add_filter( 'woocommerce_get_variation_sale_price', array($this, 'maybeGetVariationSalePrice'), 0, 4 );
+        // add_filter( 'woocommerce_get_variation_price', array($this, 'maybeGetVariationPrice'), 0, 4 );
+        // add_filter( 'woocommerce_get_variation_regular_price', array($this, 'maybeGetVariationRegularPrice'), 0, 4 );
+        // add_filter( 'woocommerce_get_variation_sale_price', array($this, 'maybeGetVariationSalePrice'), 0, 4 );
 
 
         // add_filter( 'woocommerce_cart_product_price', array(&$this, 'maybeGetCartPrice'), 0, 2 );
         // add_filter( 'woocommerce_cart_item_price', array(&$this, 'maybeGetCartItemPrice'), 0, 3 );
         // add_filter( 'woocommerce_cart_item_subtotal', array(&$this, 'maybeGetCartItemSubtotal'), 0, 3);
         // add_filter( 'woocommerce_checkout_item_subtotal', array(&$this, 'maybeGetCartItemSubtotal'), 0, 3);
-        add_filter( 'woocommerce_is_purchasable', array(&$this, 'maybeIsPurchasable'), 1, 2);
+        // add_filter( 'woocommerce_is_purchasable', array(&$this, 'maybeIsPurchasable'), 1, 2);
 
-        add_filter( 'woocommerce_sale_price_html', array(&$this, 'maybeGetSalePriceHtml'), 0, 2);
-        add_filter( 'woocommerce_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);
-        add_filter( 'woocommerce_variable_price_html', array(&$this, 'maybeGetVariablePriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_variation_price_html', array(&$this, 'maybeGetVariationPriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_variation_sale_price_html', array(&$this, 'maybeGetVariationSalePriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetEmptyPriceHtml'), 0, 2 );
-        add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);
+        // add_filter( 'woocommerce_sale_price_html', array(&$this, 'maybeGetSalePriceHtml'), 0, 2);
+        // add_filter( 'woocommerce_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);
+        // add_filter( 'woocommerce_variable_price_html', array(&$this, 'maybeGetVariablePriceHtml'), 0, 2 );
+        // add_filter( 'woocommerce_variation_price_html', array(&$this, 'maybeGetVariationPriceHtml'), 0, 2 );
+        // add_filter( 'woocommerce_variation_sale_price_html', array(&$this, 'maybeGetVariationSalePriceHtml'), 0, 2 );
+        // add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetEmptyPriceHtml'), 0, 2 );
+        // add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);
 
-        add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_tier_flat_to_woocommerce_get_variation_prices_hash'), 0, 2 );
+        add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_tier_flat_to_woocommerce_get_variation_prices_hash'), 0, 2 ); /* NEED */
 
         // TODO: THESE MAY NOT BE NECESSARY?
-        add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3);
+        add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3); /* NEED */
         // add_filter( 'woocommerce_variation_prices_price', array($this, 'maybeVariationPricesPrice'), 0, 3);
         // add_filter( 'woocommerce_variation_prices_regular_price', array($this, 'maybeVariationPricesRegularPrice'), 0, 3);
         // add_filter( 'woocommerce_variation_prices_sale_price', array($this, 'maybeVariationPricesSalePrice'), 0, 3);
 
-        add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
-        add_filter( 'woocommerce_variation_is_visible', array( &$this, 'maybeVariationIsVisible' ), 0, 4 );
+        // add_filter( 'woocommerce_get_children', array(&$this, 'maybeGetChildren'), 0, 3);
+        // add_filter( 'woocommerce_variation_is_visible', array( &$this, 'maybeVariationIsVisible' ), 0, 4 );
 
-        add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
-        add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
+        // add_filter( 'woocommerce_get_price_including_tax', array(&$this, 'maybeGetPriceInclTax'), 0, 3);
+        // add_filter( 'woocommerce_get_price_excluding_tax', array(&$this, 'maybeGetPriceExclTax'), 0, 3);
 
         add_action('woocommerce_variable_product_sync_data', array(&$this, 'maybeVariableProductSyncData'), 0, 2);
         // Deprecated in WC 3.0
@@ -1377,7 +1404,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // TODO: override get_visible_children?
         // add_filter('woocommerce_product-variable_data_store', array(&$this, 'overrideVariableDataStore'), 0, 1);
 
-        add_filter('woocommerce_available_variation', array(&$this, 'maybeAvailableVariation'), 0, 3);
+        // add_filter('woocommerce_available_variation', array(&$this, 'maybeAvailableVariation'), 0, 3);
 
         /** Dynamic Pricng */
 
