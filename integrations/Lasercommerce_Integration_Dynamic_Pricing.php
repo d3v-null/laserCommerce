@@ -395,10 +395,10 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
             $this->constructTraces();
         }
 
-        add_action('wc_memberships_discounts_disable_price_adjustments', array(&$this, 'patched_dp_remove_price_filters'));
-        add_action('wc_memberships_discounts_enable_price_adjustments', array(&$this, 'patched_dp_add_price_filters'));
+        // add_action('wc_memberships_discounts_disable_price_adjustments', array(&$this, 'patched_dp_remove_price_filters'));
+        // add_action('wc_memberships_discounts_enable_price_adjustments', array(&$this, 'patched_dp_add_price_filters'));
 
-        $this->patchDynamicPricing();
+        // $this->patchDynamicPricing();
 
         //Filter / Action research:
         //DYNAMIC PRICING
