@@ -81,22 +81,6 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
             'caller'=>$this->_class."WP_INIT",
         ));
         if(LASERCOMMERCE_DP_DEBUG) $this->procedureStart('', $context);
-
-        // if( $this->detect_target() ){
-        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);
-        // } else {
-        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET NOT DETECTED", $context);
-        // }
-        // $integration_instance = $this->get_integration_instance();
-        // if( $integration_instance !== null ){
-        //     if(LASERCOMMERCE_DP_DEBUG) {
-        //         error_log($_procedure."INTEGRATION INSTANCE OBTAINED");
-        //         error_log($_procedure."INTEGRATION INSTANCE PLUGIN: ".serialize($integration_instance->plugin_url()));
-        //     }
-        //
-        // } else {
-        //     if(LASERCOMMERCE_DP_DEBUG) error_log($_procedure."INTEGRATION INSTANCE NOT OBTAINED");
-        // }
     }
 
     public function patched_dp_add_price_filters(){
@@ -386,13 +370,12 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         $this->traceFilter('woocommerce_variation_prices_price');
         // $this->traceFilter('woocommerce_get_variation_price');
         // $this->traceFilter('woocommerce_get_price');
-        $this->traceFilter('woocommerce_composite_get_price');
-        $this->traceFilter('woocommerce_composite_get_base_price');
         // $this->traceFilter('woocommerce_coupon_is_valid');
         // $this->traceFilter('woocommerce_coupon_is_valid_for_product');
+        $this->traceAction('woocommerce_dynamic_pricing_apply_cartitem_adjustment');
+        $this->traceAction('wc_dynamic_pricing_apply_cart_item_adjustment');
         $this->traceAction('wc_memberships_discounts_disable_price_adjustments');
         $this->traceAction('wc_memberships_discounts_enable_price_adjustments');
-        $this->traceAction('woocommerce_dynamic_pricing_apply_cartitem_adjustment');
     }
 
     public function addActionsAndFilters() {
@@ -401,32 +384,19 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."ADD_ACTIONS_FILTERS",
         ));
-        $this->procedureStart('', $context);
+        if(LASERCOMMERCE_DP_DEBUG) $this->procedureStart('', $context);
 
         if(!$this->detect_target()){
             if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug('could not detect target', $context);
             return;
         }
 
-        if(LASERCOMMERCE_DEBUG) {
+        if(LASERCOMMERCE_DP_DEBUG) {
             $this->constructTraces();
         }
 
         add_action('wc_memberships_discounts_disable_price_adjustments', array(&$this, 'patched_dp_remove_price_filters'));
         add_action('wc_memberships_discounts_enable_price_adjustments', array(&$this, 'patched_dp_add_price_filters'));
-
-        // if( $this->detect_target() ){
-        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);
-        // } else {
-        //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION NOT TARGET DETECTED", $context);
-        // }
-
-        // $integration_instance = $this->get_integration_instance();
-        // if( $integration_instance !== null ){
-        //     if(LASERCOMMERCE_DP_DEBUG) error_log($_procedure."INTEGRATION INSTANCE OBTAINED");
-        // } else {
-        //     if(LASERCOMMERCE_DP_DEBUG) error_log($_procedure."INTEGRATION INSTANCE NOT OBTAINED");
-        // }
 
         $this->patchDynamicPricing();
 

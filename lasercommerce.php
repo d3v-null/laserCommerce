@@ -90,6 +90,12 @@ if( !defined('LASERCOMMERCE_GF_DEBUG')){
 if( !defined('LASERCOMMERCE_DP_DEBUG')){
     define( 'LASERCOMMERCE_DP_DEBUG', False);
 }
+if( !defined('LASERCOMMERCE_IM_DEBUG')){
+    define( 'LASERCOMMERCE_IM_DEBUG', False);
+}
+if( !defined('LASERCOMMERCE_CP_DEBUG')){
+    define( 'LASERCOMMERCE_CP_DEBUG', False);
+}
 
 if(LASERCOMMERCE_DEBUG) error_log("Lasercommerce Debugging enabled");
 if(LASERCOMMERCE_PRICING_DEBUG) error_log("Lasercommerce Price Debugging enabled");

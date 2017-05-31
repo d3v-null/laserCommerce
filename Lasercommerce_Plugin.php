@@ -40,6 +40,7 @@ include_once(LASERCOMMERCE_BASE.'/lib/Lasercommerce_Shortcodes.php');
 include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Memberships.php');
 include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Dynamic_Pricing.php');
 include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Gravityforms.php');
+include_once(LASERCOMMERCE_BASE.'/integrations/Lasercommerce_Integration_Composite_Products.php');
 include_once(LASERCOMMERCE_BASE.'/includes/data-stores/class-lc-product-variable-data-store-cpt.php');
 // include_once(WOOCOMMERCE_BASE.'/includes/class-wc-product-variable.php')
 
@@ -70,6 +71,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     protected $tree;
     protected $visibility;
     protected $integration_dp;
+    protected $integration_cp;
+    protected $integration_m;
     protected $integration_gf;
     protected $shortcodes;
 
@@ -77,6 +80,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->tree = Lasercommerce_Tier_Tree::instance();
         $this->visibility = Lasercommerce_Visibility::instance();
         $this->integration_dp = Lasercommerce_Integration_Dynamic_pricng::instance();
+        $this->integration_cp = Lasercommerce_Integration_Composite_Products::instance();
+        $this->integration_m = Lasercommerce_Integration_Memberships::instance();
         $this->integration_gf = Lasercommerce_Integration_Gravityforms::instance();
     }
 
@@ -1310,26 +1315,15 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         /** Child Integration plugins */
         add_action( 'init', array(&$this->integration_dp, 'addActionsAndFilters'), 0, 0 );
+        add_action( 'init', array(&$this->integration_cp, 'addActionsAndFilters'), 0, 0 );
+        add_action( 'init', array(&$this->integration_m, 'addActionsAndFilters'), 0, 0 );
         add_action( 'init', array(&$this->integration_gf, 'addActionsAndFilters'), 0, 0 );
 
         parent::addActionsAndFilters();
     }
 
-    // MEMBERSHIPS STUFF
-    // add_filter( 'woocommerce_product_is_visible', array( $this, 'product_is_visible' ), 10, 2 );
-    // add_filter( 'woocommerce_variation_is_visible', array( $this, 'variation_is_visible' ), 10, 2 );
-    // remove_filter( 'woocommerce_product_is_visible', array('WC_Memberships_Restrictions', 'product_is_visible'));
-    // remove_filter( 'woocommerce_variation_is_visible', array('WC_Memberships_Restrictions', 'variation_is_visible'));
-    // BUNDLES STUFF
-    // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
-    // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
-    // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PreWooBundlesValidation' ), 9, 6 );
-    // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'woo_bundles_validation' ), 10, 6 );
-    // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PostWooBundlesValidation' ), 11, 6 );
-    // add_filter( 'woocommerce_product_is_visible',
 
-
-    //TODO: make modifications to tax
+    //TODO: make modifications to tax?
     // add_filter( 'woocommerce_get_cart_tax',
     // add_filter( 'option_woocommerce_calc_taxes',
     // add_filter( 'woocommerce_product_is_taxable'

@@ -18,7 +18,7 @@ modification, are permitted provided that the following conditions are met:
       derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ANY EXPRESS OR CPPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
 DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
@@ -30,17 +30,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-class Lasercommerce_Integration_Memberships extends Lasercommerce_Abstract_Child {
-    private $_class = "LC_IM_";
+class Lasercommerce_Integration_Composite_Products extends Lasercommerce_Abstract_Child {
+    private $_class = "LC_CP_";
 
     private static $instance;
 
-    public static $integration_target = 'WC_Memberships';
+    public static $integration_target = 'WC_Composite_Products';
     protected static $integration_instance = null;
 
     public static function init() {
         if ( self::$instance == null ) {
-            self::$instance = new Lasercommerce_Integration_Memberships();
+            self::$instance = new Lasercommerce_Integration_Composite_Products();
         }
     }
 
@@ -80,13 +80,13 @@ class Lasercommerce_Integration_Memberships extends Lasercommerce_Abstract_Child
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."WP_INIT",
         ));
-        if(LASERCOMMERCE_IM_DEBUG) $this->procedureStart('', $context);
+        if(LASERCOMMERCE_CP_DEBUG) $this->procedureStart('', $context);
     }
 
 
     public function constructTraces() {
-        $this->traceAction('wc_memberships_discounts_disable_price_adjustments');
-        $this->traceAction('wc_memberships_discounts_enable_price_adjustments');
+        $this->traceFilter('woocommerce_composite_get_price');
+        $this->traceFilter('woocommerce_composite_get_base_price');
     }
 
     public function addActionsAndFilters() {
@@ -95,22 +95,24 @@ class Lasercommerce_Integration_Memberships extends Lasercommerce_Abstract_Child
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."ADD_ACTIONS_FILTERS",
         ));
-        if(LASERCOMMERCE_IM_DEBUG) $this->procedureStart('', $context);
+        if(LASERCOMMERCE_CP_DEBUG) $this->procedureStart('', $context);
 
         if(!$this->detect_target()){
-            if(LASERCOMMERCE_IM_DEBUG) $this->procedureDebug('could not detect target', $context);
+            if(LASERCOMMERCE_CP_DEBUG) $this->procedureDebug('could not detect target', $context);
             return;
         }
 
-        if(LASERCOMMERCE_IM_DEBUG) {
+        if(LASERCOMMERCE_CP_DEBUG) {
             $this->constructTraces();
         }
-
-        // MEMBERSHIPS STUFF
-        // add_filter( 'woocommerce_product_is_visible', array( $this, 'product_is_visible' ), 10, 2 );
-        // add_filter( 'woocommerce_variation_is_visible', array( $this, 'variation_is_visible' ), 10, 2 );
-        // remove_filter( 'woocommerce_product_is_visible', array('WC_Memberships_Restrictions', 'product_is_visible'));
-        // remove_filter( 'woocommerce_variation_is_visible', array('WC_Memberships_Restrictions', 'variation_is_visible'));
     }
+
+    // BUNDLES STUFF
+    // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPreBundle'), 9, 3);
+    // add_filter( 'woocommerce_available_variation', array(&$this, 'maybeAvailableVariationPostBundle'), 11, 3);
+    // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PreWooBundlesValidation' ), 9, 6 );
+    // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'woo_bundles_validation' ), 10, 6 );
+    // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PostWooBundlesValidation' ), 11, 6 );
+    // add_filter( 'woocommerce_product_is_visible',
 
 }
