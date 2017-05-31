@@ -1189,6 +1189,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->traceFilter('woocommerce_product_get_price');
         $this->traceFilter('woocommerce_product_get_regular_price');
         $this->traceFilter('woocommerce_product_get_sale_price');
+        $this->traceFilter('woocommerce_product_variation_get_price');
+        $this->traceFilter('woocommerce_product_variation_get_regular_price');
+        $this->traceFilter('woocommerce_product_variation_get_sale_price');
         $this->traceFilter('woocommerce_get_variation_price');
         $this->traceFilter('woocommerce_get_variation_regular_price');
         $this->traceFilter('woocommerce_get_variation_sale_price');
@@ -1206,12 +1209,13 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->traceFilter('woocommerce_get_price_including_tax');
         $this->traceFilter('woocommerce_get_price_excluding_tax');
         $this->traceFilter('woocommerce_get_variation_prices_hash');
+
         $this->traceFilter('woocommerce_variation_prices');
         $this->traceFilter('woocommerce_available_variation');
         $this->traceFilter('woocommerce_show_variation_price');
-        // $this->traceFilter('woocommerce_variation_prices_price');
-        // $this->traceFilter('woocommerce_variation_prices_regular_price');
-        // $this->traceFilter('woocommerce_variation_prices_sale_price');
+        $this->traceFilter('woocommerce_variation_prices_price');
+        $this->traceFilter('woocommerce_variation_prices_regular_price');
+        $this->traceFilter('woocommerce_variation_prices_sale_price');
     }
 
     public function addPriceFilters() {

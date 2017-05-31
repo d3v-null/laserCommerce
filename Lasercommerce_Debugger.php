@@ -44,39 +44,59 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
         });
     }
 
-    public function printFn($function){
+    public function stringAnything($thing){
         $context = array_merge($this->defaultContext, array(
             'caller' => $this->_class."PRINTFN",
         ));
 
-        if(is_string($function)){
-            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("printFn called with string: $function", $context);
-            return $function;
+        if(empty($thing)){
+            return serialize($thing);
         }
 
-        if(is_array($function) && !empty($function)){
+        if(is_string($thing)){
+            return $thing;
+        }
+
+        if(is_callable($thing) && is_array($thing) && !empty($thing)){
             $response_components = array();
-            if(isset($function[0])){
-                $response_components[] = is_string($function[0])?$function[0]:get_class($function[0]);
+            if(isset($thing[0])){
+                $response_components[] = is_string($thing[0])?$thing[0]:get_class($thing[0]);
             }
-            if(isset($function[1])){
-                $response_components[] = is_string($function[1])?$function[1]:"?";
+            if(isset($thing[1])){
+                $response_components[] = is_string($thing[1])?$thing[1]:"?";
             }
             return implode(":", $response_components);
         }
 
-        if(is_object($function) && ($function instanceof Closure)){
-            return "closure";
+
+        if(is_object($thing)){
+            if($thing instanceof Closure){
+                return "<closure>";
+            }
+            $thing = (array)$thing;
         }
 
-        return serialize($function);
+        if(is_array($thing)){
+            $response_components = array();
+            foreach($thing as $key => $value){
+                $response_components[] = sprintf("%s:%s", $key, $this->stringAnything($value));
+            }
+            return implode(";", $response_components);
+        }
+
+        try {
+            return serialize($thing);
+        } catch( Exception $e ){
+            return "<unserializable>";
+        }
+
     }
 
     public function patchAction($hookName, $oldFn, $newFn, $priority, $nargs){
         if( empty( $hookName ) ) return;
 
         $context = array_merge($this->defaultContext, array(
-            'caller' => "ACT_".strtoupper($hookName),
+            'caller' => "PTCH_ACT_".strtoupper($hookName),
         ));
 
         add_action(
@@ -84,17 +104,11 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
             function() use ($context, $hookName, $oldFn, $newFn, $priority, $nargs) {
                 global $wp_filter;
 
-                if(LASERCOMMERCE_DEBUG) $this->procedureStart("FIRST ACTION", $context);
-
                 $replace = false;
                 if( isset($wp_filter[$hookName]) ){
                     foreach( $wp_filter[$hookName] as $hook_priority => $hooks){
                         if ($hook_priority <> $priority ) continue;
-                        foreach ($hooks as $hook_k => $hook_v) {
-                            // $hook_echo = "hooked function: " . $this->printFn($hook_v['function']);
-                            // $hook_echo .= " searching for function: " . $this->printFn($oldFn);
-                            // $hook_echo .= " equality: " . serialize($hook_v['function'] == $oldFn);
-                            // $this->procedureDebug("HOOKED (".serialize($hook_priority)."): ".serialize($hook_k)."".serialize($hook_echo), $context);
+                        foreach ($hooks as $hook_v) {
                             if( $hook_v['function'] == $oldFn && $hook_priority == $priority ){
                                 $replace = true;
                                 break;
@@ -106,11 +120,10 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
                         add_action( $hookName, $newFn, $priority, $nargs );
                         if(LASERCOMMERCE_DEBUG) $this->procedureDebug(sprintf(
                             "replacing function %s at %s with %s",
-                            $this->printFn($hook_v['function']),
+                            $this->stringAnything($hook_v['function']),
                             $priority,
-                            $this->printFn($newFn)
+                            $this->stringAnything($newFn)
                         ), $context);
-                        break;
                     }
                 }
             },
@@ -125,7 +138,7 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
         if( empty( $hookName ) ) return;
 
         $context = array_merge($this->defaultContext, array(
-            'caller'=>"FLT_".strtoupper($hookName),
+            'caller'=>"PTCH_FLT_".strtoupper($hookName),
         ));
 
         add_filter(
@@ -133,35 +146,26 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
             function($param) use ($context, $hookName, $oldFn, $newFn, $priority, $nargs) {
                 global $wp_filter;
 
-                try {
-                    $context['args'] = "\$param=".serialize($param);
-                } catch( Exception $e ){
-                    $context['args'] = "\$param=<unserializable>";
-                }
-                if(LASERCOMMERCE_DEBUG) $this->procedureStart("", $context);
+                $context['args'] = "\$param=".$this->stringAnything($param);
 
                 $replace = false;
                 if( isset($wp_filter[$hookName]) ){
                     foreach( $wp_filter[$hookName] as $hook_priority => $hooks){
                         if ($hook_priority <> $priority ) continue;
-                        foreach ($hooks as $hook_k => $hook_v) {
-                            // $hook_echo = "hooked function: " . $this->printFn($hook_v['function']);
-                            // $hook_echo .= " searching for function: " . $this->printFn($oldFn);
-                            // $hook_echo .= " equality: " . serialize($hook_v['function'] == $oldFn);
+                        foreach ($hooks as $hook_v) {
                             if( $hook_v['function'] == $oldFn && $hook_priority == $priority ){
                                 $replace = true;
                                 break;
                             }
-                            // if(LASERCOMMERCE_DEBUG) $this->procedureDebug("HOOKED (".serialize($hook_priority)."): ".serialize($hook_k)."".serialize($hook_echo), $context);
                         }
                         if($replace){
                             remove_filter( $hookName, $oldFn, $priority, $nargs );
                             add_filter( $hookName, $newFn, $priority, $nargs );
                             if(LASERCOMMERCE_DEBUG) $this->procedureDebug(sprintf(
                                 "replacing function %s at %s with %s",
-                                $this->printFn($hook_v['function']),
+                                $this->stringAnything($hook_v['function']),
                                 $priority,
-                                $this->printFn($newFn)
+                                $this->stringAnything($newFn)
                             ), $context);
                             break;
                         }
@@ -182,7 +186,7 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
         if( empty( $hookName ) ) return;
 
         $context = array_merge($this->defaultContext, array(
-            'caller'=>"ACT_".strtoupper($hookName),
+            'caller'=>"TRC_ACT_".strtoupper($hookName),
         ));
 
         add_action(
@@ -196,12 +200,11 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
                     foreach( $wp_filter[$hookName] as $priority => $hooks){
                         if ($priority < 0 || $priority >= 99999) continue;
                         foreach ($hooks as $hook_k => $hook_v) {
-                            $hook_echo = $this->printFn($hook_v['function']);
-                            $this->procedureDebug("HOOKED (".serialize($priority)."): ".serialize($hook_k)."".serialize($hook_echo), $context);
+                            $this->procedureDebug("HOOKED ($priority): $hook_k => ".$this->stringAnything($hook_v['function']), $context);
                         }
                     }
                 } else {
-                    $this->procedureDebug("NO ACTIONS: $hookName; ".serialize(array_keys($wp_filter)), $context);
+                    $this->procedureDebug("NO ACTIONS: $hookName", $context);
                 }
             },
             -1,
@@ -221,8 +224,9 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
         if( empty( $hookName ) ) return;
 
         $context = array_merge($this->defaultContext, array(
-            'caller'=>"FLT_".strtoupper($hookName),
+            'caller'=>"TRC_FLT_".strtoupper($hookName),
         ));
+
 
         // get list of things hooked to this filter
         add_filter(
@@ -231,24 +235,25 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
                 global $wp_filter;
 
                 if(LASERCOMMERCE_DEBUG) {
-                    try {
-                        $context['args'] = "\$param=".serialize($param);
-                    } catch( Exception $e ){
-                        $context['args'] = "\$param=<unserializable>";
-                    }
+                    $context['args'] = "\$param=".$this->stringAnything($param);
                     $this->procedureStart("FIRST FILTER", $context);
                 }
 
                 if( isset($wp_filter[$hookName]) ){
                     foreach( $wp_filter[$hookName] as $priority => $hooks){
-                        if ($priority < 0 || $priority >= 99999) continue;
+                        if ($priority < 0 || $priority >= 99999 || empty($hooks)) continue;
                         foreach ($hooks as $hook_k => $hook_v) {
-                            $hook_echo=$this->printFn($hook_v['function']);
-                            $this->procedureDebug("HOOKED (".serialize($priority)."): ".serialize($hook_k)."".serialize($hook_echo), $context);
+                            $this->procedureDebug("HOOKED ($priority): $hook_k => ".$this->stringAnything($hook_v['function']), $context);
                         }
+                        // if(!isset($hooks['lasercommerce'])){
+                        //     $wp_filter[$hookName][$priority]['lasercommerce'] = function($arg) use ($context, $priority) {
+                        //         $this->procedureDebug("MID-HOOK ($priority): ".$this->stringAnything($arg));
+                        //         return $arg;
+                        //     };
+                        // }
                     }
                 } else {
-                    $this->procedureDebug("NO FILTERS: $hookName; ".serialize(($wp_filter)), $context);
+                    $this->procedureDebug("NO FILTERS: $hookName; ", $context);
                 }
 
                 return $param;
@@ -259,14 +264,7 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
         add_filter(
             $hookName,
             function($param) use ($context) {
-
-                if(LASERCOMMERCE_DEBUG) {
-                    try {
-                        $this->procedureDebug("FINAL FILTER: ".serialize($param), $context);
-                    } catch( Exception $e ){
-                        $this->procedureDebug("FINAL FILTER: <unserializable>", $context);
-                    }
-                }
+                if(LASERCOMMERCE_DEBUG) $this->procedureDebug("FINAL FILTER: ".$this->stringAnything($param), $context);
                 return $param;
             },
             99999,

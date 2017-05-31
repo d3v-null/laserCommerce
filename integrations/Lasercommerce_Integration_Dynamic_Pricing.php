@@ -149,7 +149,7 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
             $modules = apply_filters('wc_dynamic_pricing_load_modules', $dp_instance->modules);
             foreach ($modules as $module) {
                 if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug(
-                    sprintf("after module %s, working: %s, discount: %s", serialize($module), serialize($working_price), serialize($discount_price)),
+                    sprintf("after module %s, working: %s, discount: %s", get_class($module), serialize($working_price), serialize($discount_price)),
                     $context
                 );
 
@@ -174,6 +174,48 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         if(LASERCOMMERCE_DP_DEBUG) $this->procedureEnd("", $context);
 	    return $result_price;
     }
+
+    private function patched_dp_get_discounted_price( $base_price, $_product ) {
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."PATCHED_DP_ON_GET_DISCOUNTED_PRICE",
+        ));
+        if(LASERCOMMERCE_DP_DEBUG) $this->procedureStart('', $context);
+
+        $id             = $_product->get_id();
+        $discount_price = false;
+        $working_price = $base_price;
+
+        $modules = apply_filters( 'wc_dynamic_pricing_load_modules', $dp_instance->modules );
+        foreach ( $modules as $module ) {
+            if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug(
+                sprintf("after module %s, working: %s, discount: %s", get_class($module), serialize($working_price), serialize($discount_price)),
+                $context
+            );
+
+            if ( $module->module_type == 'simple' ) {
+                //Make sure we are using the price that was just discounted.
+                $working_price = $discount_price ? $discount_price : $base_price;
+                $working_price = $module->get_product_working_price( $working_price, $_product );
+                if ( floatval( $working_price ) ) {
+                    $discount_price = $module->get_discounted_price_for_shop( $_product, $working_price );
+                }
+            }
+        }
+
+        if ( $discount_price ) {
+            return $discount_price;
+        } else {
+            return $base_price;
+        }
+    }
+
+    /**
+     * Filters the variation price from WC_Product_Variable->get_variation_prices()
+    */
+    public function on_get_variation_prices_price( $price, $variation ) {
+        return $this->patched_dp_get_discounted_price( $price, $variation );
+    }
+
 
     public function patched_dp_on_get_product_variation_price( $base_price, $_product ) {
         return $this->patched_dp_on_get_price( $base_price, $_product, false );
@@ -205,7 +247,7 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
             $dp_instance = $this->get_integration_instance();
             $lc_price =  $this->plugin->maybeGetPrice('', $_product);
             // $dynamic_price = $this->patched_dp_on_get_price( $lc_price, $_product, true );
-            $dynamic_price = $dp_instance->on_get_price( $lc_price, $_product, true);
+            $dynamic_price = $this->patched_dp_on_get_price( $lc_price, $_product, true);
             $regular_price = $_product->get_regular_price();
 
             if(LASERCOMMERCE_DP_DEBUG) {
@@ -259,12 +301,19 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         @uasort( $sorted_cart, 'WC_Dynamic_Pricing_Cart_Query::sort_by_price' );
 
         $modules = apply_filters( 'wc_dynamic_pricing_load_modules', $dp_instance->modules );
+        if(LASERCOMMERCE_DP_DEBUG) {
+            $old_cart = $sorted_cart;
+            $this->procedureDebug("first cart: \n".serialize($sorted_cart), $context);
+        }
         foreach ( $modules as $module ) {
-            if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug(
-                sprintf("after module %s cart: %s", serialize($module), serialize($sorted_cart)),
-                $context
-            );
             $module->adjust_cart( $sorted_cart );
+            if(LASERCOMMERCE_DP_DEBUG) {
+                $this->procedureDebug( "module: ".get_class($module), $context );
+                if($sorted_cart != $old_cart){
+                    $this->procedureDebug( "cart changed: \n".serialize($sorted_cart), $context );
+                    $old_cart = $sorted_cart;
+                }
+            }
         }
 
         //Reset the subtotal on ajax requests to force the mini cart to refresh itself.
@@ -299,19 +348,19 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
 		uasort( $sorted_cart, 'WC_Dynamic_Pricing_Cart_Query::sort_by_price' );
 
 		$modules = apply_filters( 'wc_dynamic_pricing_load_modules', $dp_instance->modules );
-        if(LASERCOMMERCE_DP_DEBUG) $old_cart = $sorted_cart;
+        if(LASERCOMMERCE_DP_DEBUG) {
+            $old_cart = $sorted_cart;
+            $this->procedureDebug("first cart: \n".serialize($sorted_cart), $context);
+        }
 		foreach ( $modules as $module ) {
+            $module->adjust_cart( $sorted_cart );
             if(LASERCOMMERCE_DP_DEBUG) {
-                $this->procedureDebug(sprintf("module %s", get_class($module) ), $context);
-                if( $old_cart != $sorted_cart ) {
-                    $this->procedureDebug(
-                        sprintf("cart: \n%s", print_r($sorted_cart, true)),
-                        $context
-                    );
+                $this->procedureDebug("module: ".get_class($module), $context);
+                if($sorted_cart != $old_cart){
+                    $this->procedureDebug( "cart changed: \n". serialize($sorted_cart, true), $context );
                     $old_cart = $sorted_cart;
                 }
             };
-			$module->adjust_cart( $sorted_cart );
 		}
 	}
 
@@ -365,13 +414,63 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         }
     }
 
+    public function patchLasercommerce() {
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."PATCH_LC",
+        ));
+
+        if( $this->plugin ){
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("PATCHING", $context);
+            $this->patchFilter(
+                'woocommerce_product_get_price',
+                array(&$this->plugin, 'actuallyGetPrice'),
+                array(&$this->plugin, 'maybeGetPrice'),
+                0,
+                2
+            );
+            $this->patchFilter(
+                'woocommerce_product_get_regular_price',
+                array(&$this->plugin, 'actuallyGetRegularPrice'),
+                array(&$this->plugin, 'maybeGetRegularPrice'),
+                0,
+                2
+            );
+            $this->patchFilter(
+                'woocommerce_product_get_sale_price',
+                array(&$this->plugin, 'actuallyGetSalePrice'),
+                array(&$this->plugin, 'maybeGetSalePrice'),
+                0,
+                2
+            );
+            $this->patchFilter(
+                'woocommerce_product_variation_get_price',
+                array(&$this->plugin, 'actuallyGetPrice'),
+                array(&$this->plugin, 'maybeGetPrice'),
+                0,
+                2
+            );
+            $this->patchFilter(
+                'woocommerce_product_variation_get_regular_price',
+                array(&$this->plugin, 'actuallyGetRegularPrice'),
+                array(&$this->plugin, 'maybeGetRegularPrice'),
+                0,
+                2
+            );
+            $this->patchFilter(
+                'woocommerce_product_variation_get_sale_price',
+                array(&$this->plugin, 'actuallyGetSalePrice'),
+                array(&$this->plugin, 'maybeGetSalePrice'),
+                0,
+                2
+            );
+        }
+    }
+
     public function constructTraces() {
         $this->traceFilter('woocommerce_product_is_on_sale');
-        $this->traceFilter('woocommerce_variation_prices_price');
-        // $this->traceFilter('woocommerce_get_variation_price');
-        // $this->traceFilter('woocommerce_get_price');
         // $this->traceFilter('woocommerce_coupon_is_valid');
         // $this->traceFilter('woocommerce_coupon_is_valid_for_product');
+        $this->traceAction('woocommerce_before_calculate_totals');
         $this->traceAction('woocommerce_dynamic_pricing_apply_cartitem_adjustment');
         $this->traceAction('wc_dynamic_pricing_apply_cart_item_adjustment');
         $this->traceAction('wc_memberships_discounts_disable_price_adjustments');
@@ -398,7 +497,8 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         // add_action('wc_memberships_discounts_disable_price_adjustments', array(&$this, 'patched_dp_remove_price_filters'));
         // add_action('wc_memberships_discounts_enable_price_adjustments', array(&$this, 'patched_dp_add_price_filters'));
 
-        // $this->patchDynamicPricing();
+        $this->patchDynamicPricing();
+        $this->patchLasercommerce();
 
         //Filter / Action research:
         //DYNAMIC PRICING
