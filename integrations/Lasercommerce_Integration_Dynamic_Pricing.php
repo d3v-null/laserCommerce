@@ -315,11 +315,18 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
 		uasort( $sorted_cart, 'WC_Dynamic_Pricing_Cart_Query::sort_by_price' );
 
 		$modules = apply_filters( 'wc_dynamic_pricing_load_modules', $dp_instance->modules );
+        if(LASERCOMMERCE_DP_DEBUG) $old_cart = $sorted_cart;
 		foreach ( $modules as $module ) {
-            if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug(
-                sprintf("after module %s cart: \n%s", get_class($module), print_r($sorted_cart, true)),
-                $context
-            );
+            if(LASERCOMMERCE_DP_DEBUG) {
+                $this->procedureDebug(sprintf("module %s", get_class($module) ), $context);
+                if( $old_cart != $sorted_cart ) {
+                    $this->procedureDebug(
+                        sprintf("cart: \n%s", print_r($sorted_cart, true)),
+                        $context
+                    );
+                    $old_cart = $sorted_cart;
+                }
+            };
 			$module->adjust_cart( $sorted_cart );
 		}
 	}
@@ -374,6 +381,20 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         }
     }
 
+    public function constructTraces() {
+        $this->traceFilter('woocommerce_product_is_on_sale');
+        $this->traceFilter('woocommerce_variation_prices_price');
+        // $this->traceFilter('woocommerce_get_variation_price');
+        // $this->traceFilter('woocommerce_get_price');
+        $this->traceFilter('woocommerce_composite_get_price');
+        $this->traceFilter('woocommerce_composite_get_base_price');
+        // $this->traceFilter('woocommerce_coupon_is_valid');
+        // $this->traceFilter('woocommerce_coupon_is_valid_for_product');
+        $this->traceAction('wc_memberships_discounts_disable_price_adjustments');
+        $this->traceAction('wc_memberships_discounts_enable_price_adjustments');
+        $this->traceAction('woocommerce_dynamic_pricing_apply_cartitem_adjustment');
+    }
+
     public function addActionsAndFilters() {
         // must be called after wp_init to detect other plugins
 
@@ -381,6 +402,18 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
             'caller'=>$this->_class."ADD_ACTIONS_FILTERS",
         ));
         $this->procedureStart('', $context);
+
+        if(!$this->detect_target()){
+            if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug('could not detect target', $context);
+            return;
+        }
+
+        if(LASERCOMMERCE_DEBUG) {
+            $this->constructTraces();
+        }
+
+        add_action('wc_memberships_discounts_disable_price_adjustments', array(&$this, 'patched_dp_remove_price_filters'));
+        add_action('wc_memberships_discounts_enable_price_adjustments', array(&$this, 'patched_dp_add_price_filters'));
 
         // if( $this->detect_target() ){
         //     if(LASERCOMMERCE_DP_DEBUG) $this->procedureDebug("INTEGRATION TARGET DETECTED", $context);
@@ -396,5 +429,34 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
         // }
 
         $this->patchDynamicPricing();
+
+        //Filter / Action research:
+        //DYNAMIC PRICING
+        //---------------
+        //on_cart_loaded_from_session
+        //
+        // add_action( 'woocommerce_cart_loaded_from_session',
+        //Handled by on_calculate_totals
+        // add_action( 'woocommerce_before_calculate_totals',
+        //Handled by on_price_html
+        // add_filter( 'woocommerce_grouped_price_html',
+        // add_filter( 'woocommerce_variation_price_html',
+        // add_filter( 'woocommerce_sale_price_html',
+        // add_filter( 'woocommerce_price_html',
+        // add_filter( 'woocommerce_variation_price_html',
+        // add_filter( 'woocommerce_variation_sale_price_html',
+        //Handled by on_get_price
+        // add_filter( 'woocommerce_get_price',
+        //Filters used by ...
+        // add_filter( 'woocommerce_get_price_html',
+        // add_filter( 'woocommerce_get_variation_price'
+        // add_filter( 'woocommerce_variable_price_html',
+        // add_filter( 'woocommerce_variation_price_html',
+        // add_filter( 'woocommerce_variation_sale_price_html',
+        // add_filter( 'woocommerce_grouped_price_html',
+        // add_filter( 'woocommerce_sale_price_html',
+        // add_filter( 'woocommerce_price_html',
+        // add_filter( 'woocommerce_variable_empty_price_html',
+        // add_filter( 'woocommerce_order_amount_item_subtotal'
     }
 }

@@ -1180,6 +1180,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     public function constructTraces() {
         $this->traceAction('init');
+
         $this->traceFilter('woocommerce_product_get_price');
         $this->traceFilter('woocommerce_product_get_regular_price');
         $this->traceFilter('woocommerce_product_get_sale_price');
@@ -1187,6 +1188,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->traceFilter('woocommerce_get_variation_regular_price');
         $this->traceFilter('woocommerce_get_variation_sale_price');
         $this->traceFilter('woocommerce_is_purchasable');
+        /* HTML STUFF */
         $this->traceFilter('woocommerce_sale_price_html');
         $this->traceFilter('woocommerce_price_html');
         $this->traceFilter('woocommerce_variable_price_html');
@@ -1194,6 +1196,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->traceFilter('woocommerce_variation_sale_price_html');
         $this->traceFilter('woocommerce_empty_price_html');
         $this->traceFilter('woocommerce_get_price_html');
+        $this->traceFilter('woocommerce_variable_sale_price_html');
+        /* Tax stuff */
         $this->traceFilter('woocommerce_get_price_including_tax');
         $this->traceFilter('woocommerce_get_price_excluding_tax');
         $this->traceFilter('woocommerce_get_variation_prices_hash');
@@ -1203,22 +1207,32 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // $this->traceFilter('woocommerce_variation_prices_price');
         // $this->traceFilter('woocommerce_variation_prices_regular_price');
         // $this->traceFilter('woocommerce_variation_prices_sale_price');
+    }
 
-        $this->traceFilter('woocommerce_variable_sale_price_html');
-        // if(LASERCOMMERCE_DEBUG) error_log($_procedure."Called addActionsAndFilters");
+    public function addPriceFilters() {
+        add_filter( 'woocommerce_product_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );
+        add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );
+        add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );
+        add_filter( 'woocommerce_product_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );
+        add_filter( 'woocommerce_product_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );
+        add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );
+        add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );
+        add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );
+        add_filter( 'woocommerce_product_variation_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );
+        add_filter( 'woocommerce_product_variation_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );
+    }
 
-        /**
-        * Dynamic pricng specific
-        */
-        $this->traceFilter('woocommerce_product_is_on_sale');
-        $this->traceFilter('woocommerce_variation_prices_price');
-        // $this->traceFilter('woocommerce_get_variation_price');
-        // $this->traceFilter('woocommerce_get_price');
-        $this->traceFilter('woocommerce_composite_get_price');
-        $this->traceFilter('woocommerce_composite_get_base_price');
-        // $this->traceFilter('woocommerce_coupon_is_valid');
-        // $this->traceFilter('woocommerce_coupon_is_valid_for_product');
-
+    public function removePriceFilters() {
+        remove_filter( 'woocommerce_product_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );
+        remove_filter( 'woocommerce_product_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );
+        remove_filter( 'woocommerce_product_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );
+        remove_filter( 'woocommerce_product_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );
+        remove_filter( 'woocommerce_product_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );
+        remove_filter( 'woocommerce_product_variation_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );
+        remove_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );
+        remove_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );
+        remove_filter( 'woocommerce_product_variation_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );
+        remove_filter( 'woocommerce_product_variation_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );
     }
 
     public function addActionsAndFilters() {
@@ -1237,21 +1251,13 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20 );
         });
 
+        $this->addPriceFilters();
+
 
         //helper class for tier tree functions
 
 
         // WC 3.0 Properties
-        add_filter( 'woocommerce_product_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );   /* NEED */
-        add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );  /* NEED */
-        add_filter( 'woocommerce_product_variation_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );  /* NEED */
         // add_filter( 'woocommerce_product_get_price', array(&$this, 'maybeGetPrice'), 0, 2 );
         // add_filter( 'woocommerce_product_get_regular_price', array(&$this, 'maybeGetRegularPrice' ), 0, 2 );
         // add_filter( 'woocommerce_product_get_sale_price', array(&$this, 'maybeGetSalePrice'), 0, 2 );
@@ -1278,8 +1284,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // add_filter( 'woocommerce_variation_sale_price_html', array(&$this, 'maybeGetVariationSalePriceHtml'), 0, 2 );
         // add_filter( 'woocommerce_empty_price_html', array(&$this, 'maybeGetEmptyPriceHtml'), 0, 2 );
         // add_filter( 'woocommerce_get_price_html', array(&$this, 'maybeGetPriceHtml'), 0, 2);
-
         add_filter( 'woocommerce_get_variation_prices_hash', array(&$this, 'add_tier_flat_to_woocommerce_get_variation_prices_hash'), 0, 2 ); /* NEED */
+
 
         // TODO: THESE MAY NOT BE NECESSARY?
         add_filter( 'woocommerce_variation_prices', array(&$this, 'maybeVariationPrices'), 0, 3); /* NEED */
@@ -1302,8 +1308,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         // add_filter('woocommerce_available_variation', array(&$this, 'maybeAvailableVariation'), 0, 3);
 
-        /** Dynamic Pricng */
-
+        /** Child Integration plugins */
         add_action( 'init', array(&$this->integration_dp, 'addActionsAndFilters'), 0, 0 );
         add_action( 'init', array(&$this->integration_gf, 'addActionsAndFilters'), 0, 0 );
 
@@ -1322,47 +1327,10 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'woo_bundles_validation' ), 10, 6 );
     // add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'PostWooBundlesValidation' ), 11, 6 );
     // add_filter( 'woocommerce_product_is_visible',
-    //Filter / Action research:
-    //DYNAMIC PRICING
-    //---------------
-    //on_cart_loaded_from_session
-    //
-    // add_action( 'woocommerce_cart_loaded_from_session',
-    //Handled by on_calculate_totals
-    // add_action( 'woocommerce_before_calculate_totals',
-    //Handled by on_price_html
-    // add_filter( 'woocommerce_grouped_price_html',
-    // add_filter( 'woocommerce_variation_price_html',
-    // add_filter( 'woocommerce_sale_price_html',
-    // add_filter( 'woocommerce_price_html',
-    // add_filter( 'woocommerce_variation_price_html',
-    // add_filter( 'woocommerce_variation_sale_price_html',
-    //Handled by on_get_price
-    // add_filter( 'woocommerce_get_price',
-    //Filters used by ...
-    // add_filter( 'woocommerce_get_price_html',
-    // add_filter( 'woocommerce_get_variation_price'
-    // add_filter( 'woocommerce_variable_price_html',
-    // add_filter( 'woocommerce_variation_price_html',
-    // add_filter( 'woocommerce_variation_sale_price_html',
-    // add_filter( 'woocommerce_grouped_price_html',
-    // add_filter( 'woocommerce_sale_price_html',
-    // add_filter( 'woocommerce_price_html',
-    // add_filter( 'woocommerce_variable_empty_price_html',
-    // add_filter( 'woocommerce_order_amount_item_subtotal'
+
+
     //TODO: make modifications to tax
     // add_filter( 'woocommerce_get_cart_tax',
     // add_filter( 'option_woocommerce_calc_taxes',
     // add_filter( 'woocommerce_product_is_taxable'
-    //TODO: Make modifications to product columns, quick edit: http://www.creativedev.in/2014/01/to-create-custom-field-in-woocommerce-products-admin-panel/
 }
-
-
-// function lc_exceptions_error_handler($severity, $message, $filename, $lineno) {
-//   if (error_reporting() == 0) {
-//     return;
-//   }
-//   if (error_reporting() & $severity) {
-//     throw new ErrorException($message, 0, $severity, $filename, $lineno);
-//   }
-// }

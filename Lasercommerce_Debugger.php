@@ -319,7 +319,8 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
             $context['trace'] = implode("|", array_reverse($trace_frames));
         }
         if( !isset($context['caller']) ){
-            $context['caller'] = array_pop(wp_debug_backtrace_summary(array(), $skipFrames, false));
+            $backtrace = wp_debug_backtrace_summary(array(), $skipFrames, false);
+            $context['caller'] = array_pop($backtrace);
         }
         $this->debug($message, $context);
     }

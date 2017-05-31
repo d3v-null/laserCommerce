@@ -3,6 +3,7 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
     private $_class = "LC_GF_";
 
     private static $instance;
+    public static $integration_target = 'GFForms';
 
     public static function init() {
         if ( self::$instance == null ) {
@@ -25,6 +26,10 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         $this->plugin = Lasercommerce_Plugin::instance();
         $this->tree = Lasercommerce_Tier_Tree::instance();
         add_action( 'init', array( &$this, 'wp_init' ), 999);
+    }
+
+    public function detect_target(){
+        return class_exists(self::$integration_target);
     }
 
     public function wp_init() {
@@ -147,7 +152,12 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."ADD_ACTIONS_FILTERS",
         ));
-        $this->procedureStart('', $context);
+        if(LASERCOMMERCE_GF_DEBUG) $this->procedureStart('', $context);
+
+        if(!$this->detect_target()){
+            if(LASERCOMMERCE_GF_DEBUG) $this->procedureDebug('could not detect target', $context);
+            return;
+        }
 
         add_filter('gform_field_value_user_tier_string', array(&$this, 'gform_user_tier_string_paramter'), 0, 1);
         $this->gf_setup_lc_tags();
