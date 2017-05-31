@@ -223,7 +223,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     * @param Lasercommerce_Tier[] - an array of tiers currently visible.
     * @return Lasercommerce_Pricing[] - an array of pricings currently visible.
     */
-    public function maybeGetPricing($_product='', $tiers=array()){
+    public function getPricing($_product='', $tiers=array()){
         $postID = $this->getProductPostID($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."GETPRICING",
@@ -268,7 +268,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     * @param WC_Product|int $_product - the product object or PostID
     * @return Lasercommerce_Pricing[] - an array of pricing objects currently visible
     */
-    public function maybeGetVisiblePricing($_product=''){
+    public function getVisiblePricing($_product=''){
         $postID = $this->getProductPostID($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."GETVISIBLEPRICING",
@@ -277,7 +277,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
         $visibleTiers = $this->tree->getVisibleTiers();
-        $pricings = $this->maybeGetPricing($_product, $visibleTiers );
+        $pricings = $this->getPricing($_product, $visibleTiers );
         uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
 
         if(LASERCOMMERCE_PRICING_DEBUG){
@@ -298,7 +298,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     * @param WC_Product|int $_product - the product object or PostID
     * @return Lasercommerce_Pricing[] - an array of pricing objects currently visible
     */
-    public function maybeGetOmniscientPricing($_product=''){
+    public function getOmniscientPricing($_product=''){
         $postID = $this->getProductPostID($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."GETOMNISCIENTPRICING",
@@ -307,7 +307,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
         $allTiers = $this->tree->getTreeTiers();
-        $pricings = $this->maybeGetPricing($_product, $allTiers );
+        $pricings = $this->getPricing($_product, $allTiers );
         uasort( $pricings, 'Lasercommerce_Pricing::sort_by_regular_price' );
 
         if(LASERCOMMERCE_PRICING_DEBUG){
@@ -323,12 +323,12 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     }
 
     /**
-     * Gets the highest or lowest pricing for a given product
+     * Gets the highest or lowest pricing for a given product across all visible pricing
      * @param string $star: either 'highest' or 'lowest'
      * @param WC_Product|int $_product: The WC_Product object or post_id
      * @return Lasercommerce_Pricing $pricing: the requested pricing object
      */
-    public function maybeGetStarPricing( $star='', $_product=''){
+    public function getStarPricing( $star='', $_product=''){
         $postID = $this->getProductPostID($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."GETSTARPRICING|$star",
@@ -336,7 +336,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         ));
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
-        $pricings = $this->maybeGetVisiblePricing($_product);
+        $pricings = $this->getVisiblePricing($_product);
 
         $pricing = null;
         if(!empty($pricings)){
@@ -351,13 +351,13 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $pricing;
     }
 
-    public function maybeGetLowestPricing($_product=''){ return $this->maybeGetStarPricing('lowest', $_product); }
-    public function maybeGetHighestPricing($_product=''){ return $this->maybeGetStarPricing('highest', $_product); }
+    public function getLowestPricing($_product=''){ return $this->getStarPricing('lowest', $_product); }
+    public function getHighestPricing($_product=''){ return $this->getStarPricing('highest', $_product); }
 
     /**
      * Gets the pricing object for a variable products minimum or maximum variation.
      */
-    public function maybeGetVariationPricing( $_product, $min_or_max ){
+    public function getVariationPricing( $_product, $min_or_max ){
         $postID = $this->getProductPostID($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."GETVARIATIONPRICING|$min_or_max",
@@ -385,7 +385,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         $value = null;
         if($target){
-            $value = $this->maybeGetLowestPricing($target);
+            $value = $this->getLowestPricing($target);
         }
 
         $context['return'] = (string)($value);
@@ -394,34 +394,33 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         return $value;
     }
 
-    public function maybeGetVariationStarPrice( $star = '', $price = '', $_product, $min_or_max, $include_taxes){
-        $postID = $this->getProductPostID($_product);
-        $context = array_merge($this->defaultContext, array(
-            'caller'=>$this->_class."GETVARIATIONSTARPRICE|$star|$min_or_max",
-            'args'=>"\$_product=".serialize($postID).", \$price=".serialize($price)
-        ));
-        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
-
-        $pricing = $this->maybeGetVariationPricing($_product, $min_or_max);
-        if($pricing){
-            switch ($star) {
-                case '':
-                $price = $pricing->maybe_get_current_price();
-                break;
-                case 'regular':
-                $price = $pricing->regular_price;
-                break;
-                case 'sale':
-                $price = $pricing->sale_price;
-                break;
-            }
-        }
-
-        $context['return'] = serialize($price);
-        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
-
-        return $price;
-    }
+    // public function maybeGetVariationStarPrice( $star = '', $price = '', $_product, $min_or_max, $include_taxes){
+    //     $postID = $this->getProductPostID($_product);
+    //     $context = array_merge($this->defaultContext, array(
+    //         'caller'=>$this->_class."GETVARIATIONSTARPRICE|$star|$min_or_max",
+    //         'args'=>"\$_product=".serialize($postID).", \$price=".serialize($price)
+    //     ));
+    //     if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
+    //
+    //     $pricing = $this->getVariationPricing($_product, $min_or_max);
+    //     if($pricing){
+    //         switch ($star) {
+    //             case '':
+    //             $price = $pricing->maybe_get_current_price();
+    //             break;
+    //             case 'regular':
+    //             $price = $pricing->regular_price;
+    //             break;
+    //             case 'sale':
+    //             $price = $pricing->sale_price;
+    //             break;
+    //         }
+    //     }
+    //
+    //     $context['return'] = serialize($price);
+    //     if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
+    //     return $price;
+    // }
 
     // public function maybeGetVariationPrice( $price = '', $_product, $min_or_max, $include_taxes ) { return $this->maybeGetVariationStarPrice( '', $price = '', $_product, $min_or_max, $include_taxes ); }
     // public function maybeGetVariationRegularPrice($price = '', $_product, $min_or_max, $include_taxes) { return $this->maybeGetVariationStarPrice( 'regular', $price = '', $_product, $min_or_max, $include_taxes ); }
@@ -454,9 +453,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing is not cached");
 
         if($_product->is_type( 'variable' )){
-            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+            $lowestPricing = $this->getVariationPricing( $_product, 'min');
         } else {
-            $lowestPricing = $this->maybeGetLowestPricing($_product);
+            $lowestPricing = $this->getLowestPricing($_product);
         }
 
         // set_transient($cache_key, $lowestPricing);
@@ -510,9 +509,9 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
         if($_product->is_type( 'variable' )){
-            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+            $lowestPricing = $this->getVariationPricing( $_product, 'min');
         } else {
-            $lowestPricing = $this->maybeGetLowestPricing($_product);
+            $lowestPricing = $this->getLowestPricing($_product);
         }
 
         if($lowestPricing) {
@@ -563,16 +562,16 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         if(LASERCOMMERCE_HTML_DEBUG) $this->procedureStart('', $context);
 
         if($_product->is_type( 'variable' )){
-            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
+            $lowestPricing = $this->getVariationPricing( $_product, 'min');
         } else {
-            $lowestPricing = $this->maybeGetLowestPricing($_product);
+            $lowestPricing = $this->getLowestPricing($_product);
         }
 
         if( '' === $this->actuallyGetPrice('', $_product) ) {
             $html = apply_filters( 'woocommerce_empty_price_html', '', $_product );
         } else if($_product->is_type( 'variable' )){
-            $lowestPricing = $this->maybeGetVariationPricing( $_product, 'min');
-            $highestPricing = $this->maybeGetVariationPricing( $_product, 'max');
+            $lowestPricing = $this->getVariationPricing( $_product, 'min');
+            $highestPricing = $this->getVariationPricing( $_product, 'max');
             if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug(
                 sprintf("lowestPricing: %s, highestPricing: %s", $lowestPricing, $highestPricing),
                 $context
@@ -762,7 +761,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("post_status: $post_status", $context);
                 if($post_status === 'publish'){
                     // if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("GETTING VISIBLE PRICING", $context);
-                    $pricings = $this->maybeGetVisiblePricing($_product);
+                    $pricings = $this->getVisiblePricing($_product);
                     if($pricings) $purchasable = true;
                 }
             }
@@ -806,7 +805,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                     }
                 }
             } else {
-                $pricings = $this->maybeGetOmniscientPricing($_product);
+                $pricings = $this->getOmniscientPricing($_product);
                 $post_status = get_post_status($_product);
                 if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("post_status: $post_status", $context);
 
@@ -865,7 +864,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             $max_pricing = null;
             foreach ($children as $child) {
                 $variation = wc_get_product($child);
-                $discounted_pricing = $this->maybeGetLowestPricing($variation);
+                $discounted_pricing = $this->getLowestPricing($variation);
                 if($min_pricing == null || Lasercommerce_Pricing::sort_by_regular_price($discounted_pricing, $min_pricing) < 0){
                     $min_pricing = $discounted_pricing;
                 }
@@ -968,7 +967,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         foreach ( $_product->get_visible_children() as $variation_id ) {
             $variation = wc_get_product($variation_id);
             if ( $variation ) {
-                $pricing = $this->maybeGetLowestPricing($variation);
+                $pricing = $this->getLowestPricing($variation);
                 if(!$pricing) continue;
                 $price         = $pricing->maybe_get_current_price();
                 $regular_price = $pricing->regular_price;

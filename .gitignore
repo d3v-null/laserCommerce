@@ -8,3 +8,4 @@ lasercommerce.zip
 
 lasercommerce/debug.log
 .DS_Store
+.tags*
