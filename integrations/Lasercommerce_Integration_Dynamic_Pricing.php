@@ -30,6 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+if( !defined('LASERCOMMERCE_DP_DEBUG')){
+    define( 'LASERCOMMERCE_DP_DEBUG', False);
+}
+
 class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Child {
     private $_class = "LC_DP_";
 

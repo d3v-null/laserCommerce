@@ -30,6 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+if( !defined('LASERCOMMERCE_IM_DEBUG')){
+    define( 'LASERCOMMERCE_IM_DEBUG', False);
+}
+
 class Lasercommerce_Integration_Memberships extends Lasercommerce_Abstract_Child {
     private $_class = "LC_IM_";
 

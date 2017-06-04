@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+if( !defined('LASERCOMMERCE_GF_DEBUG')){
+    define( 'LASERCOMMERCE_GF_DEBUG', False);
+}
 
 class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Child {
     private $_class = "LC_GF_";
@@ -68,7 +71,7 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."WP_INIT",
         ));
-        if(LASERCOMMERCE_DP_DEBUG) $this->procedureStart('', $context);
+        if(LASERCOMMERCE_GF_DEBUG) $this->procedureStart('', $context);
     }
 
 
