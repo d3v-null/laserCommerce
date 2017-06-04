@@ -482,6 +482,8 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             } else {
                 $lowestPricing = $this->getLowestPricing($_product);
             }
+        } else {
+            if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("not an object: ".$this->stringAnything($_product), $context);
         }
 
         // set_transient($cache_key, $lowestPricing);
@@ -544,16 +546,16 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
             switch($star){
                 case 'from':
                 $date = $lowestPricing->sale_price_dates_from;
-                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to $star".serialize($date), $context);
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to '$star'".serialize($date), $context);
                 break;
                 case 'to':
                 $date = $lowestPricing->sale_price_dates_from;
-                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to $star".serialize($date), $context);
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to '$star'".serialize($date), $context);
                 break;
             }
         }
 
-        $date = DateTime::createFromFormat("%U", $date);
+        $date = DateTime::createFromFormat("U", $date);
         $context['return'] = serialize($date);
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
         return $date;
@@ -1211,13 +1213,19 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $this->traceFilter('woocommerce_product_get_price');
         $this->traceFilter('woocommerce_product_get_regular_price');
         $this->traceFilter('woocommerce_product_get_sale_price');
+        $this->traceFilter('woocommerce_product_get_date_on_sale_from');
+        $this->traceFilter('woocommerce_product_get_date_on_sale_to');
         $this->traceFilter('woocommerce_product_variation_get_price');
         $this->traceFilter('woocommerce_product_variation_get_regular_price');
         $this->traceFilter('woocommerce_product_variation_get_sale_price');
+        $this->traceFilter('woocommerce_product_variation_get_date_on_sale_from');
+        $this->traceFilter('woocommerce_product_variation_get_date_on_sale_to');
+
         $this->traceFilter('woocommerce_get_variation_price');
         $this->traceFilter('woocommerce_get_variation_regular_price');
         $this->traceFilter('woocommerce_get_variation_sale_price');
         $this->traceFilter('woocommerce_is_purchasable');
+        $this->traceFilter('woocommerce_product_is_on_sale');
         /* HTML STUFF */
         $this->traceFilter('woocommerce_sale_price_html');
         $this->traceFilter('woocommerce_price_html');
@@ -1249,6 +1257,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         add_filter( 'woocommerce_product_variation_get_price', array(&$this, 'actuallyGetPrice'), 0, 2 );
         add_filter( 'woocommerce_product_variation_get_regular_price', array(&$this, 'actuallyGetRegularPrice' ), 0, 2 );
         add_filter( 'woocommerce_product_variation_get_sale_price', array(&$this, 'actuallyGetSalePrice'), 0, 2 );
+        add_filter( 'woocommerce_product_variation_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );
         add_filter( 'woocommerce_product_variation_get_date_on_sale_from', array(&$this, 'actuallyGetDateOnSaleFrom'), 0, 2 );
         add_filter( 'woocommerce_product_variation_get_date_on_sale_to', array(&$this, 'actuallyGetDateOnSaleTo'), 0, 2 );
     }
