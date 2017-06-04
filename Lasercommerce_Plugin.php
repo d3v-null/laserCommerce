@@ -185,10 +185,12 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     * @param WC_Product|int $_product - The product object or PostID to test prices against.
     */
     public function whichWCPrice($price, $_product=''){
+        $_product = $this->getProductObject($_product);
         $postID = $this->getProductPostID( $_product );
+        $sku = $this->getProductSKU($_product);
         $context = array_merge($this->defaultContext, array(
             'caller'=>$this->_class."ISWHICHWCPRICE",
-            'args'=>"\$price=".serialize($price).", \$_product=".serialize($postID)
+            'args'=>"\$price=".serialize($price).", \$_product=".serialize($postID).$sku
         ));
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
@@ -198,26 +200,45 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 //TODO: This
             }
 
+            // TODO: remember to delete this next line
             $wc_meta = get_post_meta($postID);
+
             $metaKeys = array(
                 '_price'=>'current',
                 '_regular_price'=>'regular',
                 '_sale_price'=>'sale'
             );
+            $decimals = wc_get_price_decimals();
+            $price_cents = intval(floatval($price) * pow(10, $decimals));
+            if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("price to compare: $price_cents", $context);
+
             foreach($metaKeys as $metaKey => $return_value){
+                $wc_price_meta = '';
                 if(isset($wc_meta[$metaKey])){
-                    $WC_price = $wc_meta[$metaKey][0]; #assume meta not singular
-                    $WC_cents = intval(floatval($WC_price) * 100);
-                    $cents = intval(floatval($price)* 100);
-                    if($WC_cents and $WC_cents == $cents ){
-                        $value = $return_value;
-                    }
+                    $wc_price_meta = $wc_meta[$metaKey][0];
                 }
+                $wc_price_meta_cents = intval(floatval($wc_price_meta) * pow(10, $decimals));
+                if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("meta $metaKey cents: $wc_price_meta_cents", $context);
+                $wc_price_cents = $wc_price_meta_cents;
+
+                // $wc_price = $_product->{"get$metaKey"}("edit");
+                // $wc_price_cents = intval(floatval($wc_price) * pow(10, $decimals));
+                // if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("object $metaKey cents: $wc_price_cents", $context);
+
+                // if($wc_price_cents != $wc_price_meta_cents){
+                //     $this->procedureDebug("SOMETHING FUCKED UP ".serialize(get_class($_product)), $context);
+                // }
+
+                if($wc_price_cents && $wc_price_cents == $price_cents) {
+                    if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("equal", $context);
+                    $value = $return_value;
+                    break;
+                }
+
             }
         }
         $context['return'] = serialize($value);
         if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
-
         return $value;
     }
 
@@ -238,8 +259,6 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         $pricings = null;
         if($_product) {
-            $postID = $this->getProductPostID( $_product );
-
             $pricings = array();
             if(is_array($tiers)) {
                 array_push($tiers, new Lasercommerce_Tier('') );
@@ -432,6 +451,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     // public function maybeGetVariationSalePrice($price = '', $_product, $min_or_max, $include_taxes) { return $this->maybeGetVariationStarPrice( 'sale', $price = '', $_product, $min_or_max, $include_taxes ); }
 
     public function actuallyGetStarPrice($star = '', $price = '', $_product = ''){
+        $_product = $this->getProductObject($_product);
         $postID = $this->getProductPostID($_product);
         $sku = $this->getProductSKU($_product);
         $context = array_merge($this->defaultContext, array(
@@ -452,15 +472,16 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         // $cache_key  = 'lc_lowestPricings' . substr( md5( json_encode( $hash ) ), 0, 22 ) ;
 
         // $lowestPricing = get_transient($cache_key);
-        // $lowestPricing = array();
+        $lowestPricing = null;
 
         // if( empty($lowestPricing) ){ //if not cached
         // if(LASERCOMMERCE_PRICING_DEBUG) error_log($_procedure."lowestPricing is not cached");
-
-        if($_product->is_type( 'variable' )){
-            $lowestPricing = $this->getVariationPricing( $_product, 'min');
-        } else {
-            $lowestPricing = $this->getLowestPricing($_product);
+        if(is_object($_product)){
+            if($_product->is_type( 'variable' )){
+                $lowestPricing = $this->getVariationPricing( $_product, 'min');
+            } else {
+                $lowestPricing = $this->getLowestPricing($_product);
+            }
         }
 
         // set_transient($cache_key, $lowestPricing);
@@ -618,6 +639,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
     /**
     * Generalization of maybeGet*Price
+    * Determines if the given price is blank,
     */
     public function maybeGetStarPrice($star = '', $price = '', $_product = ''){
         $postID = $this->getProductPostID($_product);
@@ -629,7 +651,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
 
         //only override if it is a WC price
 
-        if($price == '' || $price == 'None'){
+        if($price == '' || $price == 'None' || floatval($price) == 0.0){
             $override = 'current';
         } else {
             $whichWCPrice = $this->whichWCPrice($price, $_product);

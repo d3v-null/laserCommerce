@@ -87,6 +87,7 @@ class Lasercommerce_Integration_Memberships extends Lasercommerce_Abstract_Child
     public function constructTraces() {
         $this->traceAction('wc_memberships_discounts_disable_price_adjustments');
         $this->traceAction('wc_memberships_discounts_enable_price_adjustments');
+        $this->traceAction('wc_memberships_get_discounted_price');
     }
 
     public function addActionsAndFilters() {

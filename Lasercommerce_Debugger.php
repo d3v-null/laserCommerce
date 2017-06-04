@@ -99,6 +99,8 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
             'caller' => "PTCH_ACT_".strtoupper($hookName),
         ));
 
+        $this->procedureStart("Attempt", $context);
+
         add_action(
             $hookName,
             function() use ($context, $hookName, $oldFn, $newFn, $priority, $nargs) {
@@ -140,6 +142,8 @@ class Lasercommerce_Debugger extends Lasercommerce_OptionsManager {
         $context = array_merge($this->defaultContext, array(
             'caller'=>"PTCH_FLT_".strtoupper($hookName),
         ));
+
+        $this->procedureStart("", $context);
 
         add_filter(
             $hookName,
