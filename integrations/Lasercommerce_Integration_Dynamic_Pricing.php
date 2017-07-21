@@ -418,8 +418,6 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
                 10,
                 2
             );
-            // remove_filter( 'woocommerce_product_is_on_sale', array(&$dp_instance , 'on_get_product_is_on_sale'), 10, 2 );
-            // add_filter('woocommerce_product_is_on_sale', array(&$this, 'patched_dp_on_get_product_is_on_sale'), 10, 2);
             $this->patchFilter(
                 'woocommerce_product_get_price',
                 array(&$dp_instance , 'on_get_price'),
