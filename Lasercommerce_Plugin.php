@@ -563,19 +563,37 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
     public function actuallyGetDateOnSaleTo($date = '', $_product) { return $this->actuallyGetStarDate('to', $date, $_product ); }
 
     public function actuallyGetOnSale($on_sale, $_product) {
-        if ( '' !== (string) $this->actuallyGetSalePrice('', $_product) && $this->actuallyGetRegularPrice('', $_product) > $this->actuallyGetSalePrice('', $_product) ) {
-            $on_sale = true;
+        #
+        $postID = $this->getProductPostID($_product);
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."!GETONSALE",
+            'args'=>"\$_product=".serialize($postID).", \$on_sale=".serialize($on_sale)
+        ));
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
 
-            if ( $this->actuallyGetDateOnSaleFrom('', $_product) && $this->actuallyGetDateOnSaleFrom('', $_product)->getTimestamp() > current_time( 'timestamp', true ) ) {
-                $on_sale = false;
-            }
-
-            if ($this->actuallyGetDateOnSaleTo('', $_product) && $this->actuallyGetDateOnSaleFrom('', $_product)->getTimestamp() < current_time( 'timestamp', true ) ) {
-                $on_sale = false;
-            }
+        if($_product->is_type( 'variable' )){
+            $lowestPricing = $this->getVariationPricing( $_product, 'min');
         } else {
-            $on_sale = false;
+            $lowestPricing = $this->getLowestPricing($_product);
         }
+        $on_sale = $lowestPricing->is_sale_active_now();
+
+        // if ( '' !== (string) $this->actuallyGetSalePrice('', $_product) && $this->actuallyGetRegularPrice('', $_product) > $this->actuallyGetSalePrice('', $_product) ) {
+        //     $on_sale = true;
+        //
+        //     if ( $this->actuallyGetDateOnSaleFrom('', $_product) && $this->actuallyGetDateOnSaleFrom('', $_product)->getTimestamp() > current_time( 'timestamp', true ) ) {
+        //         $on_sale = false;
+        //     }
+        //
+        //     if ($this->actuallyGetDateOnSaleTo('', $_product) && $this->actuallyGetDateOnSaleFrom('', $_product)->getTimestamp() < current_time( 'timestamp', true ) ) {
+        //         $on_sale = false;
+        //     }
+        // } else {
+        //     $on_sale = false;
+        // }
+
+        $context['return'] = serialize($on_sale);
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureEnd("", $context);
         return $on_sale;
     }
 
@@ -621,7 +639,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
                 $html = apply_filters( 'woocommerce_variable_price_html', wc_price( $min_price ) . $_product->get_price_suffix(), $_product );
             }
         } else {
-            if( $this->actuallyGetOnSale(false, $_product) ){
+            if( $lowestPricing->is_sale_active_now() ){
                 $html = wc_format_sale_price( $this->actuallyGetRegularPrice('', $_product) , $this->actuallyGetSalePrice('', $_product) ) . $_product->get_price_suffix();
             } else {
                 $html = wc_price( $this->actuallyGetPrice('', $_product) ) . $_product->get_price_suffix();
