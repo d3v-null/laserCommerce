@@ -545,7 +545,7 @@ class Lasercommerce_Plugin extends Lasercommerce_UI_Extensions {
         $date = null;
 
         if($lowestPricing) {
-            if( property_exists($lowestPricing, "sale_price_dates_$star") ) {
+            if( isset($lowestPricing->{"sale_price_dates_$star"}) ) {
               $date = $lowestPricing->{"sale_price_dates_$star"};
               if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("-> changing date to '$star'".serialize($date), $context);
               $date = DateTime::createFromFormat("U", $date);
