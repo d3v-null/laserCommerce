@@ -412,8 +412,10 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                     $tier_name = $this->tree->getTierName($tier);
                     $new_cols[$this->prefix($tier_id)] = $tier_name;
                 }
-                $price_pos = array_search('price', array_keys($columns)) + 1;
-                return array_slice($columns, 0, $price_pos) + $new_cols + array_slice($columns, $price_pos);
+                if(!empty($new_cols)){
+                    $price_pos = array_search('price', array_keys($columns));
+                    return array_slice($columns, 0, $price_pos) + $new_cols + array_slice($columns, $price_pos + 1);
+                }
             },
             99
         );
