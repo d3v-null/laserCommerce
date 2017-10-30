@@ -568,6 +568,8 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
                 }
             }
         }
+
+        $prices = array_reverse($prices);
         // unset($prices['']);
         // $prices[''] = $current_price;
 
