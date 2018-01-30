@@ -639,19 +639,30 @@ class Lasercommerce_UI_Extensions extends Lasercommerce_LifeCycle
     }
 
     public function term_restrictions_save_meta($term_id, $tt_id){
-        $_procedure = $this->_class . "TIER_RESTR_SAVE_META: ";
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."TIER_RESTR_SAVE_META",
+            'args'=>"\$term_id=".serialize($term_id).", \$tt_id=".serialize($tt_id)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
+
         if(isset($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]) and '' != $_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]){
             $term_restrictions = ($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]);
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("term_restrictions: ". serialize($term_restrictions), $context);
             Lasercommerce_Visibility::set_term_read_tiers_str($term_id, $term_restrictions);
             // add_term_meta($term_id, Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY, $term_restrictions, true );
         }
     }
 
     public function term_restrictions_update_meta($term_id, $tt_id){
-        $_procedure = $this->_class . "TIER_RESTR_UPD8_META: ";
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."TIER_RESTR_UPD8_META",
+            'args'=>"\$term_id=".serialize($term_id).", \$tt_id=".serialize($tt_id)
+        ));
+        if(LASERCOMMERCE_DEBUG) $this->procedureStart('', $context);
 
         if(isset($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]) ){
             $term_restrictions = ($_POST[Lasercommerce_Visibility::TERM_RESTRICTIONS_KEY]);
+            if(LASERCOMMERCE_DEBUG) $this->procedureDebug("term_restrictions: ". serialize($term_restrictions), $context);
             Lasercommerce_Visibility::set_term_read_tiers_str($term_id, $term_restrictions);
         }
     }

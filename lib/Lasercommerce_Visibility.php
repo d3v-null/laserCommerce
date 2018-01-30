@@ -13,7 +13,7 @@ include_once('Lasercommerce_Abstract_Child.php');
 
 class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 {
-    const _CLASS = "LC_VI_";
+    private $_class = "LC_VI_";
 
     const TERM_RESTRICTIONS_KEY = 'lc_term_restrictions';
     const TERM_RESTRICTIONS_DEFAULT = '';
@@ -25,10 +25,9 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     const CACHE_GROUP         = 'Lasercommerce_Visibility';
 
-    protected $tree;
-
+    private static $tree;
     private static $instance;
-    
+
     public static function init() {
         if ( self::$instance == null ) {
             self::$instance = new Lasercommerce_Visibility();
@@ -47,7 +46,8 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     function __construct()
     {
         parent::__construct();
-        $this->tree = Lasercommerce_Tier_Tree::instance();
+
+        self::$tree = Lasercommerce_Tier_Tree::instance();
 
         add_action( 'init', array( __CLASS__, 'wp_init' ), 999);
 
@@ -97,7 +97,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Returns true if the user can access the term.
-     * 
+     *
      * @param int $user_id
      * @param int $term_id
      * @return boolean
@@ -110,9 +110,8 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
             if($term_tierIDs){
                 $restricted = true;
                 $user_tierIDs = array();
-                global $Lasercommerce_Tier_Tree;
-                if(isset($Lasercommerce_Tier_Tree)){
-                    $user_tierIDs = $Lasercommerce_Tier_Tree->getVisibleTierIDs();
+                if(isset(self::$tree)){
+                    $user_tierIDs = self::$tree->getVisibleTierIDs();
                 }
                 if(self::tier_ids_satisfy_requirement($user_tierIDs, $term_tierIDs)){
                     $restricted = False;
@@ -124,7 +123,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Returns all term IDs that the user is not allowed to read.
-     * 
+     *
      * @param int $user_id
      * @return array of int with term IDs
      */
@@ -135,7 +134,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Filters out terms that are restricted.
-     * 
+     *
      * @param string $exclusions
      * @param array $args
      * @param array $taxonomies
@@ -168,7 +167,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     /**
      * Filters out posts that the user should not be able to access, based
      * on taxonomy terms with access restrictions.
-     * 
+     *
      * @param string $where current where conditions
      * @param WP_Query $query current query
      * @return string modified $where
@@ -213,7 +212,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
      * Filter pages by their terms' access restrictions. Although pages don't
      * have any terms related by default, this should be included if there
      * are custom taxonomies related to pages.
-     * 
+     *
      * @param array $pages
      * @return array
      */
@@ -229,9 +228,9 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     }
 
     /**
-     * Filter the excerpt by the post's related terms and their access 
+     * Filter the excerpt by the post's related terms and their access
      * restrictions.
-     * 
+     *
      * @param string $output
      * @return string the original output if access is granted, otherwise ''
      */
@@ -272,7 +271,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     /**
      * Returns true if all related terms allow access to the user. A single
      * related term that restricts access will result in false to be returned.
-     * 
+     *
      * @param int $post_id
      * @param int $user_id
      * @return boolean
@@ -311,7 +310,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
      * The lasercommerce_visibility_get_taxonomies_args filter can be used
      * to modify the query which restricts the taxonomies that are handled
      * to those which fulfill public and show_ui are true.
-     * 
+     *
      * @param string $output 'objects' or 'names'
      * @return array of object or string
      */
@@ -330,7 +329,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     /**
      * Returns true if the term is of a taxonomy that has
      * access restrictions enabled.
-     * 
+     *
      * @param int $term_id
      * @return boolean
      */
@@ -354,7 +353,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Returns true if access restrictions are enabled for the taxonomy.
-     * 
+     *
      * @param string $taxonomy taxonomy name
      * @return boolean
      */
@@ -365,7 +364,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     /**
      * Returns an array of taxonomy names for which access restrictions are
      * enabled.
-     * 
+     *
      * @return array of string
      */
     public static function get_controlled_taxonomies() {
@@ -376,7 +375,7 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Determines taxonomies for which access restrictions are enabled.
-     *  
+     *
      * @param array $taxonomies taxonomy names
      */
     public static function set_controlled_taxonomies( $taxonomies ) {
@@ -392,56 +391,77 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
     }
 
     public static function validate_tierIDs($tierIDs){
-        $_procedure = self::_CLASS . "VALIDATE_TIERIDS: ";
+        $context = array_merge(self::$instance->defaultContext, array(
+            'caller'=>self::$instance->_class."VALIDATE_TIERIDS",
+            'args'=>"\$term_id=".serialize($term_id).", \$tierIDs=".serialize($tierIDs)
+        ));
+        // if(LASERCOMMERCE_DEBUG) self::$instance->procedureStart('', $context);
+
         $_tierIDs = array();
-        global $Lasercommerce_Tier_Tree;
-        if(isset($Lasercommerce_Tier_Tree) and is_array($tierIDs)){
-            $all_tierIDs = $Lasercommerce_Tier_Tree->getTreeTierIDs();
+        if(isset(self::$tree) and is_array($tierIDs)){
+            $all_tierIDs = self::$tree->getTreeTierIDs();
+            // if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug('all tier_ids: '.serialize($all_tierIDs), $context);
             foreach ($tierIDs as $tierID) {
                 if(in_array($tierID, $all_tierIDs)){
                     $_tierIDs[] = $tierID;
+                } else {
+                    // if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug('invalid tier_id: '.serialize($tierID), $context);
                 }
             }
         }
+
+        $context['return'] = $_tierIDs;
+        // if(LASERCOMMERCE_DEBUG) self::$instance->procedureEnd('', $context);
+
         return $_tierIDs;
     }
 
     /**
      * Set the read tiers for the term.
-     * 
+     *
      * @param int $term_id
      * @param array $tiers
      */
     public static function set_term_read_tiers( $term_id, $tierIDs ) {
         $term_id = intval( $term_id );
-        $_procedure = self::_CLASS . "SET_TERM_READ|$term_id: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."setting to ".serialize($tierIDs));
+
+        $context = array_merge(self::$instance->defaultContext, array(
+            'caller'=>self::$instance->_class."SET_TERM_READ",
+            'args'=>"\$term_id=".serialize($term_id).", \$tierIDs=".serialize($tierIDs)
+        ));
+        if(LASERCOMMERCE_DEBUG) self::$instance->procedureStart('', $context);
+
 
         if(term_exists($term_id)){
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."term_exists");
+            if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug('term_exists', $context);
             $tierIDs = self::validate_tierIDs($tierIDs);
             if($tierIDs){
-                if(LASERCOMMERCE_DEBUG) error_log($_procedure."tierIDs is_array");
+                if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug('tierIDs is_array', $context);
                 update_term_meta($term_id, self::TERM_RESTRICTIONS_KEY, json_encode($tierIDs) );
+            } else {
+                if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug('tierIDs is not array'.serialize($tierIDs), $context);
             }
-            
+
         }
     }
 
     /**
      * Set the read tiers for the term.
-     * 
+     *
      * @param int $term_id
      * @param string $tierIDs
      */
     public static function set_term_read_tiers_str( $term_id, $tierID_str ) {
-        $_procedure = self::_CLASS . "SET_TERM_READ_JSON|$term_id: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."setting to ".serialize($tierID_str));
-        
+        $context = array_merge(self::$instance->defaultContext, array(
+            'caller'=>self::$instance->_class."SET_TERM_READ_STR",
+            'args'=>"\$term_id=".serialize($term_id).", \$tierID_str=".serialize($tierID_str)
+        ));
+        if(LASERCOMMERCE_DEBUG) self::$instance->procedureStart('', $context);
+
         if( is_string($tierID_str) ){
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."tierID_str is_string");
+            if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug('tierID_str is_string', $context);
             $tierIDs = explode(self::TERM_RESTRICTIONS_STR_DELIM, $tierID_str);
-            if(LASERCOMMERCE_DEBUG) error_log($_procedure."tierIDs: ".serialize($tierIDs));
+            if(LASERCOMMERCE_DEBUG) self::$instance->procedureDebug("tierIDs: ".serialize($tierIDs), $context);
             self::set_term_read_tiers( $term_id, $tierIDs);
         }
     }
@@ -449,35 +469,42 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Returns an array of read tiers for the term.
-     * 
+     *
      * @param int $term_id
      * @return array of string with read tiers for the term, null if the term does not exist
      */
     public static function get_term_read_tiers( $term_id ) {
         $term_id = intval( $term_id );
-        $_procedure = self::_CLASS . "GET_TERM_READ|$term_id: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge(self::$instance->defaultContext, array(
+            'caller'=>self::$instance->_class."GET_TERM_READ",
+            'args'=>"\$term_id=".serialize($term_id)
+        ));
+        if(LASERCOMMERCE_DEBUG) self::$instance->procedureStart('', $context);
 
         $restrictions = get_term_meta($term_id, self::TERM_RESTRICTIONS_KEY, true);
         if($restrictions){
             $decoded = json_decode($restrictions);
             if($decoded){
-                return $decoded; 
+                return $decoded;
             } else {
-                return json_decode(self::TERM_RESTRICTIONS_DEFAULT);        
+                return json_decode(self::TERM_RESTRICTIONS_DEFAULT);
             }
         }
     }
 
     /**
      * Returns a string of read tiers for the term.
-     * 
+     *
      * @param int $term_id
      * @return string with read tiers for the term, null if the term does not exist
      */
     public static function get_term_read_tiers_str( $term_id ){
-        $_procedure = self::_CLASS . "GET_TERM_READ_STR|$term_id: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
+        $context = array_merge(self::$instance->defaultContext, array(
+            'caller'=>self::$instance->_class."GET_TERM_READ_STR",
+            'args'=>"\$term_id=".serialize($term_id)
+        ));
+        if(LASERCOMMERCE_DEBUG) self::$instance->procedureStart('', $context);
+
         $tiers = self::get_term_read_tiers($term_id);
         if($tiers){
             return implode(self::TERM_RESTRICTIONS_STR_DELIM, $tiers);
@@ -488,14 +515,18 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
 
     /**
      * Delete the read tiers for the term.
-     * 
+     *
      * @param int $term_id
      */
     public static function delete_term_read_tiers( $term_id ) {
-        $_procedure = self::_CLASS . "DEL_TERM_READ: ";
-        if(LASERCOMMERCE_DEBUG) error_log($_procedure."start");
- 
         $term_id = intval( $term_id );
+
+        $context = array_merge(self::$instance->defaultContext, array(
+            'caller'=>self::$instance->_class."DEL_TERM_READ",
+            'args'=>"\$term_id=".serialize($term_id)
+        ));
+        if(LASERCOMMERCE_DEBUG) self::$instance->procedureStart('', $context);
+
         delete_term_meta($term_id, self::TERM_RESTRICTIONS_KEY);
     }
 }
