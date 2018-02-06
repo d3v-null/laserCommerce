@@ -439,13 +439,13 @@ class Lasercommerce_Integration_Dynamic_pricng extends Lasercommerce_Abstract_Ch
                 98,
                 1
             );
-            $this->patchFilter(
-                'woocommerce_before_calculate_totals',
-                array(&$dp_instance, 'on_calculate_totals'),
-                array(&$this, 'patched_dp_on_calculate_totals'),
-                98,
-                1
-            );
+            // $this->patchFilter(
+            //     'woocommerce_before_calculate_totals',
+            //     array(&$dp_instance, 'on_calculate_totals'),
+            //     array(&$this, 'patched_dp_on_calculate_totals'),
+            //     98,
+            //     1
+            // );
             // add_filter( 'woocommerce_variation_prices_price', array( $this, 'on_get_variation_prices_price' ), 10, 3 );
             $this->patchFilter(
                 'woocommerce_variation_prices_price',

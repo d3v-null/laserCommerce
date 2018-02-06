@@ -2,7 +2,7 @@
 /*
    Plugin Name: LaserCommerce
    Plugin URI: http://dev.laserphile.com/plugins/lasercommerce
-   Version: 0.1.1
+   Version: 0.1.2
    Author: Derwent
    Description: Custom pricing, special scheduling and visibility for an arbitrary number of price tiers
    Text Domain: lasercommerce
