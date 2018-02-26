@@ -351,6 +351,17 @@ class Lasercommerce_Tier_Tree extends Lasercommerce_Abstract_Child{
         return implode("|", $this->getTierIDs($tiers));
     }
 
+    public function serializeUserTiers() {
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."SERIALIZE_USER_TIERS",
+        ));
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
+
+        $tierString = $this->serializeTiers($this->getUserTiers());
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("tier string: ".serialize($tierString), $context);
+        return $tierString;
+    }
+
     /**
      * Gets a list of the price tiers available to a user
      *
@@ -466,6 +477,17 @@ class Lasercommerce_Tier_Tree extends Lasercommerce_Abstract_Child{
             }
         }
         return $majorTiers;
+    }
+
+    public function serializeMajorTiers($tiers = null){
+        $context = array_merge($this->defaultContext, array(
+            'caller'=>$this->_class."SERIALIZE_MAJOR_TIERS",
+        ));
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureStart('', $context);
+
+        $tierString = $this->serializeTiers($this->getMajorTiers());
+        if(LASERCOMMERCE_PRICING_DEBUG) $this->procedureDebug("tier string: ".serialize($tierString), $context);
+        return $tierString;
     }
 
 

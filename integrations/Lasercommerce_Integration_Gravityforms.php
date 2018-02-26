@@ -97,6 +97,24 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         }
     }
 
+    public function gform_user_major_tiers($value=null){
+        $_procedure = $this->_class."GFORM_MAJOR_TIERS: ";
+
+        $tierString = $this->tree->serializeMajorTiers();
+        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."tierString: $tierString");}
+
+        return $tierString;
+    }
+
+    public function gform_user_direct_tiers($value=null){
+        $_procedure = $this->_class."GFORM_DIRECT_TIERS: ";
+
+        $tierString = $this->tree->serializeUserTiers();
+        if(LASERCOMMERCE_GF_DEBUG) {error_log($_procedure."tierString: $tierString");}
+
+        return $tierString;
+    }
+
     public function gform_user_is_logged_in($value=null){
         $_procedure = $this->_class."GFORM_IS_AUTH: ";
 
@@ -172,6 +190,8 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         // Sets up Gravity Forms to save certain fields to the user profile when submitting a form
         $this->gf_setup_custom_merge_tag('user_is_wholesale', $this->gform_user_is_wholesale(), 'Is Wholesale');
         $this->gf_setup_custom_merge_tag('user_tier_string', $this->gform_user_tier_string_paramter(), 'User Tier String');
+        $this->gf_setup_custom_merge_tag('user_major_tiers', $this->gform_user_major_tiers(), 'User Major Tiers');
+        $this->gf_setup_custom_merge_tag('user_direct_tiers', $this->gform_user_direct_tiers(), 'User Direct Tiers');
         $this->gf_setup_custom_merge_tag('user_is_logged_in', $this->gform_user_is_logged_in(), 'User Logged In');
         // $this->gf_setup_dynamic_parameter('param_test', 'it works');
         $this->gf_setup_dynamic_parameter('user_tier_string', $this->gform_user_tier_string_paramter());
