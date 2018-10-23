@@ -128,11 +128,11 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         }
     }
 
-    public function gf_setup_custom_merge_tag($tag, $value, $label = null){
+    public function gf_setup_custom_merge_tag($tag, $t_value, $label = null){
         if(!$label) $label = $tag;
         add_filter(
             'gform_custom_merge_tags',
-            function($merge_tags, $form_id, $fields, $elemend_id) use ($tag, $label, $value) {
+            function($merge_tags, $form_id, $fields, $elemend_id) use ($tag, $label, $t_value) {
                 $merge_tags[] = array('label' => $label, 'tag' => "{"."$tag"."}");
 
                 return $merge_tags;
@@ -142,8 +142,8 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         );
         add_filter(
             'gform_replace_merge_tags',
-            function($text, $form, $lead, $url_encode, $esc_html, $nl2br, $format) use ($tag, $value){
-                $text = str_replace('{'.$tag.'}', $value, $text);
+            function($text, $form, $lead, $url_encode, $esc_html, $nl2br, $format) use ($tag, $t_value){
+                $text = str_replace('{'.$tag.'}', $t_value, $text);
 
                 return $text;
             },
@@ -152,9 +152,9 @@ class Lasercommerce_Integration_Gravityforms extends Lasercommerce_Abstract_Chil
         );
         add_filter(
             'gform_field_content',
-            function($field_content, $field, $value, $lead_id, $form_id) use ($tag, $value) {
+            function($field_content, $field, $value, $lead_id, $form_id) use ($tag, $t_value) {
                 if (strpos($field_content, '{'.$tag.'}') !== false) {
-                    $field_content = str_replace('{'.$tag.'}', $value, $field_content);
+                    $field_content = str_replace('{'.$tag.'}', $t_value, $field_content);
                 }
 
                 return $field_content;
