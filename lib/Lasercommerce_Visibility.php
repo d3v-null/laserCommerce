@@ -169,10 +169,9 @@ class Lasercommerce_Visibility extends Lasercommerce_Abstract_Child
      * on taxonomy terms with access restrictions.
      *
      * @param string $where current where conditions
-     * @param WP_Query $query current query
      * @return string modified $where
      */
-    public static function posts_where( $where, &$query ) {
+    public static function posts_where( $where ) {
 
         global $wpdb;
 
